@@ -1,7 +1,14 @@
-import React, { createContext, useContext, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useEffect } from 'react';
+import type { ReactNode } from 'react';
 import { useAI } from '../hooks/useAI';
 import { useAuthContext } from './AuthContext';
-import { AIStudyAssistant, AIConversation, AIInsight, AIStudyPlan } from '../types';
+import type {
+  AIStudyAssistant,
+  AIConversation,
+  AIInsight,
+  AIStudyPlan,
+  LearningStyle,
+} from '../types';
 
 interface AIContextType {
   // State
@@ -12,20 +19,20 @@ interface AIContextType {
   studyPlans: AIStudyPlan[];
   isLoading: boolean;
   error: string | null;
-  
+
   // Computed values
   hasAssistant: boolean;
   hasActiveConversation: boolean;
   unacknowledgedInsights: AIInsight[];
   activeStudyPlans: AIStudyPlan[];
-  
+
   // Actions
   setupAssistant: (
     name: string,
     personalityType: 'encouraging' | 'analytical' | 'casual' | 'professional',
     communicationStyle: 'formal' | 'friendly' | 'motivational' | 'direct',
     preferences?: any,
-    learningStyle?: string[]
+    learningStyle?: LearningStyle[]
   ) => Promise<void>;
   startChat: (context?: any) => Promise<void>;
   chat: (message: string, context?: any) => Promise<void>;
@@ -72,9 +79,24 @@ export const AIProvider: React.FC<AIProviderProps> = ({ children }) => {
         streakDays: 5,
         recentPerformance: 'improving' as const,
         subjectBreakdown: [
-          { courseId: '1', courseName: 'Mathematics', timeSpent: 60, percentage: 50 },
-          { courseId: '2', courseName: 'Physics', timeSpent: 40, percentage: 33 },
-          { courseId: '3', courseName: 'Chemistry', timeSpent: 20, percentage: 17 },
+          {
+            courseId: '1',
+            courseName: 'Mathematics',
+            timeSpent: 60,
+            percentage: 50,
+          },
+          {
+            courseId: '2',
+            courseName: 'Physics',
+            timeSpent: 40,
+            percentage: 33,
+          },
+          {
+            courseId: '3',
+            courseName: 'Chemistry',
+            timeSpent: 20,
+            percentage: 17,
+          },
         ],
       };
 
@@ -98,15 +120,21 @@ export const AIProvider: React.FC<AIProviderProps> = ({ children }) => {
     studyPlans: aiHook.studyPlans,
     isLoading: aiHook.isLoading,
     error: aiHook.error,
-    
+
     // Computed values
     hasAssistant: aiHook.hasAssistant,
     hasActiveConversation: aiHook.hasActiveConversation,
     unacknowledgedInsights: aiHook.unacknowledgedInsights,
     activeStudyPlans: aiHook.activeStudyPlans,
-    
+
     // Wrapped actions with user context
-    setupAssistant: async (name, personalityType, communicationStyle, preferences, learningStyle) => {
+    setupAssistant: async (
+      name,
+      personalityType,
+      communicationStyle,
+      preferences,
+      learningStyle
+    ) => {
       if (!user) throw new Error('User not authenticated');
       return aiHook.setupAssistant(
         user.id,
@@ -117,43 +145,52 @@ export const AIProvider: React.FC<AIProviderProps> = ({ children }) => {
         learningStyle || ['visual']
       );
     },
-    
-    startChat: async (context) => {
+
+    startChat: async context => {
       if (!user) throw new Error('User not authenticated');
       return aiHook.startChat(user.id, context);
     },
-    
+
     chat: aiHook.chat,
-    
+
     askStudyQuestion: async (question, courseId, topic, difficulty) => {
       if (!user) throw new Error('User not authenticated');
-      return aiHook.askStudyQuestion(user.id, question, courseId, topic, difficulty);
+      return aiHook.askStudyQuestion(
+        user.id,
+        question,
+        courseId,
+        topic,
+        difficulty
+      );
     },
-    
+
     createStudyPlan: async (courseId, goals, timeframeDays) => {
       if (!user) throw new Error('User not authenticated');
       return aiHook.createStudyPlan(user.id, courseId, goals, timeframeDays);
     },
-    
+
     getMotivation: async (recentPerformance, streakStatus, goalProgress) => {
       if (!user) throw new Error('User not authenticated');
-      return aiHook.getMotivation(user.id, recentPerformance, streakStatus, goalProgress);
+      return aiHook.getMotivation(
+        user.id,
+        recentPerformance,
+        streakStatus,
+        goalProgress
+      );
     },
-    
-    getInsights: async (studyData) => {
+
+    getInsights: async studyData => {
       if (!user) throw new Error('User not authenticated');
       return aiHook.getInsights(user.id, studyData);
     },
-    
+
     acknowledgeInsight: aiHook.acknowledgeInsight,
     applyInsight: aiHook.applyInsight,
     clearError: aiHook.clearError,
   };
 
   return (
-    <AIContext.Provider value={contextValue}>
-      {children}
-    </AIContext.Provider>
+    <AIContext.Provider value={contextValue}>{children}</AIContext.Provider>
   );
 };
 

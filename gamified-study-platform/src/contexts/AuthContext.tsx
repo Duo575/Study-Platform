@@ -1,126 +1,131 @@
-import React, { createContext, useContext, useEffect, useState } from 'react'
-import { AuthService, type AuthUser } from '../services/auth'
-import type { LoginForm, RegisterForm } from '../types'
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { AuthService, type AuthUser } from '../services/auth';
+import type { LoginForm, RegisterForm } from '../types';
 
 interface AuthContextType {
-  user: AuthUser | null
-  loading: boolean
-  signUp: (data: RegisterForm) => Promise<void>
-  signIn: (data: LoginForm) => Promise<void>
-  signOut: () => Promise<void>
-  resetPassword: (email: string) => Promise<void>
-  updatePassword: (newPassword: string) => Promise<void>
+  user: AuthUser | null;
+  loading: boolean;
+  signUp: (data: RegisterForm) => Promise<void>;
+  signIn: (data: LoginForm) => Promise<void>;
+  signOut: () => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
+  updatePassword: (newPassword: string) => Promise<void>;
   updateProfile: (updates: {
-    username?: string
-    firstName?: string
-    lastName?: string
-    avatarUrl?: string
-  }) => Promise<void>
-  uploadAvatar: (file: File) => Promise<string>
+    username?: string;
+    firstName?: string;
+    lastName?: string;
+    avatarUrl?: string;
+  }) => Promise<void>;
+  uploadAvatar: (file: File) => Promise<string>;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined)
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function useAuth() {
-  const context = useContext(AuthContext)
+  const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider')
+    throw new Error('useAuth must be used within an AuthProvider');
   }
-  return context
+  return context;
 }
 
+// Export alias for consistency with other contexts
+export const useAuthContext = useAuth;
+
 interface AuthProviderProps {
-  children: React.ReactNode
+  children: React.ReactNode;
 }
 
 export function AuthProvider({ children }: AuthProviderProps) {
-  const [user, setUser] = useState<AuthUser | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // Get initial session
     const getInitialSession = async () => {
       try {
-        const session = await AuthService.getSession()
+        const session = await AuthService.getSession();
         if (session?.user) {
-          const currentUser = await AuthService.getCurrentUser()
-          setUser(currentUser)
+          const currentUser = await AuthService.getCurrentUser();
+          setUser(currentUser);
         }
       } catch (error) {
-        console.error('Error getting initial session:', error)
+        console.error('Error getting initial session:', error);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
 
-    getInitialSession()
+    getInitialSession();
 
     // Listen for auth changes
-    const { data: { subscription } } = AuthService.onAuthStateChange((user) => {
-      setUser(user)
-      setLoading(false)
-    })
+    const {
+      data: { subscription },
+    } = AuthService.onAuthStateChange(user => {
+      setUser(user);
+      setLoading(false);
+    });
 
-    return () => subscription.unsubscribe()
-  }, [])
+    return () => subscription.unsubscribe();
+  }, []);
 
   const signUp = async (data: RegisterForm) => {
-    setLoading(true)
+    setLoading(true);
     try {
-      await AuthService.signUp(data)
+      await AuthService.signUp(data);
       // User will be set via the auth state change listener
     } catch (error) {
-      setLoading(false)
-      throw error
+      setLoading(false);
+      throw error;
     }
-  }
+  };
 
   const signIn = async (data: LoginForm) => {
-    setLoading(true)
+    setLoading(true);
     try {
-      await AuthService.signIn(data)
+      await AuthService.signIn(data);
       // User will be set via the auth state change listener
     } catch (error) {
-      setLoading(false)
-      throw error
+      setLoading(false);
+      throw error;
     }
-  }
+  };
 
   const signOut = async () => {
-    setLoading(true)
+    setLoading(true);
     try {
-      await AuthService.signOut()
-      setUser(null)
+      await AuthService.signOut();
+      setUser(null);
     } catch (error) {
-      console.error('Error signing out:', error)
+      console.error('Error signing out:', error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const resetPassword = async (email: string) => {
-    await AuthService.resetPassword(email)
-  }
+    await AuthService.resetPassword(email);
+  };
 
   const updatePassword = async (newPassword: string) => {
-    await AuthService.updatePassword(newPassword)
-  }
+    await AuthService.updatePassword(newPassword);
+  };
 
   const updateProfile = async (updates: {
-    username?: string
-    firstName?: string
-    lastName?: string
-    avatarUrl?: string
+    username?: string;
+    firstName?: string;
+    lastName?: string;
+    avatarUrl?: string;
   }) => {
-    await AuthService.updateProfile(updates)
+    await AuthService.updateProfile(updates);
     // Refresh user data
-    const updatedUser = await AuthService.getCurrentUser()
-    setUser(updatedUser)
-  }
+    const updatedUser = await AuthService.getCurrentUser();
+    setUser(updatedUser);
+  };
 
   const uploadAvatar = async (file: File) => {
-    return await AuthService.uploadAvatar(file)
-  }
+    return await AuthService.uploadAvatar(file);
+  };
 
   const value: AuthContextType = {
     user,
@@ -131,12 +136,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     resetPassword,
     updatePassword,
     updateProfile,
-    uploadAvatar
-  }
+    uploadAvatar,
+  };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  )
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
