@@ -26,6 +26,7 @@ import {
   AccessibilityEnhancements,
 } from './components/integration/FinalPolish';
 import PerformanceDashboard from './components/admin/PerformanceDashboard';
+import { AuthDebugPanel } from './components/debug/AuthDebugPanel';
 
 // Lazy load pages for better performance
 const LandingPage = React.lazy(() => import('./pages/LandingPage'));
@@ -351,6 +352,9 @@ function App() {
 
                   {/* Performance Dashboard - only visible in development or when enabled */}
                   <PerformanceDashboard />
+
+                  {/* Auth Debug Panel - only in development */}
+                  {process.env.NODE_ENV === 'development' && <AuthDebugPanel />}
                 </Router>
               </AIProvider>
             </AuthProvider>

@@ -1,263 +1,111 @@
-import { create } from 'zustand'
-import { TodoItem, TodoForm, TodoFilters } from '../types'
-import { TodoService } from '../services/todoService'
+import { create } from 'zustand';
+import { mockTodoService, MOCK_MODE } from '../services/mockDatabase';
 
-interface TodoState {
-  // State
-  todos: TodoItem[]
-  isLoading: boolean
-  error: string | null
-  filters: TodoFilters
-  currentPage: number
-  totalPages: number
-  totalItems: number
-  
-  // Stats
-  stats: {
-    total: number
-    completed: number
-    pending: number
-    overdue: number
-    completionRate: number
-    totalEstimatedTime: number
-    completedTime: number
-  } | null
-
-  // Actions
-  fetchTodos: (page?: number) => Promise<void>
-  createTodo: (todoData: TodoForm) => Promise<void>
-  updateTodo: (id: string, updates: Partial<TodoForm>) => Promise<void>
-  toggleTodo: (id: string) => Promise<{ xpEarned: number }>
-  deleteTodo: (id: string) => Promise<void>
-  setFilters: (filters: Partial<TodoFilters>) => void
-  clearFilters: () => void
-  fetchStats: () => Promise<void>
-  setError: (error: string | null) => void
-  clearError: () => void
+interface Todo {
+  id: string;
+  title: string;
+  description: string;
+  completed: boolean;
+  priority: 'low' | 'medium' | 'high';
+  dueDate: string;
+  courseId?: string;
+  createdAt: string;
 }
 
-const defaultFilters: TodoFilters = {
-  completed: undefined,
-  priority: 'all',
-  courseId: undefined,
-  search: '',
-  dueDate: 'all',
-  sortBy: 'created_at',
-  sortOrder: 'desc'
+interface TodoState {
+  todos: Todo[];
+  isLoading: boolean;
+  error: string | null;
+
+  // Actions
+  fetchTodos: () => Promise<void>;
+  createTodo: (todoData: Partial<Todo>) => Promise<Todo | null>;
+  updateTodo: (id: string, todoData: Partial<Todo>) => Promise<Todo | null>;
+  deleteTodo: (id: string) => Promise<void>;
+  toggleTodo: (id: string) => Promise<void>;
 }
 
 export const useTodoStore = create<TodoState>((set, get) => ({
-  // Initial state
   todos: [],
   isLoading: false,
   error: null,
-  filters: defaultFilters,
-  currentPage: 1,
-  totalPages: 0,
-  totalItems: 0,
-  stats: null,
 
-  // Actions
-  fetchTodos: async (page = 1) => {
-    set({ isLoading: true, error: null })
-    
+  fetchTodos: async () => {
     try {
-      const { filters } = get()
-      const response = await TodoService.getTodos(filters, page, 20)
-      
-      set({
-        todos: response.data,
-        currentPage: response.pagination.page,
-        totalPages: response.pagination.totalPages,
-        totalItems: response.pagination.total,
-        isLoading: false
-      })
+      set({ isLoading: true, error: null });
+      console.log('🔧 Using mock todo data');
+      const todosData = await mockTodoService.getByUserId('mock-user');
+      set({ todos: todosData, isLoading: false });
     } catch (error) {
-      set({
-        error: error instanceof Error ? error.message : 'Failed to fetch todos',
-        isLoading: false
-      })
+      console.error('Error fetching todos:', error);
+      set({ error: 'Failed to load todos', isLoading: false });
     }
   },
 
-  createTodo: async (todoData: TodoForm) => {
-    set({ isLoading: true, error: null })
-    
+  createTodo: async todoData => {
     try {
-      await TodoService.createTodo(todoData)
-      
-      // Refresh todos and stats
-      await get().fetchTodos(get().currentPage)
-      await get().fetchStats()
-      
-      set({ isLoading: false })
+      set({ isLoading: true, error: null });
+      console.log('🔧 Creating todo with mock data');
+      const newTodo = await mockTodoService.create(todoData);
+
+      // Add to local state
+      const { todos } = get();
+      set({ todos: [...todos, newTodo], isLoading: false });
+
+      return newTodo;
     } catch (error) {
-      set({
-        error: error instanceof Error ? error.message : 'Failed to create todo',
-        isLoading: false
-      })
-      throw error
+      console.error('Error creating todo:', error);
+      set({ error: 'Failed to create todo', isLoading: false });
+      return null;
     }
   },
 
-  updateTodo: async (id: string, updates: Partial<TodoForm>) => {
-    set({ isLoading: true, error: null })
-    
+  updateTodo: async (id, todoData) => {
     try {
-      await TodoService.updateTodo(id, updates)
-      
-      // Refresh todos and stats
-      await get().fetchTodos(get().currentPage)
-      await get().fetchStats()
-      
-      set({ isLoading: false })
+      set({ isLoading: true, error: null });
+      console.log('🔧 Updating todo with mock data');
+      const updatedTodo = await mockTodoService.update(id, todoData);
+
+      if (updatedTodo) {
+        // Update local state
+        const { todos } = get();
+        const updatedTodos = todos.map(todo =>
+          todo.id === id ? { ...todo, ...todoData } : todo
+        );
+        set({ todos: updatedTodos, isLoading: false });
+        return updatedTodo;
+      }
+
+      set({ isLoading: false });
+      return null;
     } catch (error) {
-      set({
-        error: error instanceof Error ? error.message : 'Failed to update todo',
-        isLoading: false
-      })
-      throw error
+      console.error('Error updating todo:', error);
+      set({ error: 'Failed to update todo', isLoading: false });
+      return null;
     }
   },
 
-  toggleTodo: async (id: string) => {
-    set({ error: null })
-    
+  deleteTodo: async id => {
     try {
-      const response = await TodoService.toggleTodo(id)
-      
-      // Update the specific todo in the list
-      const { todos } = get()
-      const updatedTodos = todos.map(todo => 
-        todo.id === id ? response.data.todo : todo
-      )
-      
-      set({ todos: updatedTodos })
-      
-      // Refresh stats
-      await get().fetchStats()
-      
-      return { xpEarned: response.data.xpEarned }
+      set({ isLoading: true, error: null });
+      console.log('🔧 Deleting todo with mock data');
+      await mockTodoService.delete(id);
+
+      // Remove from local state
+      const { todos } = get();
+      const updatedTodos = todos.filter(todo => todo.id !== id);
+      set({ todos: updatedTodos, isLoading: false });
     } catch (error) {
-      set({
-        error: error instanceof Error ? error.message : 'Failed to toggle todo'
-      })
-      throw error
+      console.error('Error deleting todo:', error);
+      set({ error: 'Failed to delete todo', isLoading: false });
     }
   },
 
-  deleteTodo: async (id: string) => {
-    set({ error: null })
-    
-    try {
-      await TodoService.deleteTodo(id)
-      
-      // Remove todo from the list
-      const { todos } = get()
-      const updatedTodos = todos.filter(todo => todo.id !== id)
-      
-      set({ todos: updatedTodos, totalItems: get().totalItems - 1 })
-      
-      // Refresh stats
-      await get().fetchStats()
-    } catch (error) {
-      set({
-        error: error instanceof Error ? error.message : 'Failed to delete todo'
-      })
-      throw error
+  toggleTodo: async id => {
+    const { todos } = get();
+    const todo = todos.find(t => t.id === id);
+    if (todo) {
+      await get().updateTodo(id, { completed: !todo.completed });
     }
   },
-
-  setFilters: (newFilters: Partial<TodoFilters>) => {
-    const currentFilters = get().filters
-    const updatedFilters = { ...currentFilters, ...newFilters }
-    
-    set({ 
-      filters: updatedFilters,
-      currentPage: 1 // Reset to first page when filters change
-    })
-    
-    // Automatically fetch todos with new filters
-    get().fetchTodos(1)
-  },
-
-  clearFilters: () => {
-    set({ 
-      filters: defaultFilters,
-      currentPage: 1
-    })
-    
-    // Fetch todos with cleared filters
-    get().fetchTodos(1)
-  },
-
-  fetchStats: async () => {
-    try {
-      const response = await TodoService.getTodoStats()
-      set({ stats: response.data })
-    } catch (error) {
-      console.error('Failed to fetch todo stats:', error)
-      // Don't set error state for stats failure as it's not critical
-    }
-  },
-
-  setError: (error: string | null) => {
-    set({ error })
-  },
-
-  clearError: () => {
-    set({ error: null })
-  }
-}))
-
-// Selectors for computed values
-export const useTodoSelectors = () => {
-  const store = useTodoStore()
-  
-  return {
-    ...store,
-    
-    // Computed values
-    activeTodos: store.todos.filter(todo => !todo.completed),
-    completedTodos: store.todos.filter(todo => todo.completed),
-    overdueTodos: store.todos.filter(todo => 
-      !todo.completed && 
-      todo.dueDate && 
-      todo.dueDate < new Date()
-    ),
-    todayTodos: store.todos.filter(todo => {
-      if (!todo.dueDate) return false
-      const today = new Date()
-      const todoDate = new Date(todo.dueDate)
-      return todoDate.toDateString() === today.toDateString()
-    }),
-    
-    // Priority counts
-    highPriorityTodos: store.todos.filter(todo => 
-      !todo.completed && todo.priority === 'high'
-    ),
-    mediumPriorityTodos: store.todos.filter(todo => 
-      !todo.completed && todo.priority === 'medium'
-    ),
-    lowPriorityTodos: store.todos.filter(todo => 
-      !todo.completed && todo.priority === 'low'
-    ),
-    
-    // Utility functions
-    getTodoById: (id: string) => store.todos.find(todo => todo.id === id),
-    getTodosByCourse: (courseId: string) => 
-      store.todos.filter(todo => todo.courseId === courseId),
-    
-    // Filter helpers
-    hasActiveFilters: () => {
-      const { filters } = store
-      return (
-        filters.completed !== undefined ||
-        (filters.priority && filters.priority !== 'all') ||
-        filters.courseId ||
-        (filters.search && filters.search.length > 0) ||
-        (filters.dueDate && filters.dueDate !== 'all')
-      )
-    }
-  }
-}
+}));

@@ -66,13 +66,19 @@ export const FinalPolish: React.FC = () => {
             animate={{ opacity: 0.1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 bg-blue-500 pointer-events-none z-40"
+            style={{
+              position: 'fixed',
+              inset: 0,
+              backgroundColor: '#3b82f6',
+              pointerEvents: 'none',
+              zIndex: 40,
+            }}
           />
         )}
       </AnimatePresence>
 
       {/* Global CSS enhancements */}
-      <style jsx global>{`
+      <style>{`
         /* Enhanced focus indicators */
         *:focus-visible {
           outline: 2px solid #3b82f6;

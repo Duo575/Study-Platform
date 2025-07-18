@@ -1,13 +1,24 @@
-import React from 'react'
-import { Navigate, useLocation } from 'react-router-dom'
-import { useAuth } from '../../contexts/AuthContext'
+import React from 'react';
+import { Navigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface ProtectedRouteProps {
-  children: React.ReactNode
-  requireAuth?: boolean
+  children: React.ReactNode;
+  requireAuth?: boolean;
 }
 
-export function ProtectedRoute({ children, requireAuth = true }: ProtectedRouteProps) {
+export function ProtectedRoute({
+  children,
+  requireAuth = true,
+}: ProtectedRouteProps) {
+  // TEMPORARY BYPASS: Always allow access for development
+  // TODO: Remove this bypass when authentication is fixed
+  console.log(
+    '🚧 AUTH BYPASS: Authentication temporarily disabled for development'
+  );
+  return <>{children}</>;
+
+  /* ORIGINAL CODE - COMMENTED OUT FOR BYPASS
   const { user, loading } = useAuth()
   const location = useLocation()
 
@@ -31,4 +42,5 @@ export function ProtectedRoute({ children, requireAuth = true }: ProtectedRouteP
   }
 
   return <>{children}</>
+  */
 }

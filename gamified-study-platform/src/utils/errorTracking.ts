@@ -9,7 +9,7 @@ export enum ErrorSeverity {
   LOW = 'low',
   MEDIUM = 'medium',
   HIGH = 'high',
-  CRITICAL = 'critical'
+  CRITICAL = 'critical',
 }
 
 // Error categories
@@ -19,7 +19,7 @@ export enum ErrorCategory {
   VALIDATION = 'validation',
   RUNTIME = 'runtime',
   PERFORMANCE = 'performance',
-  USER_ACTION = 'user_action'
+  USER_ACTION = 'user_action',
 }
 
 // Error context interface
@@ -63,7 +63,7 @@ class ErrorTracker {
 
   private setupGlobalErrorHandlers() {
     // Handle uncaught JavaScript errors
-    window.addEventListener('error', (event) => {
+    window.addEventListener('error', event => {
       this.captureError(
         new Error(event.message),
         ErrorSeverity.HIGH,
@@ -73,14 +73,14 @@ class ErrorTracker {
           metadata: {
             filename: event.filename,
             lineno: event.lineno,
-            colno: event.colno
-          }
+            colno: event.colno,
+          },
         }
       );
     });
 
     // Handle unhandled promise rejections
-    window.addEventListener('unhandledrejection', (event) => {
+    window.addEventListener('unhandledrejection', event => {
       this.captureError(
         new Error(event.reason?.message || 'Unhandled Promise Rejection'),
         ErrorSeverity.HIGH,
@@ -88,31 +88,35 @@ class ErrorTracker {
         {
           component: 'promise',
           metadata: {
-            reason: event.reason
-          }
+            reason: event.reason,
+          },
         }
       );
     });
 
     // Handle resource loading errors
-    window.addEventListener('error', (event) => {
-      if (event.target !== window) {
-        const target = event.target as HTMLElement;
-        this.captureError(
-          new Error(`Resource failed to load: ${target.tagName}`),
-          ErrorSeverity.MEDIUM,
-          ErrorCategory.NETWORK,
-          {
-            component: 'resource-loader',
-            metadata: {
-              tagName: target.tagName,
-              src: (target as any).src || (target as any).href,
-              outerHTML: target.outerHTML
+    window.addEventListener(
+      'error',
+      event => {
+        if (event.target !== window) {
+          const target = event.target as HTMLElement;
+          this.captureError(
+            new Error(`Resource failed to load: ${target.tagName}`),
+            ErrorSeverity.MEDIUM,
+            ErrorCategory.NETWORK,
+            {
+              component: 'resource-loader',
+              metadata: {
+                tagName: target.tagName,
+                src: (target as any).src || (target as any).href,
+                outerHTML: target.outerHTML,
+              },
             }
-          }
-        );
-      }
-    }, true);
+          );
+        }
+      },
+      true
+    );
   }
 
   private setupNetworkStatusHandlers() {
@@ -150,9 +154,9 @@ class ErrorTracker {
         timestamp: Date.now(),
         userAgent: navigator.userAgent,
         url: window.location.href,
-        ...context
+        ...context,
       },
-      fingerprint: this.generateFingerprint(error, context)
+      fingerprint: this.generateFingerprint(error, context),
     };
 
     // Add to queue
@@ -170,9 +174,14 @@ class ErrorTracker {
   }
 
   // Generate error fingerprint for deduplication
-  private generateFingerprint(error: Error, context: Partial<ErrorContext>): string {
+  private generateFingerprint(
+    error: Error,
+    context: Partial<ErrorContext>
+  ): string {
     const key = `${error.message}_${context.component}_${context.route}`;
-    return btoa(key).replace(/[^a-zA-Z0-9]/g, '').substr(0, 16);
+    return btoa(key)
+      .replace(/[^a-zA-Z0-9]/g, '')
+      .substr(0, 16);
   }
 
   // Flush error queue to remote service
@@ -223,19 +232,22 @@ class ErrorTracker {
       action,
       metadata,
       timestamp: Date.now(),
-      route: window.location.pathname
+      route: window.location.pathname,
     };
 
     // Store in session storage for persistence
     const recentActions = this.getRecentUserActions();
     recentActions.push(userAction);
-    
+
     // Keep only last 10 actions
     if (recentActions.length > 10) {
       recentActions.shift();
     }
 
-    sessionStorage.setItem('recent_user_actions', JSON.stringify(recentActions));
+    sessionStorage.setItem(
+      'recent_user_actions',
+      JSON.stringify(recentActions)
+    );
   }
 
   private getRecentUserActions(): any[] {
@@ -253,7 +265,7 @@ class ErrorTracker {
       sessionId: this.sessionId,
       userId: this.userId,
       queuedErrors: this.errorQueue.length,
-      isOnline: this.isOnline
+      isOnline: this.isOnline,
     };
   }
 }
@@ -289,8 +301,9 @@ export const withNetworkErrorHandling = async <T>(
   try {
     return await request();
   } catch (error) {
-    const severity = error instanceof TypeError ? ErrorSeverity.HIGH : ErrorSeverity.MEDIUM;
-    
+    const severity =
+      error instanceof TypeError ? ErrorSeverity.HIGH : ErrorSeverity.MEDIUM;
+
     errorTracker.captureError(
       error instanceof Error ? error : new Error(String(error)),
       severity,
@@ -299,8 +312,8 @@ export const withNetworkErrorHandling = async <T>(
         ...context,
         metadata: {
           ...context.metadata,
-          networkStatus: navigator.onLine ? 'online' : 'offline'
-        }
+          networkStatus: navigator.onLine ? 'online' : 'offline',
+        },
       }
     );
     throw error;
@@ -322,8 +335,8 @@ export const captureValidationError = (
       action: 'validate-field',
       metadata: {
         field,
-        formData: formData ? Object.keys(formData) : undefined // Don't log actual form data for privacy
-      }
+        formData: formData ? Object.keys(formData) : undefined, // Don't log actual form data for privacy
+      },
     }
   );
 };
@@ -341,7 +354,7 @@ export const captureAuthError = (
     {
       component: 'auth',
       action,
-      metadata: context
+      metadata: context,
     }
   );
 };
@@ -363,8 +376,8 @@ export const capturePerformanceError = (
           metric,
           value,
           threshold,
-          exceedBy: value - threshold
-        }
+          exceedBy: value - threshold,
+        },
       }
     );
   }
@@ -380,7 +393,7 @@ export const initializeErrorTracking = (userId?: string) => {
   errorTracker.captureUserAction('page-load', {
     url: window.location.href,
     referrer: document.referrer,
-    timestamp: Date.now()
+    timestamp: Date.now(),
   });
 
   // Set up periodic error queue flush
@@ -393,7 +406,10 @@ export const initializeErrorTracking = (userId?: string) => {
 
 // React Error Boundary helper
 export class ErrorBoundary extends React.Component<
-  { children: React.ReactNode; fallback?: React.ComponentType<{ error: Error }> },
+  {
+    children: React.ReactNode;
+    fallback?: React.ComponentType<{ error: Error }>;
+  },
   { hasError: boolean; error?: Error }
 > {
   constructor(props: any) {
@@ -414,8 +430,8 @@ export class ErrorBoundary extends React.Component<
         component: 'react-error-boundary',
         metadata: {
           componentStack: errorInfo.componentStack,
-          errorBoundary: true
-        }
+          errorBoundary: true,
+        },
       }
     );
   }
@@ -424,24 +440,36 @@ export class ErrorBoundary extends React.Component<
     if (this.state.hasError) {
       const FallbackComponent = this.props.fallback;
       if (FallbackComponent && this.state.error) {
-        return <FallbackComponent error={this.state.error} />;
+        return React.createElement(FallbackComponent, {
+          error: this.state.error,
+        });
       }
-      
-      return (
-        <div className="error-boundary p-4 bg-red-50 border border-red-200 rounded-lg">
-          <h2 className="text-lg font-semibold text-red-800 mb-2">
-            Something went wrong
-          </h2>
-          <p className="text-red-600">
-            We've been notified about this error and will fix it soon.
-          </p>
-          <button
-            className="mt-3 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
-            onClick={() => window.location.reload()}
-          >
-            Reload Page
-          </button>
-        </div>
+
+      return React.createElement(
+        'div',
+        {
+          className:
+            'error-boundary p-4 bg-red-50 border border-red-200 rounded-lg',
+        },
+        React.createElement(
+          'h2',
+          { className: 'text-lg font-semibold text-red-800 mb-2' },
+          'Something went wrong'
+        ),
+        React.createElement(
+          'p',
+          { className: 'text-red-600' },
+          "We've been notified about this error and will fix it soon."
+        ),
+        React.createElement(
+          'button',
+          {
+            className:
+              'mt-3 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700',
+            onClick: () => window.location.reload(),
+          },
+          'Reload Page'
+        )
       );
     }
 
