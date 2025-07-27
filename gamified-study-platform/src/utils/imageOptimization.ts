@@ -154,7 +154,17 @@ export const compressImage = (
 
       // Draw and compress
       ctx.drawImage(img, 0, 0, width, height);
-      canvas.toBlob(resolve, 'image/jpeg', quality);
+      canvas.toBlob(
+        blob => {
+          if (blob) {
+            resolve(blob);
+          } else {
+            reject(new Error('Failed to create blob from canvas'));
+          }
+        },
+        'image/jpeg',
+        quality
+      );
     };
 
     img.src = URL.createObjectURL(file);
@@ -175,7 +185,17 @@ export const convertToWebP = (
       canvas.width = img.width;
       canvas.height = img.height;
       ctx.drawImage(img, 0, 0);
-      canvas.toBlob(resolve, 'image/webp', quality);
+      canvas.toBlob(
+        blob => {
+          if (blob) {
+            resolve(blob);
+          } else {
+            reject(new Error('Failed to create WebP blob from canvas'));
+          }
+        },
+        'image/webp',
+        quality
+      );
     };
 
     img.src = URL.createObjectURL(file);

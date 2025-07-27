@@ -1,88 +1,92 @@
-import React, { useState, useRef } from 'react'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { useAuth } from '../../contexts/AuthContext'
-import { profileSchema, type ProfileFormData } from '../../lib/validations'
-import { Input } from '../ui/Input'
-import { Button } from '../ui/Button'
+import React, { useState, useRef } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useAuth } from '../../contexts/AuthContext';
+import { profileSchema, type ProfileFormData } from '../../lib/validations';
+import { Input } from '../ui/Input';
+import { Button } from '../ui/Button';
 
 export function ProfileForm() {
-  const { user, updateProfile, uploadAvatar } = useAuth()
-  const [loading, setLoading] = useState(false)
-  const [uploadingAvatar, setUploadingAvatar] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState(false)
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const { user, updateProfile, uploadAvatar } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const {
     register,
     handleSubmit,
     formState: { errors },
-    setValue
+    setValue,
   } = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
       username: user?.profile?.username || '',
       firstName: user?.profile?.firstName || '',
-      lastName: user?.profile?.lastName || ''
-    }
-  })
+      lastName: user?.profile?.lastName || '',
+    },
+  });
 
   const onSubmit = async (data: ProfileFormData) => {
-    setLoading(true)
-    setError(null)
-    setSuccess(false)
+    setLoading(true);
+    setError(null);
+    setSuccess(false);
 
     try {
       await updateProfile({
         username: data.username,
         firstName: data.firstName || undefined,
-        lastName: data.lastName || undefined
-      })
-      setSuccess(true)
-      setTimeout(() => setSuccess(false), 3000)
+        lastName: data.lastName || undefined,
+      });
+      setSuccess(true);
+      setTimeout(() => setSuccess(false), 3000);
     } catch (err: any) {
-      setError(err.message || 'An error occurred while updating profile')
+      setError(err.message || 'An error occurred while updating profile');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
-  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (!file) return
+  const handleAvatarUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
 
     // Validate file type
     if (!file.type.startsWith('image/')) {
-      setError('Please select an image file')
-      return
+      setError('Please select an image file');
+      return;
     }
 
     // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
-      setError('Image size must be less than 5MB')
-      return
+      setError('Image size must be less than 5MB');
+      return;
     }
 
-    setUploadingAvatar(true)
-    setError(null)
+    setUploadingAvatar(true);
+    setError(null);
 
     try {
-      const avatarUrl = await uploadAvatar(file)
-      await updateProfile({ avatarUrl })
-      setSuccess(true)
-      setTimeout(() => setSuccess(false), 3000)
+      const avatarUrl = await uploadAvatar(file);
+      await updateProfile({ avatarUrl });
+      setSuccess(true);
+      setTimeout(() => setSuccess(false), 3000);
     } catch (err: any) {
-      setError(err.message || 'An error occurred while uploading avatar')
+      setError(err.message || 'An error occurred while uploading avatar');
     } finally {
-      setUploadingAvatar(false)
+      setUploadingAvatar(false);
     }
-  }
+  };
 
   return (
     <div className="max-w-2xl mx-auto">
       <div className="bg-white shadow-lg rounded-lg p-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">Profile Settings</h2>
+        <h2 className="text-2xl font-bold text-gray-900 mb-6">
+          Profile Settings
+        </h2>
 
         {error && (
           <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
@@ -92,7 +96,9 @@ export function ProfileForm() {
 
         {success && (
           <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-md">
-            <p className="text-sm text-green-600">Profile updated successfully!</p>
+            <p className="text-sm text-green-600">
+              Profile updated successfully!
+            </p>
           </div>
         )}
 
@@ -110,8 +116,18 @@ export function ProfileForm() {
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                <svg
+                  className="w-8 h-8 text-gray-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                  />
                 </svg>
               )}
             </div>
@@ -127,14 +143,12 @@ export function ProfileForm() {
                 type="button"
                 variant="outline"
                 size="sm"
-                loading={uploadingAvatar}
+                isLoading={uploadingAvatar}
                 onClick={() => fileInputRef.current?.click()}
               >
                 {uploadingAvatar ? 'Uploading...' : 'Change Photo'}
               </Button>
-              <p className="text-xs text-gray-500 mt-1">
-                JPG, PNG up to 5MB
-              </p>
+              <p className="text-xs text-gray-500 mt-1">JPG, PNG up to 5MB</p>
             </div>
           </div>
         </div>
@@ -169,10 +183,7 @@ export function ProfileForm() {
           </div>
 
           <div className="pt-4">
-            <Button
-              type="submit"
-              loading={loading}
-            >
+            <Button type="submit" isLoading={loading}>
               Save Changes
             </Button>
           </div>
@@ -180,13 +191,22 @@ export function ProfileForm() {
 
         {/* Account Info */}
         <div className="mt-8 pt-6 border-t border-gray-200">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Account Information</h3>
+          <h3 className="text-lg font-medium text-gray-900 mb-4">
+            Account Information
+          </h3>
           <div className="space-y-2 text-sm text-gray-600">
-            <p><span className="font-medium">Email:</span> {user?.email}</p>
-            <p><span className="font-medium">Member since:</span> {user?.created_at ? new Date(user.created_at).toLocaleDateString() : 'N/A'}</p>
+            <p>
+              <span className="font-medium">Email:</span> {user?.email}
+            </p>
+            <p>
+              <span className="font-medium">Member since:</span>{' '}
+              {user?.created_at
+                ? new Date(user.created_at).toLocaleDateString()
+                : 'N/A'}
+            </p>
           </div>
         </div>
       </div>
     </div>
-  )
+  );
 }

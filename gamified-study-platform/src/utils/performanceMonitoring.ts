@@ -153,8 +153,8 @@ class PerformanceMonitor {
 
   private sendToAnalytics(name: string, value: number, metadata?: any) {
     // Example: Send to Google Analytics 4
-    if (typeof gtag !== 'undefined') {
-      gtag('event', 'performance_metric', {
+    if (typeof (window as any).gtag !== 'undefined') {
+      (window as any).gtag('event', 'performance_metric', {
         metric_name: name,
         metric_value: value,
         custom_parameters: metadata,

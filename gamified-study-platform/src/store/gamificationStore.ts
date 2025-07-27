@@ -14,7 +14,7 @@ import {
 interface GamificationState {
   // Current user's game stats
   gameStats: GameStats | null;
-  
+
   // Level up state
   isLevelUpModalOpen: boolean;
   levelUpData: {
@@ -23,7 +23,7 @@ interface GamificationState {
     xpGained: number;
     newAchievements: Achievement[];
   } | null;
-  
+
   // XP animation state
   xpAnimationQueue: Array<{
     id: string;
@@ -31,7 +31,7 @@ interface GamificationState {
     source: string;
     timestamp: number;
   }>;
-  
+
   // Streak state
   streakData: {
     currentStreak: number;
@@ -39,7 +39,7 @@ interface GamificationState {
     lastStudyDate: Date | null;
     streakBonusEarned: boolean;
   };
-  
+
   // Loading states
   isLoading: boolean;
   error: string | null;
@@ -48,26 +48,37 @@ interface GamificationState {
 interface GamificationActions {
   // Initialize game stats
   initializeGameStats: (stats: GameStats) => void;
-  
+
   // XP and leveling actions
   awardXP: (amount: number, source: string) => Promise<void>;
-  awardStudySessionXP: (durationMinutes: number, difficulty?: 'easy' | 'medium' | 'hard', hasBonus?: boolean) => Promise<void>;
-  awardQuestXP: (questType: 'daily' | 'weekly' | 'milestone' | 'bonus', difficulty?: 'easy' | 'medium' | 'hard') => Promise<void>;
-  awardTodoXP: (estimatedMinutes: number, completedEarly?: boolean, completedOnTime?: boolean) => Promise<void>;
-  
+  awardStudySessionXP: (
+    durationMinutes: number,
+    difficulty?: 'easy' | 'medium' | 'hard',
+    hasBonus?: boolean
+  ) => Promise<void>;
+  awardQuestXP: (
+    questType: 'daily' | 'weekly' | 'milestone' | 'bonus',
+    difficulty?: 'easy' | 'medium' | 'hard'
+  ) => Promise<void>;
+  awardTodoXP: (
+    estimatedMinutes: number,
+    completedEarly?: boolean,
+    completedOnTime?: boolean
+  ) => Promise<void>;
+
   // Level up modal actions
   openLevelUpModal: (data: GamificationState['levelUpData']) => void;
   closeLevelUpModal: () => void;
-  
+
   // XP animation actions
   addXPAnimation: (amount: number, source: string) => void;
   removeXPAnimation: (id: string) => void;
   clearXPAnimations: () => void;
-  
+
   // Streak actions
   updateStreak: (studyDate?: Date) => void;
   checkStreakStatus: () => boolean;
-  
+
   // Utility actions
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
@@ -89,12 +100,14 @@ const initialState: GamificationState = {
   error: null,
 };
 
-export const useGamificationStore = create<GamificationState & GamificationActions>()(
+export const useGamificationStore = create<
+  GamificationState & GamificationActions
+>()(
   devtools(
     persist(
       (set, get) => ({
         ...initialState,
-        
+
         initializeGameStats: (stats: GameStats) => {
           set({
             gameStats: stats,
@@ -106,24 +119,28 @@ export const useGamificationStore = create<GamificationState & GamificationActio
             },
           });
         },
-        
+
         awardXP: async (amount: number, source: string) => {
           const { gameStats } = get();
           if (!gameStats) return;
-          
+
           try {
             set({ isLoading: true, error: null });
-            
+
             // Update game stats
-            const { stats: newStats, leveledUp, newLevel } = updateGameStats(gameStats, amount);
-            
+            const {
+              stats: newStats,
+              leveledUp,
+              newLevel,
+            } = updateGameStats(gameStats, amount);
+
             // Add XP animation
             const animationId = `xp-${Date.now()}-${Math.random()}`;
             get().addXPAnimation(amount, source);
-            
+
             // Update state
             set({ gameStats: newStats });
-            
+
             // Handle level up
             if (leveledUp && newLevel) {
               get().openLevelUpModal({
@@ -133,10 +150,9 @@ export const useGamificationStore = create<GamificationState & GamificationActio
                 newAchievements: [], // TODO: Check for new achievements
               });
             }
-            
+
             // TODO: Sync with backend
             // await syncGameStatsWithBackend(newStats);
-            
           } catch (error) {
             console.error('Error awarding XP:', error);
             set({ error: 'Failed to award XP' });
@@ -144,31 +160,85 @@ export const useGamificationStore = create<GamificationState & GamificationActio
             set({ isLoading: false });
           }
         },
-        
-        awardStudySessionXP: async (durationMinutes: number, difficulty = 'medium' as const, hasBonus = false) => {
-          const xp = calculateStudySessionXP(durationMinutes, difficulty, hasBonus);
+
+        awardStudySessionXP: async (
+          durationMinutes: number,
+          difficulty = 'medium' as const,
+          hasBonus = false
+        ) => {
+          const xp = calculateStudySessionXP(
+            durationMinutes,
+            difficulty,
+            hasBonus
+          );
           await get().awardXP(xp, `Study Session (${durationMinutes}min)`);
+
+          // Trigger pet mood update for study session
+          try {
+            const { studyPetIntegrationService } = await import(
+              '../services/studyPetIntegrationService'
+            );
+            // This would be called with proper user context in a real implementation
+            // For now, we'll skip the direct integration here to avoid circular dependencies
+          } catch (error) {
+            console.error(
+              'Error integrating study session with pet system:',
+              error
+            );
+          }
         },
-        
-        awardQuestXP: async (questType: 'daily' | 'weekly' | 'milestone' | 'bonus', difficulty = 'medium' as const) => {
+
+        awardQuestXP: async (
+          questType: 'daily' | 'weekly' | 'milestone' | 'bonus',
+          difficulty = 'medium' as const
+        ) => {
           const xp = calculateQuestXP(questType, difficulty);
-          await get().awardXP(xp, `${questType.charAt(0).toUpperCase() + questType.slice(1)} Quest`);
+          await get().awardXP(
+            xp,
+            `${questType.charAt(0).toUpperCase() + questType.slice(1)} Quest`
+          );
+
+          // Integrate quest completion with pet system
+          try {
+            const { studyPetIntegrationService } = await import(
+              '../services/studyPetIntegrationService'
+            );
+            // This would be called with proper user context in a real implementation
+            // For now, we'll skip the direct integration here to avoid circular dependencies
+          } catch (error) {
+            console.error(
+              'Error integrating quest completion with pet system:',
+              error
+            );
+          }
         },
-        
-        awardTodoXP: async (estimatedMinutes: number, completedEarly = false, completedOnTime = true) => {
-          const xp = calculateTodoXP(estimatedMinutes, completedEarly, completedOnTime);
-          const source = completedEarly ? 'Todo (Early)' : completedOnTime ? 'Todo (On Time)' : 'Todo (Late)';
+
+        awardTodoXP: async (
+          estimatedMinutes: number,
+          completedEarly = false,
+          completedOnTime = true
+        ) => {
+          const xp = calculateTodoXP(
+            estimatedMinutes,
+            completedEarly,
+            completedOnTime
+          );
+          const source = completedEarly
+            ? 'Todo (Early)'
+            : completedOnTime
+              ? 'Todo (On Time)'
+              : 'Todo (Late)';
           await get().awardXP(xp, source);
         },
-        
+
         openLevelUpModal: (data: GamificationState['levelUpData']) => {
           set({ isLevelUpModalOpen: true, levelUpData: data });
         },
-        
+
         closeLevelUpModal: () => {
           set({ isLevelUpModalOpen: false, levelUpData: null });
         },
-        
+
         addXPAnimation: (amount: number, source: string) => {
           const animation = {
             id: `xp-${Date.now()}-${Math.random()}`,
@@ -176,50 +246,60 @@ export const useGamificationStore = create<GamificationState & GamificationActio
             source,
             timestamp: Date.now(),
           };
-          
+
           set(state => ({
-            xpAnimationQueue: [...state.xpAnimationQueue, animation]
+            xpAnimationQueue: [...state.xpAnimationQueue, animation],
           }));
-          
+
           // Auto-remove animation after 3 seconds
           setTimeout(() => {
             get().removeXPAnimation(animation.id);
           }, 3000);
         },
-        
+
         removeXPAnimation: (id: string) => {
           set(state => ({
-            xpAnimationQueue: state.xpAnimationQueue.filter(anim => anim.id !== id)
+            xpAnimationQueue: state.xpAnimationQueue.filter(
+              anim => anim.id !== id
+            ),
           }));
         },
-        
+
         clearXPAnimations: () => {
           set({ xpAnimationQueue: [] });
         },
-        
+
         updateStreak: (studyDate = new Date()) => {
           const { gameStats, streakData } = get();
           if (!gameStats) return;
-          
+
           const today = new Date();
           today.setHours(0, 0, 0, 0);
-          
+
           const studyDateNormalized = new Date(studyDate);
           studyDateNormalized.setHours(0, 0, 0, 0);
-          
-          const lastStudyDate = streakData.lastStudyDate ? new Date(streakData.lastStudyDate) : null;
+
+          const lastStudyDate = streakData.lastStudyDate
+            ? new Date(streakData.lastStudyDate)
+            : null;
           if (lastStudyDate) {
             lastStudyDate.setHours(0, 0, 0, 0);
           }
-          
+
           let newStreak = streakData.currentStreak;
           let streakBonusEarned = false;
-          
+
           // Check if this is a new day of studying
-          if (!lastStudyDate || studyDateNormalized.getTime() !== lastStudyDate.getTime()) {
+          if (
+            !lastStudyDate ||
+            studyDateNormalized.getTime() !== lastStudyDate.getTime()
+          ) {
             if (lastStudyDate) {
-              const daysDiff = Math.floor((studyDateNormalized.getTime() - lastStudyDate.getTime()) / (1000 * 60 * 60 * 24));
-              
+              const daysDiff = Math.floor(
+                (studyDateNormalized.getTime() - lastStudyDate.getTime()) /
+                  (1000 * 60 * 60 * 24)
+              );
+
               if (daysDiff === 1) {
                 // Consecutive day - increment streak
                 newStreak += 1;
@@ -236,14 +316,14 @@ export const useGamificationStore = create<GamificationState & GamificationActio
               // First study session
               newStreak = 1;
             }
-            
+
             // Update game stats
             const updatedStats = {
               ...gameStats,
               streakDays: newStreak,
               lastActivity: studyDate,
             };
-            
+
             set({
               gameStats: updatedStats,
               streakData: {
@@ -255,29 +335,29 @@ export const useGamificationStore = create<GamificationState & GamificationActio
             });
           }
         },
-        
+
         checkStreakStatus: () => {
           const { streakData } = get();
           if (!streakData.lastStudyDate) return false;
-          
+
           return isStreakActive(streakData.lastStudyDate);
         },
-        
+
         setLoading: (loading: boolean) => {
           set({ isLoading: loading });
         },
-        
+
         setError: (error: string | null) => {
           set({ error });
         },
-        
+
         reset: () => {
           set(initialState);
         },
       }),
       {
         name: 'gamification-store',
-        partialize: (state) => ({
+        partialize: state => ({
           gameStats: state.gameStats,
           streakData: state.streakData,
         }),

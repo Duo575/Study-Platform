@@ -1,233 +1,9 @@
-import { useEffect, useCallback, useRef, useMemo, useState } from 'react';
-import { useLocation } from 'react-router-dom';
-import {
-  performanceMonitor,
-  debounce,
-  throttle,
-} from '../utils/performanceMonitoring';
-import { errorTracker } from '../utils/errorTracking';
+import { useEffect, useCallback, useRef, useMemo } from 'react';
+import { performanceOptimizer } from '../services/performanceOptimizationService';
+import { assetOptimizer } from '../services/assetOptimizationService';
 
-// Hook for route change performance monitoring
-export const useRoutePerformance = () => {
-  const location = useLocation();
-  const routeStartTime = useRef<number>(0);
-
-  useEffect(() => {
-    routeStartTime.current = performance.now();
-
-    // Measure route change performance after component mounts
-    const timeoutId = setTimeout(() => {
-      performanceMonitor.measureRouteChange(
-        location.pathname,
-        routeStartTime.current
-      );
-    }, 100);
-
-    return () => clearTimeout(timeoutId);
-  }, [location.pathname]);
-};
-
-// Hook for API call performance monitoring
-export const useApiPerformance = () => {
-  const measureApiCall = useCallback(
-    (endpoint: string, startTime: number, success: boolean = true) => {
-      performanceMonitor.measureApiCall(endpoint, startTime, success);
-    },
-    []
-  );
-
-  const withApiTracking = useCallback(
-    async <T>(endpoint: string, apiCall: () => Promise<T>): Promise<T> => {
-      const startTime = performance.now();
-      try {
-        const result = await apiCall();
-        measureApiCall(endpoint, startTime, true);
-        return result;
-      } catch (error) {
-        measureApiCall(endpoint, startTime, false);
-        throw error;
-      }
-    },
-    [measureApiCall]
-  );
-
-  return { measureApiCall, withApiTracking };
-};
-
-// Hook for optimized event handlers
-export const useOptimizedHandlers = () => {
-  const createDebouncedHandler = useCallback(
-    <T extends (...args: any[]) => any>(handler: T, delay: number = 300) => {
-      return debounce(handler, delay);
-    },
-    []
-  );
-
-  const createThrottledHandler = useCallback(
-    <T extends (...args: any[]) => any>(handler: T, limit: number = 100) => {
-      return throttle(handler, limit);
-    },
-    []
-  );
-
-  return { createDebouncedHandler, createThrottledHandler };
-};
-
-// Hook for memory usage monitoring
-export const useMemoryMonitoring = (interval: number = 30000) => {
-  useEffect(() => {
-    const monitorMemory = () => {
-      performanceMonitor.measureMemoryUsage();
-    };
-
-    const intervalId = setInterval(monitorMemory, interval);
-
-    // Initial measurement
-    monitorMemory();
-
-    return () => clearInterval(intervalId);
-  }, [interval]);
-};
-
-// Hook for intersection observer (lazy loading)
-export const useIntersectionObserver = (
-  callback: (entries: IntersectionObserverEntry[]) => void,
-  options: IntersectionObserverInit = {}
-) => {
-  const observer = useRef<IntersectionObserver | null>(null);
-
-  const observe = useCallback(
-    (element: Element) => {
-      if (!observer.current) {
-        observer.current = new IntersectionObserver(callback, {
-          rootMargin: '50px 0px',
-          threshold: 0.01,
-          ...options,
-        });
-      }
-      observer.current.observe(element);
-    },
-    [callback, options]
-  );
-
-  const unobserve = useCallback((element: Element) => {
-    if (observer.current) {
-      observer.current.unobserve(element);
-    }
-  }, []);
-
-  const disconnect = useCallback(() => {
-    if (observer.current) {
-      observer.current.disconnect();
-      observer.current = null;
-    }
-  }, []);
-
-  useEffect(() => {
-    return () => disconnect();
-  }, [disconnect]);
-
-  return { observe, unobserve, disconnect };
-};
-
-// Hook for error boundary integration
-export const useErrorTracking = (componentName: string) => {
-  const captureError = useCallback(
-    (error: Error, context?: Record<string, any>) => {
-      errorTracker.captureError(error, 'medium' as any, 'runtime' as any, {
-        component: componentName,
-        metadata: context,
-      });
-    },
-    [componentName]
-  );
-
-  const captureUserAction = useCallback(
-    (action: string, metadata?: Record<string, any>) => {
-      errorTracker.captureUserAction(action, {
-        component: componentName,
-        ...metadata,
-      });
-    },
-    [componentName]
-  );
-
-  return { captureError, captureUserAction };
-};
-
-// Hook for resource preloading
-export const useResourcePreloading = () => {
-  const preloadImage = useCallback((src: string): Promise<void> => {
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      img.onload = () => resolve();
-      img.onerror = reject;
-      img.src = src;
-    });
-  }, []);
-
-  const preloadScript = useCallback((src: string): Promise<void> => {
-    return new Promise((resolve, reject) => {
-      const script = document.createElement('script');
-      script.onload = () => resolve();
-      script.onerror = reject;
-      script.src = src;
-      document.head.appendChild(script);
-    });
-  }, []);
-
-  const preloadStylesheet = useCallback((href: string): Promise<void> => {
-    return new Promise((resolve, reject) => {
-      const link = document.createElement('link');
-      link.rel = 'stylesheet';
-      link.onload = () => resolve();
-      link.onerror = reject;
-      link.href = href;
-      document.head.appendChild(link);
-    });
-  }, []);
-
-  return { preloadImage, preloadScript, preloadStylesheet };
-};
-
-// Hook for virtual scrolling optimization
-export const useVirtualScrolling = <T>(
-  items: T[],
-  itemHeight: number,
-  containerHeight: number
-) => {
-  const [scrollTop, setScrollTop] = useState(0);
-
-  const visibleItems = useMemo(() => {
-    const startIndex = Math.floor(scrollTop / itemHeight);
-    const endIndex = Math.min(
-      startIndex + Math.ceil(containerHeight / itemHeight) + 1,
-      items.length
-    );
-
-    return {
-      startIndex,
-      endIndex,
-      items: items.slice(startIndex, endIndex),
-      totalHeight: items.length * itemHeight,
-      offsetY: startIndex * itemHeight,
-    };
-  }, [items, itemHeight, containerHeight, scrollTop]);
-
-  const handleScroll = useCallback((event: React.UIEvent<HTMLDivElement>) => {
-    setScrollTop(event.currentTarget.scrollTop);
-  }, []);
-
-  return {
-    visibleItems,
-    handleScroll,
-    totalHeight: visibleItems.totalHeight,
-    offsetY: visibleItems.offsetY,
-  };
-};
-
-// Hook for component performance profiling
-export const useComponentProfiler = (componentName: string) => {
+// Hook for component performance monitoring
+export const usePerformanceMonitoring = (componentName: string) => {
   const renderStartTime = useRef<number>(0);
   const mountTime = useRef<number>(0);
 
@@ -237,86 +13,274 @@ export const useComponentProfiler = (componentName: string) => {
     return () => {
       const unmountTime = performance.now();
       const totalLifetime = unmountTime - mountTime.current;
-
-      if (process.env.NODE_ENV === 'development') {
-        console.log(
-          `Component ${componentName} lifetime: ${totalLifetime.toFixed(2)}ms`
-        );
-      }
+      performanceOptimizer.recordMetric(
+        `component-${componentName}-lifetime`,
+        totalLifetime
+      );
     };
   }, [componentName]);
 
-  const startRender = useCallback(() => {
+  const measureRender = useCallback(() => {
     renderStartTime.current = performance.now();
   }, []);
 
-  const endRender = useCallback(() => {
+  const finishRender = useCallback(() => {
     if (renderStartTime.current > 0) {
       const renderTime = performance.now() - renderStartTime.current;
-
-      if (process.env.NODE_ENV === 'development' && renderTime > 16) {
-        console.warn(
-          `Slow render in ${componentName}: ${renderTime.toFixed(2)}ms`
-        );
-      }
-
+      performanceOptimizer.recordMetric(
+        `component-${componentName}-render`,
+        renderTime
+      );
       renderStartTime.current = 0;
     }
   }, [componentName]);
 
-  return { startRender, endRender };
+  return { measureRender, finishRender };
 };
 
-// Hook for bundle splitting and code splitting
-export const useCodeSplitting = () => {
-  const loadComponent = useCallback(async (importFn: () => Promise<any>) => {
-    const startTime = performance.now();
+// Hook for adaptive loading based on device capabilities
+export const useAdaptiveLoading = () => {
+  const strategy = useMemo(() => {
+    return performanceOptimizer.getAdaptiveLoadingStrategy();
+  }, []);
 
-    try {
-      const module = await importFn();
-      const loadTime = performance.now() - startTime;
+  const shouldLoadHighQuality = strategy.imageQuality > 70;
+  const shouldEnableAnimations = strategy.enableAnimations;
+  const shouldPreloadAssets = strategy.preloadAssets;
 
-      if (process.env.NODE_ENV === 'development') {
-        console.log(`Component loaded in ${loadTime.toFixed(2)}ms`);
-      }
+  return {
+    imageQuality: strategy.imageQuality,
+    enableAnimations: shouldEnableAnimations,
+    preloadAssets: shouldPreloadAssets,
+    chunkSize: strategy.chunkSize,
+    shouldLoadHighQuality,
+  };
+};
 
-      return module;
-    } catch (error) {
-      errorTracker.captureError(
-        error instanceof Error ? error : new Error('Code splitting failed'),
-        'high' as any,
-        'runtime' as any,
-        {
-          component: 'code-splitting',
-          action: 'dynamic-import',
+// Hook for intelligent asset preloading
+export const useIntelligentPreloading = (
+  userPreferences: {
+    favoriteEnvironments?: string[];
+    recentlyUsedThemes?: string[];
+    preferredMusicGenres?: string[];
+  } = {}
+) => {
+  const { preloadAssets } = useAdaptiveLoading();
+
+  useEffect(() => {
+    if (preloadAssets && Object.keys(userPreferences).length > 0) {
+      // Delay preloading to avoid blocking initial render
+      const timer = setTimeout(() => {
+        assetOptimizer.intelligentPreload({
+          favoriteEnvironments: userPreferences.favoriteEnvironments || [],
+          recentlyUsedThemes: userPreferences.recentlyUsedThemes || [],
+          preferredMusicGenres: userPreferences.preferredMusicGenres || [],
+        });
+      }, 2000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [preloadAssets, userPreferences]);
+};
+
+// Hook for memory usage monitoring
+export const useMemoryMonitoring = (threshold: number = 100) => {
+  const memoryUsage = useRef<number>(0);
+
+  useEffect(() => {
+    const checkMemory = () => {
+      const usage = performanceOptimizer.getMemoryUsage();
+      if (usage) {
+        memoryUsage.current = usage.used;
+
+        if (usage.used > threshold) {
+          console.warn(`High memory usage detected: ${usage.used}MB`);
+
+          // Suggest cleanup actions
+          const recommendations =
+            performanceOptimizer.getOptimizationRecommendations();
+          if (recommendations.length > 0) {
+            console.info('Optimization recommendations:', recommendations);
+          }
         }
-      );
-      throw error;
+      }
+    };
+
+    // Check memory usage every 30 seconds
+    const interval = setInterval(checkMemory, 30000);
+    checkMemory(); // Initial check
+
+    return () => clearInterval(interval);
+  }, [threshold]);
+
+  const clearCaches = useCallback(() => {
+    assetOptimizer.clearCache();
+    performanceOptimizer.clearMetrics();
+  }, []);
+
+  return {
+    currentUsage: memoryUsage.current,
+    clearCaches,
+  };
+};
+
+// Hook for bundle loading optimization
+export const useBundleOptimization = () => {
+  const preloadComponent = useCallback((importFn: () => Promise<any>) => {
+    // Only preload if network conditions are good
+    const strategy = performanceOptimizer.getAdaptiveLoadingStrategy();
+    if (strategy.preloadAssets) {
+      importFn().catch(error => {
+        console.warn('Failed to preload component:', error);
+      });
     }
   }, []);
 
-  return { loadComponent };
-};
-
-// Combined performance optimization hook
-export const usePerformanceOptimization = (componentName: string) => {
-  useRoutePerformance();
-  useMemoryMonitoring();
-
-  const { captureError, captureUserAction } = useErrorTracking(componentName);
-  const { createDebouncedHandler, createThrottledHandler } =
-    useOptimizedHandlers();
-  const { measureApiCall, withApiTracking } = useApiPerformance();
-  const { startRender, endRender } = useComponentProfiler(componentName);
+  const loadComponentWithFallback = useCallback(
+    async <T>(importFn: () => Promise<T>, fallback?: T): Promise<T> => {
+      try {
+        return await performanceOptimizer.measureAsyncOperation(
+          'component-load',
+          importFn
+        );
+      } catch (error) {
+        console.error('Component loading failed:', error);
+        if (fallback) {
+          return fallback;
+        }
+        throw error;
+      }
+    },
+    []
+  );
 
   return {
-    captureError,
-    captureUserAction,
-    createDebouncedHandler,
-    createThrottledHandler,
-    measureApiCall,
-    withApiTracking,
-    startRender,
-    endRender,
+    preloadComponent,
+    loadComponentWithFallback,
+  };
+};
+
+// Hook for performance budget monitoring
+export const usePerformanceBudget = (budget: {
+  maxLCP?: number;
+  maxFID?: number;
+  maxCLS?: number;
+  maxMemoryUsage?: number;
+}) => {
+  const violations = useRef<string[]>([]);
+
+  useEffect(() => {
+    const checkBudget = () => {
+      const result = performanceOptimizer.checkPerformanceBudget({
+        maxLCP: budget.maxLCP || 2500,
+        maxFID: budget.maxFID || 100,
+        maxCLS: budget.maxCLS || 0.1,
+        maxBundleSize: 2000,
+        maxMemoryUsage: budget.maxMemoryUsage || 150,
+      });
+
+      violations.current = result.violations;
+
+      if (!result.passed) {
+        console.warn('Performance budget violations:', result.violations);
+      }
+    };
+
+    // Check budget every minute
+    const interval = setInterval(checkBudget, 60000);
+    checkBudget(); // Initial check
+
+    return () => clearInterval(interval);
+  }, [budget]);
+
+  return {
+    violations: violations.current,
+    hasViolations: violations.current.length > 0,
+  };
+};
+
+// Hook for network-aware loading
+export const useNetworkAwareLoading = () => {
+  const networkInfo = useMemo(() => {
+    return performanceOptimizer.getNetworkInfo();
+  }, []);
+
+  const isSlowNetwork =
+    networkInfo?.effectiveType === 'slow-2g' ||
+    networkInfo?.effectiveType === '2g';
+  const isDataSaverEnabled = networkInfo?.saveData || false;
+
+  const getOptimalImageQuality = useCallback(
+    (baseQuality: number = 80) => {
+      if (isSlowNetwork || isDataSaverEnabled) {
+        return Math.min(baseQuality, 40);
+      }
+      if (networkInfo?.effectiveType === '3g') {
+        return Math.min(baseQuality, 60);
+      }
+      return baseQuality;
+    },
+    [isSlowNetwork, isDataSaverEnabled, networkInfo]
+  );
+
+  const shouldLoadAsset = useCallback(
+    (assetSize: number, priority: 'high' | 'medium' | 'low' = 'medium') => {
+      if (priority === 'high') return true;
+
+      if (isSlowNetwork) {
+        return priority === 'high' && assetSize < 50000; // 50KB limit for slow networks
+      }
+
+      if (isDataSaverEnabled) {
+        return assetSize < 100000; // 100KB limit for data saver
+      }
+
+      return true;
+    },
+    [isSlowNetwork, isDataSaverEnabled]
+  );
+
+  return {
+    networkInfo,
+    isSlowNetwork,
+    isDataSaverEnabled,
+    getOptimalImageQuality,
+    shouldLoadAsset,
+  };
+};
+
+// Hook for component lazy loading with intersection observer
+export const useLazyLoading = (threshold: number = 0.1) => {
+  const elementRef = useRef<HTMLElement>(null);
+  const isVisible = useRef<boolean>(false);
+  const hasLoaded = useRef<boolean>(false);
+
+  useEffect(() => {
+    const element = elementRef.current;
+    if (!element) return;
+
+    const observer = new IntersectionObserver(
+      entries => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting && !hasLoaded.current) {
+            isVisible.current = true;
+            hasLoaded.current = true;
+          }
+        });
+      },
+      { threshold }
+    );
+
+    observer.observe(element);
+
+    return () => {
+      observer.unobserve(element);
+    };
+  }, [threshold]);
+
+  return {
+    elementRef,
+    isVisible: isVisible.current,
+    hasLoaded: hasLoaded.current,
   };
 };

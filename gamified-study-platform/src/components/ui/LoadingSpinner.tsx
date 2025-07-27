@@ -48,3 +48,44 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
     </div>
   );
 };
+
+interface LoadingSkeletonProps {
+  lines?: number;
+  width?: string;
+  className?: string;
+}
+
+export const LoadingSkeleton: React.FC<LoadingSkeletonProps> = ({
+  lines = 1,
+  width = '100%',
+  className = '',
+}) => {
+  return (
+    <div className={`animate-pulse ${className}`}>
+      {Array.from({ length: lines }).map((_, index) => (
+        <div
+          key={index}
+          className={`bg-gray-200 dark:bg-gray-700 rounded h-4 ${
+            index > 0 ? 'mt-2' : ''
+          }`}
+          style={{ width: index === lines - 1 ? width : '100%' }}
+        />
+      ))}
+    </div>
+  );
+};
+
+interface PageLoadingProps {
+  message?: string;
+}
+
+export const PageLoading: React.FC<PageLoadingProps> = ({
+  message = 'Loading...',
+}) => {
+  return (
+    <div className="flex flex-col items-center justify-center min-h-64 space-y-4">
+      <LoadingSpinner size="lg" />
+      <p className="text-gray-600 dark:text-gray-400">{message}</p>
+    </div>
+  );
+};

@@ -12,27 +12,40 @@ interface StudyPetProps {
 }
 
 export function StudyPet({ userId, className = '' }: StudyPetProps) {
-  const { pet, isLoading, error, interactionType } = usePetStore();
+  const {
+    pet,
+    isLoading,
+    error,
+    interactionType,
+    fetchUserPet,
+    fetchPetSpecies,
+  } = usePetStore();
   const [showPetSelection, setShowPetSelection] = useState(false);
   const [showAccessories, setShowAccessories] = useState(false);
   const [showEvolutionModal, setShowEvolutionModal] = useState(false);
   const [previousStage, setPreviousStage] = useState('');
   const [newStage, setNewStage] = useState('');
-  
-  // Check if user has a pet
+
+  // Check if user has a pet and fetch species data
   useEffect(() => {
-    const checkForPet = async () => {
-      await usePetStore.getState().fetchUserPet(userId);
+    const initializePetData = async () => {
+      // Fetch pet species first (needed for pet selection)
+      await fetchPetSpecies();
+
+      // Then fetch user's pet
+      await fetchUserPet(userId);
       const currentPet = usePetStore.getState().pet;
-      
+
       if (!currentPet && !isLoading) {
         setShowPetSelection(true);
       }
     };
-    
-    checkForPet();
-  }, [userId, isLoading]);
-  
+
+    if (userId) {
+      initializePetData();
+    }
+  }, [userId, fetchUserPet, fetchPetSpecies, isLoading]);
+
   // Watch for evolution events
   useEffect(() => {
     if (interactionType === 'evolve' && pet) {
@@ -42,32 +55,36 @@ export function StudyPet({ userId, className = '' }: StudyPetProps) {
       setShowEvolutionModal(true);
     }
   }, [interactionType, pet]);
-  
+
   // Handle pet adoption completion
   const handlePetAdoptionComplete = () => {
     setShowPetSelection(false);
   };
-  
+
   // Handle accessory modal
   const handleOpenAccessories = () => {
     setShowAccessories(true);
   };
-  
+
   const handleCloseAccessories = () => {
     setShowAccessories(false);
   };
-  
+
   // Handle evolution modal
   const handleCloseEvolutionModal = () => {
     setShowEvolutionModal(false);
   };
-  
+
   if (showPetSelection) {
-    return <PetSelection userId={userId} onComplete={handlePetAdoptionComplete} />;
+    return (
+      <PetSelection userId={userId} onComplete={handlePetAdoptionComplete} />
+    );
   }
-  
+
   return (
-    <div className={`bg-white dark:bg-gray-800 rounded-lg shadow p-4 ${className}`}>
+    <div
+      className={`bg-white dark:bg-gray-800 rounded-lg shadow p-4 ${className}`}
+    >
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-lg font-medium">Study Pet</h2>
         <button
@@ -77,16 +94,21 @@ export function StudyPet({ userId, className = '' }: StudyPetProps) {
           Accessories
         </button>
       </div>
-      
-      <PetDisplay userId={userId} size="lg" showStats={true} showActions={true} />
-      
+
+      <PetDisplay
+        userId={userId}
+        size="lg"
+        showStats={true}
+        showActions={true}
+      />
+
       {/* Pet accessories modal */}
       {showAccessories && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <PetAccessories userId={userId} onClose={handleCloseAccessories} />
         </div>
       )}
-      
+
       {/* Pet evolution modal */}
       <PetEvolutionModal
         pet={pet!}

@@ -6,3 +6,4 @@ export * from './PetInteraction';
 export * from './PetAccessories';
 export * from './PetEvolutionModal';
 export * from './PetDemo';
+export * from './PetDashboardWidget';

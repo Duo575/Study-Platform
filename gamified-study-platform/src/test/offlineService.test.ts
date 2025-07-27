@@ -1,6 +1,5 @@
 // Tests for offline service functionality
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { offlineService } from '@/services/offlineService';
 
 // Mock IndexedDB
 const mockIDBDatabase = {
@@ -34,60 +33,74 @@ const mockIDBRequest = {
   onerror: null,
 };
 
-// Mock global IndexedDB
-Object.defineProperty(global, 'indexedDB', {
-  value: {
-    open: vi.fn(() => {
-      const request = { ...mockIDBRequest };
-      setTimeout(() => {
-        request.result = mockIDBDatabase;
-        if (request.onsuccess) request.onsuccess();
-      }, 0);
-      return request;
-    }),
-  },
-  writable: true,
+// Mock global IndexedDB before any imports
+vi.stubGlobal('indexedDB', {
+  open: vi.fn(() => {
+    const request = { ...mockIDBRequest };
+    setTimeout(() => {
+      request.result = mockIDBDatabase;
+      if (request.onsuccess) request.onsuccess();
+    }, 0);
+    return request;
+  }),
 });
 
 // Mock navigator.onLine
-Object.defineProperty(global.navigator, 'onLine', {
-  value: true,
-  writable: true,
+vi.stubGlobal('navigator', {
+  onLine: true,
 });
 
 // Mock window events
 const mockEventListeners: { [key: string]: Function[] } = {};
-Object.defineProperty(global.window, 'addEventListener', {
-  value: (event: string, callback: Function) => {
+vi.stubGlobal('window', {
+  addEventListener: (event: string, callback: Function) => {
     if (!mockEventListeners[event]) {
       mockEventListeners[event] = [];
     }
     mockEventListeners[event].push(callback);
   },
-});
-
-Object.defineProperty(global.window, 'dispatchEvent', {
-  value: (event: CustomEvent) => {
+  dispatchEvent: (event: CustomEvent) => {
     const listeners = mockEventListeners[event.type] || [];
     listeners.forEach(listener => listener(event));
   },
 });
 
+// Import the service after mocking globals
+import { offlineService } from '@/services/offlineService';
+
 describe('OfflineService', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    
+
     // Setup mock implementations
     mockIDBDatabase.transaction.mockReturnValue(mockIDBTransaction);
     mockIDBTransaction.objectStore.mockReturnValue(mockIDBObjectStore);
-    
+
     // Mock successful operations
-    mockIDBObjectStore.add.mockReturnValue({ ...mockIDBRequest, onsuccess: null });
-    mockIDBObjectStore.put.mockReturnValue({ ...mockIDBRequest, onsuccess: null });
-    mockIDBObjectStore.get.mockReturnValue({ ...mockIDBRequest, onsuccess: null });
-    mockIDBObjectStore.getAll.mockReturnValue({ ...mockIDBRequest, onsuccess: null });
-    mockIDBObjectStore.delete.mockReturnValue({ ...mockIDBRequest, onsuccess: null });
-    mockIDBObjectStore.clear.mockReturnValue({ ...mockIDBRequest, onsuccess: null });
+    mockIDBObjectStore.add.mockReturnValue({
+      ...mockIDBRequest,
+      onsuccess: null,
+    });
+    mockIDBObjectStore.put.mockReturnValue({
+      ...mockIDBRequest,
+      onsuccess: null,
+    });
+    mockIDBObjectStore.get.mockReturnValue({
+      ...mockIDBRequest,
+      onsuccess: null,
+    });
+    mockIDBObjectStore.getAll.mockReturnValue({
+      ...mockIDBRequest,
+      onsuccess: null,
+    });
+    mockIDBObjectStore.delete.mockReturnValue({
+      ...mockIDBRequest,
+      onsuccess: null,
+    });
+    mockIDBObjectStore.clear.mockReturnValue({
+      ...mockIDBRequest,
+      onsuccess: null,
+    });
   });
 
   afterEach(() => {
@@ -108,15 +121,14 @@ describe('OfflineService', () => {
 
   describe('Offline Actions Queue', () => {
     it('should queue offline action', async () => {
-      const mockAdd = vi.fn().mockImplementation(() => {
-        const request = { ...mockIDBRequest };
-        setTimeout(() => {
-          if (request.onsuccess) request.onsuccess();
-        }, 0);
-        return request;
-      });
-      
-      mockIDBObjectStore.add.mockReturnValue(mockAdd());
+      const mockRequest = { ...mockIDBRequest };
+      const mockAdd = vi.fn().mockReturnValue(mockRequest);
+      mockIDBObjectStore.add.mockImplementation(mockAdd);
+
+      // Simulate successful operation
+      setTimeout(() => {
+        if (mockRequest.onsuccess) mockRequest.onsuccess();
+      }, 0);
 
       await expect(
         offlineService.queueOfflineAction('test', { data: 'test' }, '/api/test')
@@ -127,7 +139,14 @@ describe('OfflineService', () => {
 
     it('should get offline actions', async () => {
       const mockActions = [
-        { id: '1', type: 'test', data: {}, endpoint: '/api/test', timestamp: Date.now(), retryCount: 0 }
+        {
+          id: '1',
+          type: 'test',
+          data: {},
+          endpoint: '/api/test',
+          timestamp: Date.now(),
+          retryCount: 0,
+        },
       ];
 
       const mockGetAll = vi.fn().mockImplementation(() => {
@@ -184,7 +203,11 @@ describe('OfflineService', () => {
     });
 
     it('should get cached data', async () => {
-      const mockData = { key: 'test-key', data: { test: 'data' }, timestamp: Date.now() };
+      const mockData = {
+        key: 'test-key',
+        data: { test: 'data' },
+        timestamp: Date.now(),
+      };
 
       const mockGet = vi.fn().mockImplementation(() => {
         const request = { ...mockIDBRequest };
@@ -241,7 +264,13 @@ describe('OfflineService', () => {
 
     it('should get offline study sessions', async () => {
       const mockSessions = [
-        { id: '1', subject: 'Math', duration: 1800, synced: false, timestamp: Date.now() }
+        {
+          id: '1',
+          subject: 'Math',
+          duration: 1800,
+          synced: false,
+          timestamp: Date.now(),
+        },
       ];
 
       const mockGetAll = vi.fn().mockImplementation(() => {
@@ -283,7 +312,13 @@ describe('OfflineService', () => {
 
     it('should get offline notes', async () => {
       const mockNotes = [
-        { id: '1', title: 'Test Note', content: 'Test content', synced: false, timestamp: Date.now() }
+        {
+          id: '1',
+          title: 'Test Note',
+          content: 'Test content',
+          synced: false,
+          timestamp: Date.now(),
+        },
       ];
 
       const mockGetAll = vi.fn().mockImplementation(() => {
@@ -330,7 +365,7 @@ describe('OfflineService', () => {
         xp: 1250,
         achievements: ['first_session'],
         synced: false,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       };
 
       const mockGet = vi.fn().mockImplementation(() => {
@@ -351,19 +386,16 @@ describe('OfflineService', () => {
 
   describe('Data Clearing', () => {
     it('should clear all offline data', async () => {
-      const mockClear = vi.fn().mockImplementation(() => {
-        const request = { ...mockIDBRequest };
-        setTimeout(() => {
-          if (request.onsuccess) request.onsuccess();
-        }, 0);
-        return request;
-      });
+      const mockRequest = { ...mockIDBRequest };
+      const mockClear = vi.fn().mockReturnValue(mockRequest);
+      mockIDBObjectStore.clear.mockImplementation(mockClear);
 
-      mockIDBObjectStore.clear.mockReturnValue(mockClear());
+      // Simulate successful operation
+      setTimeout(() => {
+        if (mockRequest.onsuccess) mockRequest.onsuccess();
+      }, 0);
 
-      await expect(
-        offlineService.clearOfflineData()
-      ).resolves.toBeUndefined();
+      await expect(offlineService.clearOfflineData()).resolves.toBeUndefined();
 
       // Should clear all stores
       expect(mockIDBObjectStore.clear).toHaveBeenCalledTimes(5);
@@ -373,24 +405,23 @@ describe('OfflineService', () => {
   describe('Sync Status', () => {
     it('should get sync status', async () => {
       // Mock empty arrays for all data types
-      const mockGetAll = vi.fn().mockImplementation(() => {
-        const request = { ...mockIDBRequest };
-        setTimeout(() => {
-          request.result = [];
-          if (request.onsuccess) request.onsuccess();
-        }, 0);
-        return request;
-      });
+      const mockRequest = { ...mockIDBRequest };
+      const mockGetAll = vi.fn().mockReturnValue(mockRequest);
+      mockIDBObjectStore.getAll.mockImplementation(mockGetAll);
 
-      mockIDBObjectStore.getAll.mockReturnValue(mockGetAll());
+      // Simulate successful operation
+      setTimeout(() => {
+        mockRequest.result = [];
+        if (mockRequest.onsuccess) mockRequest.onsuccess();
+      }, 0);
 
       const status = await offlineService.getSyncStatus();
-      
+
       expect(status).toEqual({
         pendingActions: 0,
         unsyncedSessions: 0,
         unsyncedNotes: 0,
-        lastSync: expect.any(Number)
+        lastSync: expect.any(Number),
       });
     });
   });
@@ -406,38 +437,37 @@ describe('OfflineService', () => {
 
     it('should not sync when offline', async () => {
       (global.navigator as any).onLine = false;
-      
+
       const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
-      
+
       await offlineService.syncOfflineData();
-      
+
       expect(consoleSpy).toHaveBeenCalledWith('Cannot sync - still offline');
-      
+
       consoleSpy.mockRestore();
     });
 
     it('should sync offline data when online', async () => {
       (global.navigator as any).onLine = true;
-      
-      // Mock empty arrays for all data types
-      const mockGetAll = vi.fn().mockImplementation(() => {
-        const request = { ...mockIDBRequest };
-        setTimeout(() => {
-          request.result = [];
-          if (request.onsuccess) request.onsuccess();
-        }, 0);
-        return request;
-      });
 
-      mockIDBObjectStore.getAll.mockReturnValue(mockGetAll());
+      // Mock empty arrays for all data types
+      const mockRequest = { ...mockIDBRequest };
+      const mockGetAll = vi.fn().mockReturnValue(mockRequest);
+      mockIDBObjectStore.getAll.mockImplementation(mockGetAll);
+
+      // Simulate successful operation
+      setTimeout(() => {
+        mockRequest.result = [];
+        if (mockRequest.onsuccess) mockRequest.onsuccess();
+      }, 0);
 
       const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
-      
+
       await expect(offlineService.syncOfflineData()).resolves.toBeUndefined();
-      
+
       expect(consoleSpy).toHaveBeenCalledWith('Starting offline data sync...');
       expect(consoleSpy).toHaveBeenCalledWith('Offline data sync completed');
-      
+
       consoleSpy.mockRestore();
     });
   });

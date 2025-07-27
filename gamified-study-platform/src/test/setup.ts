@@ -1,5 +1,6 @@
 // Test setup file for Vitest
 import { vi } from 'vitest';
+import '@testing-library/jest-dom';
 
 // Mock environment variables
 process.env.VITE_SUPABASE_URL = 'https://test.supabase.co';

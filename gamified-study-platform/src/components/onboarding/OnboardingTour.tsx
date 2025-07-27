@@ -1,408 +1,586 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  ArrowRight,
-  ArrowLeft,
-  X,
-  Lightbulb,
-  Target,
-  Trophy,
-  BookOpen,
-  Timer,
-  Users,
-  Sparkles,
-} from 'lucide-react';
+  XMarkIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  SparklesIcon,
+  HeartIcon,
+  PlayIcon,
+  GiftIcon,
+} from '@heroicons/react/24/outline';
+import { TypewriterAnimation } from '../ui/AnimationComponents';
 
-export interface TourStep {
+interface TourStep {
   id: string;
   title: string;
   content: string;
-  target: string; // CSS selector
+  target: string; // CSS selector for the element to highlight
   position: 'top' | 'bottom' | 'left' | 'right' | 'center';
+  action?: 'click' | 'hover' | 'none';
   icon?: React.ReactNode;
-  action?: {
-    label: string;
-    onClick: () => void;
-  };
+  animation?: 'bounce' | 'pulse' | 'shake' | 'none';
 }
 
 interface OnboardingTourProps {
-  steps: TourStep[];
-  isOpen: boolean;
-  onClose: () => void;
+  isActive: boolean;
+  tourType:
+    | 'pet-adoption'
+    | 'environment-selection'
+    | 'mini-games'
+    | 'store-usage'
+    | 'complete-tour';
   onComplete: () => void;
-  autoStart?: boolean;
+  onSkip: () => void;
+  className?: string;
 }
 
+const TOUR_STEPS: Record<string, TourStep[]> = {
+  'pet-adoption': [
+    {
+      id: 'welcome-pet',
+      title: 'Welcome to Pet Adoption! 🐾',
+      content:
+        "Let's adopt your first virtual study companion! Your pet will grow and evolve based on your study habits.",
+      target: '.pet-adoption-area',
+      position: 'center',
+      icon: <HeartIcon className="w-6 h-6" />,
+      animation: 'bounce',
+    },
+    {
+      id: 'choose-species',
+      title: 'Choose Your Pet Species',
+      content:
+        'Select from different pet species. Each has unique characteristics and evolution paths!',
+      target: '.pet-species-selector',
+      position: 'bottom',
+      action: 'click',
+      icon: <SparklesIcon className="w-6 h-6" />,
+    },
+    {
+      id: 'name-pet',
+      title: 'Name Your Pet',
+      content:
+        'Give your pet a special name. This will be your study buddy throughout your learning journey!',
+      target: '.pet-name-input',
+      position: 'top',
+      action: 'click',
+    },
+    {
+      id: 'pet-care-basics',
+      title: 'Pet Care Basics',
+      content:
+        'Your pet needs regular care! Feed, play, and study with your pet to keep it happy and healthy.',
+      target: '.pet-care-buttons',
+      position: 'left',
+      icon: <GiftIcon className="w-6 h-6" />,
+      animation: 'pulse',
+    },
+    {
+      id: 'study-connection',
+      title: 'Study Connection',
+      content:
+        'The more you study, the happier your pet becomes! Consistent study sessions help your pet evolve.',
+      target: '.study-progress-area',
+      position: 'right',
+      animation: 'bounce',
+    },
+  ],
+  'environment-selection': [
+    {
+      id: 'environment-intro',
+      title: 'Focus Environments 🌟',
+      content:
+        'Create the perfect study atmosphere with immersive environments and ambient sounds.',
+      target: '.environment-selector',
+      position: 'center',
+      icon: <SparklesIcon className="w-6 h-6" />,
+    },
+    {
+      id: 'choose-environment',
+      title: 'Choose Your Environment',
+      content:
+        'Select from various environments like forest, beach, cafe, or office. Each has unique visuals and sounds.',
+      target: '.environment-options',
+      position: 'bottom',
+      action: 'click',
+    },
+    {
+      id: 'ambient-sounds',
+      title: 'Ambient Sounds',
+      content:
+        'Each environment comes with relaxing ambient sounds to help you focus better.',
+      target: '.ambient-sound-controls',
+      position: 'top',
+      icon: <PlayIcon className="w-6 h-6" />,
+    },
+    {
+      id: 'music-player',
+      title: 'Study Music',
+      content:
+        'Add lo-fi study music to your environment for the perfect focus soundtrack.',
+      target: '.music-player',
+      position: 'left',
+      action: 'hover',
+    },
+    {
+      id: 'unlock-environments',
+      title: 'Unlock New Environments',
+      content: 'Study consistently to unlock premium environments and themes!',
+      target: '.locked-environments',
+      position: 'right',
+      animation: 'shake',
+    },
+  ],
+  'mini-games': [
+    {
+      id: 'mini-games-intro',
+      title: 'Relaxation Mini-Games 🎮',
+      content:
+        'Take healthy study breaks with calming mini-games designed to refresh your mind.',
+      target: '.mini-games-section',
+      position: 'center',
+      icon: <PlayIcon className="w-6 h-6" />,
+    },
+    {
+      id: 'game-selection',
+      title: 'Choose Your Game',
+      content:
+        'Select from breathing exercises, memory games, or simple puzzles to relax during breaks.',
+      target: '.game-selection',
+      position: 'bottom',
+      action: 'click',
+    },
+    {
+      id: 'earn-coins',
+      title: 'Earn Coins',
+      content:
+        'Complete mini-games to earn coins that you can spend on pet food and accessories!',
+      target: '.coin-reward-display',
+      position: 'top',
+      animation: 'bounce',
+    },
+    {
+      id: 'break-timer',
+      title: 'Break Timer',
+      content:
+        'Games are time-limited to ensure you return to studying refreshed, not distracted.',
+      target: '.break-timer',
+      position: 'left',
+    },
+  ],
+  'store-usage': [
+    {
+      id: 'store-intro',
+      title: 'Pet Store 🛍️',
+      content:
+        'Spend your earned coins on food, accessories, and themes for your pet and study environment.',
+      target: '.store-interface',
+      position: 'center',
+      icon: <GiftIcon className="w-6 h-6" />,
+    },
+    {
+      id: 'browse-items',
+      title: 'Browse Items',
+      content:
+        'Explore different categories: pet food, accessories, themes, and environment unlocks.',
+      target: '.store-categories',
+      position: 'bottom',
+      action: 'click',
+    },
+    {
+      id: 'item-effects',
+      title: 'Item Effects',
+      content:
+        "Each item shows its effects on your pet's health, happiness, and evolution progress.",
+      target: '.item-effects-display',
+      position: 'top',
+    },
+    {
+      id: 'purchase-items',
+      title: 'Make Purchases',
+      content:
+        'Click on items to purchase them with your earned coins. Your pet will love the treats!',
+      target: '.purchase-button',
+      position: 'right',
+      action: 'click',
+      animation: 'pulse',
+    },
+  ],
+  'complete-tour': [
+    {
+      id: 'complete-intro',
+      title: 'Complete Study Experience 🚀',
+      content:
+        "Let's take a full tour of all the features that make studying fun and engaging!",
+      target: '.main-dashboard',
+      position: 'center',
+      icon: <SparklesIcon className="w-6 h-6" />,
+    },
+    {
+      id: 'pet-overview',
+      title: 'Your Study Companion',
+      content:
+        'Your virtual pet grows with your study progress. Keep it happy and watch it evolve!',
+      target: '.pet-display',
+      position: 'bottom',
+      animation: 'bounce',
+    },
+    {
+      id: 'environment-overview',
+      title: 'Focus Environments',
+      content:
+        'Choose from beautiful environments with ambient sounds to create your perfect study space.',
+      target: '.environment-selector',
+      position: 'top',
+    },
+    {
+      id: 'progress-tracking',
+      title: 'Progress Tracking',
+      content:
+        'Monitor your study streaks, completed sessions, and earned achievements.',
+      target: '.progress-dashboard',
+      position: 'left',
+    },
+    {
+      id: 'rewards-system',
+      title: 'Rewards & Achievements',
+      content:
+        'Earn coins, unlock new content, and celebrate your study milestones!',
+      target: '.rewards-section',
+      position: 'right',
+      animation: 'pulse',
+    },
+  ],
+};
+
 export const OnboardingTour: React.FC<OnboardingTourProps> = ({
-  steps,
-  isOpen,
-  onClose,
+  isActive,
+  tourType,
   onComplete,
-  autoStart = false,
+  onSkip,
+  className = '',
 }) => {
-  const [currentStep, setCurrentStep] = useState(0);
-  const [targetElement, setTargetElement] = useState<HTMLElement | null>(null);
-  const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
+  const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const [isVisible, setIsVisible] = useState(false);
+  const [highlightedElement, setHighlightedElement] =
+    useState<HTMLElement | null>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
+  const tooltipRef = useRef<HTMLDivElement>(null);
 
+  const steps = TOUR_STEPS[tourType] || [];
+  const currentStep = steps[currentStepIndex];
+  const isLastStep = currentStepIndex === steps.length - 1;
+  const isFirstStep = currentStepIndex === 0;
+
+  // Show/hide tour
   useEffect(() => {
-    if (isOpen && steps.length > 0) {
-      updateTargetElement();
+    setIsVisible(isActive);
+    if (isActive) {
+      setCurrentStepIndex(0);
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+      setHighlightedElement(null);
     }
-  }, [isOpen, currentStep, steps]);
 
-  useEffect(() => {
-    const handleResize = () => {
-      if (isOpen) {
-        updateTargetElement();
-      }
+    return () => {
+      document.body.style.overflow = '';
     };
+  }, [isActive]);
 
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, [isOpen]);
+  // Highlight target element
+  useEffect(() => {
+    if (!isVisible || !currentStep) return;
 
-  const updateTargetElement = () => {
-    const step = steps[currentStep];
-    if (!step) return;
+    const targetElement = document.querySelector(
+      currentStep.target
+    ) as HTMLElement;
+    if (targetElement) {
+      setHighlightedElement(targetElement);
 
-    const element = document.querySelector(step.target) as HTMLElement;
-    if (element) {
-      setTargetElement(element);
+      // Add highlight animation class
+      if (currentStep.animation && currentStep.animation !== 'none') {
+        targetElement.classList.add(`attention-${currentStep.animation}`);
+      }
 
       // Scroll element into view
-      element.scrollIntoView({
+      targetElement.scrollIntoView({
         behavior: 'smooth',
         block: 'center',
         inline: 'center',
       });
 
-      // Calculate tooltip position
-      setTimeout(() => {
-        const rect = element.getBoundingClientRect();
-        const position = calculateTooltipPosition(rect, step.position);
-        setTooltipPosition(position);
-      }, 100);
+      return () => {
+        if (currentStep.animation && currentStep.animation !== 'none') {
+          targetElement.classList.remove(`attention-${currentStep.animation}`);
+        }
+      };
     }
-  };
+  }, [currentStep, isVisible]);
 
-  const calculateTooltipPosition = (
-    targetRect: DOMRect,
-    position: TourStep['position']
-  ) => {
-    const tooltipWidth = 320;
-    const tooltipHeight = 200;
-    const offset = 20;
+  // Position tooltip
+  useEffect(() => {
+    if (!highlightedElement || !tooltipRef.current) return;
 
-    switch (position) {
+    const tooltip = tooltipRef.current;
+    const targetRect = highlightedElement.getBoundingClientRect();
+    const tooltipRect = tooltip.getBoundingClientRect();
+
+    let top = 0;
+    let left = 0;
+
+    switch (currentStep.position) {
       case 'top':
-        return {
-          x: targetRect.left + targetRect.width / 2 - tooltipWidth / 2,
-          y: targetRect.top - tooltipHeight - offset,
-        };
+        top = targetRect.top - tooltipRect.height - 20;
+        left = targetRect.left + (targetRect.width - tooltipRect.width) / 2;
+        break;
       case 'bottom':
-        return {
-          x: targetRect.left + targetRect.width / 2 - tooltipWidth / 2,
-          y: targetRect.bottom + offset,
-        };
+        top = targetRect.bottom + 20;
+        left = targetRect.left + (targetRect.width - tooltipRect.width) / 2;
+        break;
       case 'left':
-        return {
-          x: targetRect.left - tooltipWidth - offset,
-          y: targetRect.top + targetRect.height / 2 - tooltipHeight / 2,
-        };
+        top = targetRect.top + (targetRect.height - tooltipRect.height) / 2;
+        left = targetRect.left - tooltipRect.width - 20;
+        break;
       case 'right':
-        return {
-          x: targetRect.right + offset,
-          y: targetRect.top + targetRect.height / 2 - tooltipHeight / 2,
-        };
+        top = targetRect.top + (targetRect.height - tooltipRect.height) / 2;
+        left = targetRect.right + 20;
+        break;
       case 'center':
-      default:
-        return {
-          x: window.innerWidth / 2 - tooltipWidth / 2,
-          y: window.innerHeight / 2 - tooltipHeight / 2,
-        };
+        top = (window.innerHeight - tooltipRect.height) / 2;
+        left = (window.innerWidth - tooltipRect.width) / 2;
+        break;
     }
-  };
 
-  const nextStep = () => {
-    if (currentStep < steps.length - 1) {
-      setCurrentStep(currentStep + 1);
-    } else {
+    // Ensure tooltip stays within viewport
+    top = Math.max(
+      20,
+      Math.min(top, window.innerHeight - tooltipRect.height - 20)
+    );
+    left = Math.max(
+      20,
+      Math.min(left, window.innerWidth - tooltipRect.width - 20)
+    );
+
+    tooltip.style.top = `${top}px`;
+    tooltip.style.left = `${left}px`;
+  }, [highlightedElement, currentStep]);
+
+  const handleNext = () => {
+    if (isLastStep) {
       handleComplete();
+    } else {
+      setCurrentStepIndex(prev => prev + 1);
     }
   };
 
-  const prevStep = () => {
-    if (currentStep > 0) {
-      setCurrentStep(currentStep - 1);
+  const handlePrevious = () => {
+    if (!isFirstStep) {
+      setCurrentStepIndex(prev => prev - 1);
     }
   };
 
   const handleComplete = () => {
+    setIsVisible(false);
     onComplete();
-    onClose();
   };
 
   const handleSkip = () => {
-    onClose();
+    setIsVisible(false);
+    onSkip();
   };
 
-  if (!isOpen || steps.length === 0) return null;
+  const handleOverlayClick = (e: React.MouseEvent) => {
+    // Don't close on overlay click to prevent accidental dismissal
+    e.stopPropagation();
+  };
 
-  const currentStepData = steps[currentStep];
+  if (!isVisible || !currentStep) return null;
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50">
-        {/* Overlay with spotlight effect */}
-        <motion.div
-          ref={overlayRef}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-          style={{
-            background: targetElement
-              ? `radial-gradient(circle at ${
-                  targetElement.getBoundingClientRect().left +
-                  targetElement.getBoundingClientRect().width / 2
-                }px ${
-                  targetElement.getBoundingClientRect().top +
-                  targetElement.getBoundingClientRect().height / 2
-                }px, transparent 0px, transparent ${
-                  Math.max(
-                    targetElement.getBoundingClientRect().width,
-                    targetElement.getBoundingClientRect().height
-                  ) /
-                    2 +
-                  10
-                }px, rgba(0,0,0,0.6) ${
-                  Math.max(
-                    targetElement.getBoundingClientRect().width,
-                    targetElement.getBoundingClientRect().height
-                  ) /
-                    2 +
-                  20
-                }px)`
-              : 'rgba(0,0,0,0.6)',
-          }}
-        />
-
-        {/* Highlighted element border */}
-        {targetElement && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="absolute border-2 border-blue-400 rounded-lg shadow-lg pointer-events-none"
-            style={{
-              left: targetElement.getBoundingClientRect().left - 4,
-              top: targetElement.getBoundingClientRect().top - 4,
-              width: targetElement.getBoundingClientRect().width + 8,
-              height: targetElement.getBoundingClientRect().height + 8,
-            }}
-          />
-        )}
+      <motion.div
+        ref={overlayRef}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className={`fixed inset-0 z-50 ${className}`}
+        onClick={handleOverlayClick}
+      >
+        {/* Dark overlay with spotlight effect */}
+        <div className="absolute inset-0 bg-black bg-opacity-60">
+          {highlightedElement && (
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="absolute border-4 border-blue-400 rounded-lg shadow-lg"
+              style={{
+                top: highlightedElement.getBoundingClientRect().top - 8,
+                left: highlightedElement.getBoundingClientRect().left - 8,
+                width: highlightedElement.getBoundingClientRect().width + 16,
+                height: highlightedElement.getBoundingClientRect().height + 16,
+                boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.6)',
+              }}
+            />
+          )}
+        </div>
 
         {/* Tooltip */}
         <motion.div
-          initial={{ opacity: 0, scale: 0.8, y: 20 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.8, y: 20 }}
-          className="absolute bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 p-6 max-w-sm"
-          style={{
-            left: Math.max(
-              16,
-              Math.min(tooltipPosition.x, window.innerWidth - 336)
-            ),
-            top: Math.max(
-              16,
-              Math.min(tooltipPosition.y, window.innerHeight - 216)
-            ),
-          }}
+          ref={tooltipRef}
+          initial={{ scale: 0.8, opacity: 0, y: 20 }}
+          animate={{ scale: 1, opacity: 1, y: 0 }}
+          exit={{ scale: 0.8, opacity: 0, y: 20 }}
+          className="absolute bg-white rounded-lg shadow-xl p-6 max-w-sm"
+          style={{ zIndex: 51 }}
         >
           {/* Header */}
           <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              {currentStepData.icon && (
-                <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
-                  {currentStepData.icon}
-                </div>
+            <div className="flex items-center space-x-2">
+              {currentStep.icon && (
+                <div className="text-blue-500">{currentStep.icon}</div>
               )}
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                {currentStepData.title}
+              <h3 className="text-lg font-semibold text-gray-900">
+                <TypewriterAnimation text={currentStep.title} speed={30} />
               </h3>
             </div>
             <button
               onClick={handleSkip}
-              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+              className="text-gray-400 hover:text-gray-600 transition-colors"
             >
-              <X className="w-5 h-5" />
+              <XMarkIcon className="w-5 h-5" />
             </button>
           </div>
 
           {/* Content */}
-          <p className="text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">
-            {currentStepData.content}
-          </p>
+          <div className="mb-6">
+            <p className="text-gray-600 leading-relaxed">
+              {currentStep.content}
+            </p>
 
-          {/* Action button */}
-          {currentStepData.action && (
-            <button
-              onClick={currentStepData.action.onClick}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors mb-4"
-            >
-              {currentStepData.action.label}
-            </button>
-          )}
+            {currentStep.action && (
+              <div className="mt-3 p-2 bg-blue-50 rounded-lg">
+                <p className="text-sm text-blue-700">
+                  💡 Try to {currentStep.action} on the highlighted element!
+                </p>
+              </div>
+            )}
+          </div>
 
-          {/* Navigation */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              {steps.map((_, index) => (
-                <div
-                  key={index}
-                  className={`w-2 h-2 rounded-full transition-colors ${
-                    index === currentStep
-                      ? 'bg-blue-600'
-                      : index < currentStep
-                        ? 'bg-green-500'
-                        : 'bg-gray-300 dark:bg-gray-600'
-                  }`}
-                />
-              ))}
+          {/* Progress indicator */}
+          <div className="mb-4">
+            <div className="flex justify-between text-sm text-gray-500 mb-2">
+              <span>
+                Step {currentStepIndex + 1} of {steps.length}
+              </span>
+              <span>
+                {Math.round(((currentStepIndex + 1) / steps.length) * 100)}%
+              </span>
             </div>
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <motion.div
+                className="bg-blue-500 h-2 rounded-full"
+                initial={{ width: 0 }}
+                animate={{
+                  width: `${((currentStepIndex + 1) / steps.length) * 100}%`,
+                }}
+                transition={{ duration: 0.3 }}
+              />
+            </div>
+          </div>
 
-            <div className="flex items-center gap-2">
-              {currentStep > 0 && (
-                <button
-                  onClick={prevStep}
-                  className="flex items-center gap-1 px-3 py-1.5 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors"
-                >
-                  <ArrowLeft className="w-4 h-4" />
-                  Back
-                </button>
-              )}
+          {/* Navigation buttons */}
+          <div className="flex justify-between">
+            <button
+              onClick={handlePrevious}
+              disabled={isFirstStep}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
+                isFirstStep
+                  ? 'text-gray-400 cursor-not-allowed'
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}
+            >
+              <ChevronLeftIcon className="w-4 h-4" />
+              <span>Previous</span>
+            </button>
 
+            <div className="flex space-x-2">
               <button
-                onClick={nextStep}
-                className="flex items-center gap-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded-lg text-sm font-medium transition-colors"
+                onClick={handleSkip}
+                className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
               >
-                {currentStep === steps.length - 1 ? 'Finish' : 'Next'}
-                {currentStep < steps.length - 1 && (
-                  <ArrowRight className="w-4 h-4" />
-                )}
+                Skip Tour
+              </button>
+              <button
+                onClick={handleNext}
+                className="flex items-center space-x-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+              >
+                <span>{isLastStep ? 'Complete' : 'Next'}</span>
+                {!isLastStep && <ChevronRightIcon className="w-4 h-4" />}
               </button>
             </div>
           </div>
-
-          {/* Step counter */}
-          <div className="text-center mt-4 text-xs text-gray-500 dark:text-gray-400">
-            Step {currentStep + 1} of {steps.length}
-          </div>
         </motion.div>
-      </div>
+
+        {/* Floating help text */}
+        <motion.div
+          initial={{ opacity: 0, y: 50 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="absolute bottom-6 left-1/2 transform -translate-x-1/2 bg-white bg-opacity-90 backdrop-blur-sm rounded-full px-4 py-2 text-sm text-gray-600"
+        >
+          Press ESC to skip tour • Click highlighted areas to interact
+        </motion.div>
+      </motion.div>
     </AnimatePresence>
   );
 };
 
-// Predefined tour steps for different features
-export const dashboardTourSteps: TourStep[] = [
-  {
-    id: 'welcome',
-    title: 'Welcome to Your Study Adventure!',
-    content:
-      "Let's take a quick tour to help you get started with your gamified learning journey.",
-    target: 'body',
-    position: 'center',
-    icon: <Sparkles className="w-4 h-4 text-blue-600" />,
-  },
-  {
-    id: 'xp-bar',
-    title: 'Your Progress Bar',
-    content:
-      'This shows your current level and XP. Complete study tasks to earn experience points and level up!',
-    target: '[data-tour="xp-bar"]',
-    position: 'bottom',
-    icon: <Trophy className="w-4 h-4 text-yellow-600" />,
-  },
-  {
-    id: 'courses',
-    title: 'Course Management',
-    content:
-      'Add your courses and syllabi here. The system will automatically generate study quests for you.',
-    target: '[data-tour="courses"]',
-    position: 'right',
-    icon: <BookOpen className="w-4 h-4 text-green-600" />,
-  },
-  {
-    id: 'quests',
-    title: 'Study Quests',
-    content:
-      'Complete daily, weekly, and milestone quests to earn XP and keep your study routine on track.',
-    target: '[data-tour="quests"]',
-    position: 'right',
-    icon: <Target className="w-4 h-4 text-purple-600" />,
-  },
-  {
-    id: 'timer',
-    title: 'Pomodoro Timer',
-    content:
-      'Use the built-in timer for focused study sessions. Track your productivity and earn bonus XP!',
-    target: '[data-tour="timer"]',
-    position: 'right',
-    icon: <Timer className="w-4 h-4 text-red-600" />,
-  },
-  {
-    id: 'pet',
-    title: 'Your Study Pet',
-    content:
-      'Meet your virtual study companion! Keep studying to keep your pet happy and help it evolve.',
-    target: '[data-tour="pet"]',
-    position: 'left',
-    icon: <Lightbulb className="w-4 h-4 text-orange-600" />,
-  },
-  {
-    id: 'social',
-    title: 'Study Groups',
-    content:
-      'Connect with other learners, join study groups, and compete on leaderboards for extra motivation.',
-    target: '[data-tour="social"]',
-    position: 'right',
-    icon: <Users className="w-4 h-4 text-blue-600" />,
-  },
-];
-
 // Hook for managing onboarding state
 export const useOnboarding = () => {
-  const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(() => {
-    return localStorage.getItem('onboarding_completed') === 'true';
+  const [completedTours, setCompletedTours] = useState<string[]>(() => {
+    const saved = localStorage.getItem('completed-tours');
+    return saved ? JSON.parse(saved) : [];
   });
 
-  const [currentTour, setCurrentTour] = useState<string | null>(null);
+  const [activeTour, setActiveTour] = useState<string | null>(null);
 
-  const startTour = (tourId: string) => {
-    setCurrentTour(tourId);
+  const startTour = (tourType: string) => {
+    setActiveTour(tourType);
   };
 
-  const completeTour = (tourId: string) => {
-    setCurrentTour(null);
-    if (tourId === 'dashboard') {
-      setHasCompletedOnboarding(true);
-      localStorage.setItem('onboarding_completed', 'true');
-    }
+  const completeTour = (tourType: string) => {
+    const updated = [...completedTours, tourType];
+    setCompletedTours(updated);
+    localStorage.setItem('completed-tours', JSON.stringify(updated));
+    setActiveTour(null);
+  };
+
+  const skipTour = () => {
+    setActiveTour(null);
   };
 
   const resetOnboarding = () => {
-    setHasCompletedOnboarding(false);
-    localStorage.removeItem('onboarding_completed');
+    setCompletedTours([]);
+    localStorage.removeItem('completed-tours');
+  };
+
+  const isTourCompleted = (tourType: string) => {
+    return completedTours.includes(tourType);
+  };
+
+  const shouldShowTour = (tourType: string) => {
+    return !isTourCompleted(tourType);
   };
 
   return {
-    hasCompletedOnboarding,
-    currentTour,
+    activeTour,
+    completedTours,
     startTour,
     completeTour,
+    skipTour,
     resetOnboarding,
+    isTourCompleted,
+    shouldShowTour,
   };
 };

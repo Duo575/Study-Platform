@@ -8,14 +8,17 @@ export default defineConfig({
   plugins: [
     react(),
     // Bundle analyzer for production builds
-    process.env.ANALYZE &&
-      visualizer({
-        filename: 'dist/stats.html',
-        open: true,
-        gzipSize: true,
-        brotliSize: true,
-      }),
-  ].filter(Boolean),
+    ...(process.env.ANALYZE
+      ? [
+          visualizer({
+            filename: 'dist/stats.html',
+            open: true,
+            gzipSize: true,
+            brotliSize: true,
+          }),
+        ]
+      : []),
+  ],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),

@@ -4,7 +4,11 @@ import { BrowserRouter } from 'react-router-dom';
 import { CourseCard } from '../CourseCard';
 import { CourseFilters } from '../CourseFilters';
 import { SyllabusPreview } from '../SyllabusPreview';
-import type { Course, CourseFilters as CourseFiltersType, SyllabusItem } from '../../../../types';
+import type {
+  Course,
+  CourseFilters as CourseFiltersType,
+  SyllabusItem,
+} from '../../../../types';
 
 // Mock framer-motion to avoid animation issues in tests
 vi.mock('framer-motion', () => ({
@@ -27,7 +31,7 @@ const mockCourse: Course = {
       topics: ['var', 'let', 'const', 'strings', 'numbers'],
       estimatedHours: 3,
       priority: 'high',
-      deadline: new Date('2024-02-15'),
+      deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
       completed: false,
     },
     {
@@ -72,7 +76,9 @@ describe('Course Management Integration', () => {
       );
 
       expect(screen.getByText('JavaScript Fundamentals')).toBeInTheDocument();
-      expect(screen.getByText('Learn the basics of JavaScript programming')).toBeInTheDocument();
+      expect(
+        screen.getByText('Learn the basics of JavaScript programming')
+      ).toBeInTheDocument();
       expect(screen.getByText('50%')).toBeInTheDocument();
       expect(screen.getByText('1/2')).toBeInTheDocument();
       expect(screen.getByText('15')).toBeInTheDocument();
@@ -113,7 +119,10 @@ describe('Course Management Integration', () => {
       const mockOnFilterChange = vi.fn();
 
       render(
-        <CourseFilters filters={mockFilters} onFilterChange={mockOnFilterChange} />
+        <CourseFilters
+          filters={mockFilters}
+          onFilterChange={mockOnFilterChange}
+        />
       );
 
       expect(screen.getByLabelText('Search')).toBeInTheDocument();
@@ -126,7 +135,10 @@ describe('Course Management Integration', () => {
       const mockOnFilterChange = vi.fn();
 
       render(
-        <CourseFilters filters={mockFilters} onFilterChange={mockOnFilterChange} />
+        <CourseFilters
+          filters={mockFilters}
+          onFilterChange={mockOnFilterChange}
+        />
       );
 
       const searchInput = screen.getByLabelText('Search');
@@ -142,7 +154,10 @@ describe('Course Management Integration', () => {
       const mockOnFilterChange = vi.fn();
 
       render(
-        <CourseFilters filters={mockFilters} onFilterChange={mockOnFilterChange} />
+        <CourseFilters
+          filters={mockFilters}
+          onFilterChange={mockOnFilterChange}
+        />
       );
 
       const statusSelect = screen.getByLabelText('Status');
@@ -206,7 +221,9 @@ describe('Course Management Integration', () => {
         />
       );
 
-      expect(screen.getByText('Total: 2 topics, 7 estimated hours')).toBeInTheDocument();
+      expect(
+        screen.getByText('Total: 2 topics, 7 estimated hours')
+      ).toBeInTheDocument();
     });
 
     it('should call edit callback when edit button is clicked', () => {

@@ -103,7 +103,9 @@ class PerformanceTester {
         'performance' as any,
         {
           component: 'performance-tester',
-          testName: config.name,
+          metadata: {
+            testName: config.name,
+          },
         }
       );
 
@@ -472,7 +474,9 @@ export class PerformanceTestScheduler {
             'performance' as any,
             {
               component: 'performance-scheduler',
-              failedTests: failedTests.map(t => t.name),
+              metadata: {
+                failedTests: failedTests.map(t => t.name),
+              },
             }
           );
         }

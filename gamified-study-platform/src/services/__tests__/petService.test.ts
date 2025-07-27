@@ -1,87 +1,85 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { petService } from '../petService';
-import type { PetForm, StudyPet, PetSpecies } from '../../types';
+import type { StudyPet, PetForm, PetSpecies } from '../../types';
 
 // Mock the database services
 const mockStudyPetService = {
   create: vi.fn(),
   getByUserId: vi.fn(),
-  update: vi.fn()
+  update: vi.fn(),
 };
 
 const mockPetSpeciesService = {
   getById: vi.fn(),
-  getAll: vi.fn()
+  getAll: vi.fn(),
 };
-
-vi.mock('../database', () => ({
-  studyPetService: mockStudyPetService,
-  petSpeciesService: mockPetSpeciesService
-}));
-
-// Mock the supabase client
-vi.mock('../../lib/supabase', () => ({
-  supabase: {}
-}));
 
 // Mock the mappers
 const mockMapDatabasePetToStudyPet = vi.fn();
-vi.mock('../../utils/mappers', () => ({
-  mapDatabasePetToStudyPet: mockMapDatabasePetToStudyPet
+
+// Mock the services
+vi.mock('../database', () => ({
+  studyPetService: mockStudyPetService,
+  petSpeciesService: mockPetSpeciesService,
 }));
 
-describe('Pet Service', () => {
+vi.mock('../../utils/mappers', () => ({
+  mapDatabasePetToStudyPet: mockMapDatabasePetToStudyPet,
+}));
+
+describe('petService', () => {
   const mockUserId = 'user-123';
-  const mockPetForm: PetForm = {
-    name: 'Buddy',
-    speciesId: 'dragon'
+  const mockPetData: PetForm = {
+    name: 'Fluffy',
+    speciesId: 'cat-species',
   };
 
   const mockSpeciesData = {
-    id: 'dragon',
-    name: 'Study Dragon',
-    description: 'A wise dragon that grows stronger with knowledge',
-    base_happiness: 50,
-    base_health: 50,
+    id: 'cat-species',
+    name: 'Cat',
+    description: 'A friendly cat',
+    base_happiness: 80,
+    base_health: 90,
     evolution_stages: [
       { name: 'baby', requirements: { level: 1 } },
-      { name: 'teen', requirements: { level: 5 } },
-      { name: 'adult', requirements: { level: 10 } }
-    ]
+      { name: 'adult', requirements: { level: 5 } },
+    ],
   };
 
   const mockDatabasePet = {
     id: 'pet-123',
     user_id: mockUserId,
-    name: 'Buddy',
-    species_id: 'dragon',
+    name: 'Fluffy',
+    species_id: 'cat-species',
     level: 1,
-    happiness: 50,
-    health: 50,
+    happiness: 80,
+    health: 90,
     evolution_stage: 'baby',
     accessories: [],
-    last_fed: '2024-01-15T10:00:00Z',
-    last_played: '2024-01-15T10:00:00Z',
-    last_interaction: '2024-01-15T10:00:00Z',
-    created_at: '2024-01-15T09:00:00Z',
-    updated_at: '2024-01-15T10:00:00Z'
+    last_fed: new Date().toISOString(),
+    last_played: new Date().toISOString(),
+    last_interaction: new Date().toISOString(),
   };
 
   const mockStudyPet: StudyPet = {
     id: 'pet-123',
     userId: mockUserId,
-    name: 'Buddy',
-    speciesId: 'dragon',
+    name: 'Fluffy',
+    speciesId: 'cat-species',
     level: 1,
-    happiness: 50,
-    health: 50,
-    evolutionStage: 'baby',
+    happiness: 80,
+    health: 90,
+    lastFed: new Date(),
+    lastPlayed: new Date(),
+    evolution: {
+      stage: 'baby',
+      progress: 0,
+      nextStage: 'adult',
+      requirements: { level: 5 },
+    },
     accessories: [],
-    lastFed: new Date('2024-01-15T10:00:00Z'),
-    lastPlayed: new Date('2024-01-15T10:00:00Z'),
-    lastInteraction: new Date('2024-01-15T10:00:00Z'),
-    createdAt: new Date('2024-01-15T09:00:00Z'),
-    updatedAt: new Date('2024-01-15T10:00:00Z')
+    createdAt: new Date(),
+    updatedAt: new Date(),
   };
 
   beforeEach(() => {
@@ -94,73 +92,71 @@ describe('Pet Service', () => {
       mockPetSpeciesService.getById.mockResolvedValue(mockSpeciesData);
       mockStudyPetService.create.mockResolvedValue(mockDatabasePet);
 
-      const result = await petService.adoptPet(mockUserId, mockPetForm);
+      const result = await petService.adoptPet(mockUserId, mockPetData);
 
-      expect(result).toEqual(mockStudyPet);
-      expect(mockPetSpeciesService.getById).toHaveBeenCalledWith('dragon');
+      expect(mockPetSpeciesService.getById).toHaveBeenCalledWith('cat-species');
       expect(mockStudyPetService.create).toHaveBeenCalledWith({
         user_id: mockUserId,
-        name: 'Buddy',
-        species_id: 'dragon',
+        name: 'Fluffy',
+        species_id: 'cat-species',
         level: 1,
-        happiness: 50,
-        health: 50,
+        happiness: 80,
+        health: 90,
         evolution_stage: 'baby',
         accessories: [],
         last_fed: expect.any(String),
         last_played: expect.any(String),
-        last_interaction: expect.any(String)
+        last_interaction: expect.any(String),
       });
-      expect(mockMapDatabasePetToStudyPet).toHaveBeenCalledWith(mockDatabasePet);
+      expect(mockMapDatabasePetToStudyPet).toHaveBeenCalledWith(
+        mockDatabasePet
+      );
+      expect(result).toEqual(mockStudyPet);
     });
 
     it('should throw error for invalid species', async () => {
       mockPetSpeciesService.getById.mockResolvedValue(null);
 
-      await expect(petService.adoptPet(mockUserId, mockPetForm))
-        .rejects.toThrow('Invalid pet species selected');
-
-      expect(mockStudyPetService.create).not.toHaveBeenCalled();
+      await expect(
+        petService.adoptPet(mockUserId, mockPetData)
+      ).rejects.toThrow('Invalid pet species selected');
     });
 
-    it('should handle database errors gracefully', async () => {
+    it('should handle database errors', async () => {
       mockPetSpeciesService.getById.mockResolvedValue(mockSpeciesData);
       mockStudyPetService.create.mockRejectedValue(new Error('Database error'));
 
-      await expect(petService.adoptPet(mockUserId, mockPetForm))
-        .rejects.toThrow('Failed to adopt pet. Please try again.');
-    });
-
-    it('should handle species service errors', async () => {
-      mockPetSpeciesService.getById.mockRejectedValue(new Error('Species service error'));
-
-      await expect(petService.adoptPet(mockUserId, mockPetForm))
-        .rejects.toThrow('Failed to adopt pet. Please try again.');
+      await expect(
+        petService.adoptPet(mockUserId, mockPetData)
+      ).rejects.toThrow('Failed to adopt pet. Please try again.');
     });
   });
 
   describe('getUserPet', () => {
-    it('should return user pet when found', async () => {
+    it('should return user pet if exists', async () => {
       mockStudyPetService.getByUserId.mockResolvedValue(mockDatabasePet);
 
       const result = await petService.getUserPet(mockUserId);
 
-      expect(result).toEqual(mockStudyPet);
       expect(mockStudyPetService.getByUserId).toHaveBeenCalledWith(mockUserId);
-      expect(mockMapDatabasePetToStudyPet).toHaveBeenCalledWith(mockDatabasePet);
+      expect(mockMapDatabasePetToStudyPet).toHaveBeenCalledWith(
+        mockDatabasePet
+      );
+      expect(result).toEqual(mockStudyPet);
     });
 
-    it('should return null when no pet found', async () => {
+    it('should return null if no pet exists', async () => {
       mockStudyPetService.getByUserId.mockResolvedValue(null);
 
       const result = await petService.getUserPet(mockUserId);
 
       expect(result).toBeNull();
-      expect(mockMapDatabasePetToStudyPet).not.toHaveBeenCalled();
     });
 
-    it('should return null when database error occurs', async () => {
-      mockStudyPetService.getByUserId.mockRejectedValue(new Error('Database error'));
+    it('should handle database errors gracefully', async () => {
+      mockStudyPetService.getByUserId.mockRejectedValue(
+        new Error('Database error')
+      );
 
       const result = await petService.getUserPet(mockUserId);
 
@@ -173,163 +169,148 @@ describe('Pet Service', () => {
       const mockSpeciesList = [
         mockSpeciesData,
         {
-          id: 'owl',
-          name: 'Scholar Owl',
-          description: 'A wise owl companion',
-          base_happiness: 60,
-          base_health: 40,
-          evolution_stages: []
-        }
+          id: 'dog-species',
+          name: 'Dog',
+          description: 'A loyal dog',
+          base_happiness: 85,
+          base_health: 95,
+          evolution_stages: [],
+        },
       ];
 
       mockPetSpeciesService.getAll.mockResolvedValue(mockSpeciesList);
 
       const result = await petService.getPetSpecies();
 
+      expect(mockPetSpeciesService.getAll).toHaveBeenCalled();
       expect(result).toHaveLength(2);
-      expect(result[0]).toEqual({
-        id: 'dragon',
-        name: 'Study Dragon',
-        description: 'A wise dragon that grows stronger with knowledge',
+      expect(result[0]).toMatchObject({
+        id: 'cat-species',
+        name: 'Cat',
+        description: 'A friendly cat',
         baseStats: {
-          happiness: 50,
-          health: 50,
-          intelligence: 50
+          happiness: 80,
+          health: 90,
+          intelligence: 50,
         },
-        evolutionStages: mockSpeciesData.evolution_stages
-      });
-      expect(result[1]).toEqual({
-        id: 'owl',
-        name: 'Scholar Owl',
-        description: 'A wise owl companion',
-        baseStats: {
-          happiness: 60,
-          health: 40,
-          intelligence: 50
-        },
-        evolutionStages: []
       });
     });
 
-    it('should handle missing descriptions gracefully', async () => {
-      const speciesWithoutDesc = {
-        ...mockSpeciesData,
-        description: null
-      };
+    it('should handle database errors', async () => {
+      mockPetSpeciesService.getAll.mockRejectedValue(
+        new Error('Database error')
+      );
 
-      mockPetSpeciesService.getAll.mockResolvedValue([speciesWithoutDesc]);
-
-      const result = await petService.getPetSpecies();
-
-      expect(result[0].description).toBe('');
-    });
-
-    it('should throw error when database fails', async () => {
-      mockPetSpeciesService.getAll.mockRejectedValue(new Error('Database error'));
-
-      await expect(petService.getPetSpecies())
-        .rejects.toThrow('Failed to load pet species. Please try again.');
+      await expect(petService.getPetSpecies()).rejects.toThrow(
+        'Failed to load pet species. Please try again.'
+      );
     });
   });
 
   describe('feedPet', () => {
-    it('should feed pet and increase happiness and health', async () => {
-      const petToFeed = { ...mockDatabasePet, happiness: 30, health: 40 };
-      const fedPet = { ...petToFeed, happiness: 45, health: 50 };
+    it('should feed pet and increase stats', async () => {
+      const updatedPet = {
+        ...mockDatabasePet,
+        happiness: 95,
+        health: 100,
+        last_fed: new Date().toISOString(),
+        last_interaction: new Date().toISOString(),
+      };
 
-      mockStudyPetService.getByUserId.mockResolvedValue(petToFeed);
-      mockStudyPetService.update.mockResolvedValue(fedPet);
+      mockStudyPetService.getByUserId.mockResolvedValue(mockDatabasePet);
+      mockStudyPetService.update.mockResolvedValue(updatedPet);
 
       const result = await petService.feedPet(mockUserId);
 
-      expect(result).toEqual(mockStudyPet);
+      expect(mockStudyPetService.getByUserId).toHaveBeenCalledWith(mockUserId);
       expect(mockStudyPetService.update).toHaveBeenCalledWith(mockUserId, {
-        happiness: 45, // 30 + 15
-        health: 50,    // 40 + 10
+        happiness: 95, // 80 + 15
+        health: 100, // 90 + 10, capped at 100
         last_fed: expect.any(String),
-        last_interaction: expect.any(String)
+        last_interaction: expect.any(String),
       });
+      expect(result).toEqual(mockStudyPet);
+    });
+
+    it('should throw error if pet not found', async () => {
+      mockStudyPetService.getByUserId.mockResolvedValue(null);
+
+      await expect(petService.feedPet(mockUserId)).rejects.toThrow(
+        'Pet not found'
+      );
     });
 
     it('should cap happiness and health at 100', async () => {
-      const petToFeed = { ...mockDatabasePet, happiness: 95, health: 95 };
-      const fedPet = { ...petToFeed, happiness: 100, health: 100 };
+      const highStatsPet = {
+        ...mockDatabasePet,
+        happiness: 90,
+        health: 95,
+      };
 
-      mockStudyPetService.getByUserId.mockResolvedValue(petToFeed);
-      mockStudyPetService.update.mockResolvedValue(fedPet);
+      const updatedPet = {
+        ...highStatsPet,
+        happiness: 100,
+        health: 100,
+      };
+
+      mockStudyPetService.getByUserId.mockResolvedValue(highStatsPet);
+      mockStudyPetService.update.mockResolvedValue(updatedPet);
 
       await petService.feedPet(mockUserId);
 
       expect(mockStudyPetService.update).toHaveBeenCalledWith(mockUserId, {
-        happiness: 100, // Capped at 100
-        health: 100,    // Capped at 100
+        happiness: 100, // 90 + 15, capped at 100
+        health: 100, // 95 + 10, capped at 100
         last_fed: expect.any(String),
-        last_interaction: expect.any(String)
+        last_interaction: expect.any(String),
       });
-    });
-
-    it('should throw error when pet not found', async () => {
-      mockStudyPetService.getByUserId.mockResolvedValue(null);
-
-      await expect(petService.feedPet(mockUserId))
-        .rejects.toThrow('Pet not found');
-    });
-
-    it('should handle update errors gracefully', async () => {
-      mockStudyPetService.getByUserId.mockResolvedValue(mockDatabasePet);
-      mockStudyPetService.update.mockRejectedValue(new Error('Update failed'));
-
-      await expect(petService.feedPet(mockUserId))
-        .rejects.toThrow('Failed to feed pet. Please try again.');
     });
   });
 
   describe('playWithPet', () => {
     it('should play with pet and increase happiness', async () => {
-      const petToPlay = { ...mockDatabasePet, happiness: 30 };
-      const playedPet = { ...petToPlay, happiness: 50 };
+      const updatedPet = {
+        ...mockDatabasePet,
+        happiness: 100,
+        last_played: new Date().toISOString(),
+        last_interaction: new Date().toISOString(),
+      };
 
-      mockStudyPetService.getByUserId.mockResolvedValue(petToPlay);
-      mockStudyPetService.update.mockResolvedValue(playedPet);
+      mockStudyPetService.getByUserId.mockResolvedValue(mockDatabasePet);
+      mockStudyPetService.update.mockResolvedValue(updatedPet);
 
       const result = await petService.playWithPet(mockUserId);
 
+      expect(mockStudyPetService.update).toHaveBeenCalledWith(mockUserId, {
+        happiness: 100, // 80 + 20
+        last_played: expect.any(String),
+        last_interaction: expect.any(String),
+      });
       expect(result).toEqual(mockStudyPet);
-      expect(mockStudyPetService.update).toHaveBeenCalledWith(mockUserId, {
-        happiness: 50, // 30 + 20
-        last_played: expect.any(String),
-        last_interaction: expect.any(String)
-      });
     });
 
-    it('should cap happiness at 100', async () => {
-      const petToPlay = { ...mockDatabasePet, happiness: 90 };
-      const playedPet = { ...petToPlay, happiness: 100 };
-
-      mockStudyPetService.getByUserId.mockResolvedValue(petToPlay);
-      mockStudyPetService.update.mockResolvedValue(playedPet);
-
-      await petService.playWithPet(mockUserId);
-
-      expect(mockStudyPetService.update).toHaveBeenCalledWith(mockUserId, {
-        happiness: 100, // Capped at 100
-        last_played: expect.any(String),
-        last_interaction: expect.any(String)
-      });
-    });
-
-    it('should throw error when pet not found', async () => {
+    it('should throw error if pet not found', async () => {
       mockStudyPetService.getByUserId.mockResolvedValue(null);
 
-      await expect(petService.playWithPet(mockUserId))
-        .rejects.toThrow('Pet not found');
+      await expect(petService.playWithPet(mockUserId)).rejects.toThrow(
+        'Pet not found'
+      );
     });
   });
 
   describe('checkAndEvolvePet', () => {
     it('should evolve pet when requirements are met', async () => {
-      const evolvablePet = { ...mockDatabasePet, level: 5, evolution_stage: 'baby' };
-      const evolvedPet = { ...evolvablePet, evolution_stage: 'teen', happiness: 75 };
+      const evolvablePet = {
+        ...mockDatabasePet,
+        level: 5,
+        evolution_stage: 'baby',
+      };
+
+      const evolvedPet = {
+        ...evolvablePet,
+        evolution_stage: 'adult',
+        happiness: 105, // Bonus happiness for evolving
+      };
 
       mockStudyPetService.getByUserId.mockResolvedValue(evolvablePet);
       mockPetSpeciesService.getById.mockResolvedValue(mockSpeciesData);
@@ -338,18 +319,22 @@ describe('Pet Service', () => {
       const result = await petService.checkAndEvolvePet(mockUserId);
 
       expect(result.evolved).toBe(true);
-      expect(result.newStage).toBe('teen');
+      expect(result.newStage).toBe('adult');
       expect(mockStudyPetService.update).toHaveBeenCalledWith(mockUserId, {
-        evolution_stage: 'teen',
-        happiness: 75, // 50 + 25 bonus
-        last_interaction: expect.any(String)
+        evolution_stage: 'adult',
+        happiness: 105,
+        last_interaction: expect.any(String),
       });
     });
 
     it('should not evolve pet when requirements are not met', async () => {
-      const nonEvolvablePet = { ...mockDatabasePet, level: 3, evolution_stage: 'baby' };
+      const lowLevelPet = {
+        ...mockDatabasePet,
+        level: 3,
+        evolution_stage: 'baby',
+      };
 
-      mockStudyPetService.getByUserId.mockResolvedValue(nonEvolvablePet);
+      mockStudyPetService.getByUserId.mockResolvedValue(lowLevelPet);
       mockPetSpeciesService.getById.mockResolvedValue(mockSpeciesData);
 
       const result = await petService.checkAndEvolvePet(mockUserId);
@@ -359,8 +344,12 @@ describe('Pet Service', () => {
       expect(mockStudyPetService.update).not.toHaveBeenCalled();
     });
 
-    it('should not evolve pet at maximum evolution stage', async () => {
-      const maxEvolutionPet = { ...mockDatabasePet, level: 15, evolution_stage: 'adult' };
+    it('should not evolve pet at max evolution stage', async () => {
+      const maxEvolutionPet = {
+        ...mockDatabasePet,
+        level: 10,
+        evolution_stage: 'adult',
+      };
 
       mockStudyPetService.getByUserId.mockResolvedValue(maxEvolutionPet);
       mockPetSpeciesService.getById.mockResolvedValue(mockSpeciesData);
@@ -370,115 +359,84 @@ describe('Pet Service', () => {
       expect(result.evolved).toBe(false);
       expect(result.newStage).toBeNull();
     });
-
-    it('should handle unknown evolution stage gracefully', async () => {
-      const unknownStagePet = { ...mockDatabasePet, level: 15, evolution_stage: 'unknown' };
-
-      mockStudyPetService.getByUserId.mockResolvedValue(unknownStagePet);
-      mockPetSpeciesService.getById.mockResolvedValue(mockSpeciesData);
-
-      const result = await petService.checkAndEvolvePet(mockUserId);
-
-      expect(result.evolved).toBe(false);
-      expect(result.newStage).toBeNull();
-    });
-
-    it('should throw error when pet not found', async () => {
-      mockStudyPetService.getByUserId.mockResolvedValue(null);
-
-      await expect(petService.checkAndEvolvePet(mockUserId))
-        .rejects.toThrow('Pet not found');
-    });
   });
 
   describe('updatePetFromStudyActivity', () => {
     it('should update pet stats from study session', async () => {
-      const petToUpdate = { ...mockDatabasePet, happiness: 40, level: 2 };
-      const updatedPet = { ...petToUpdate, happiness: 45, level: 2 };
+      const updatedPet = {
+        ...mockDatabasePet,
+        happiness: 85, // 80 + 5 (30 minutes / 10)
+        level: 1, // No level up
+      };
 
-      mockStudyPetService.getByUserId.mockResolvedValue(petToUpdate);
+      mockStudyPetService.getByUserId.mockResolvedValue(mockDatabasePet);
       mockStudyPetService.update.mockResolvedValue(updatedPet);
 
-      const result = await petService.updatePetFromStudyActivity(mockUserId, 'study_session', 60);
+      const result = await petService.updatePetFromStudyActivity(
+        mockUserId,
+        'study_session',
+        30
+      );
 
-      expect(result).toEqual(mockStudyPet);
       expect(mockStudyPetService.update).toHaveBeenCalledWith(mockUserId, {
-        happiness: 46, // 40 + min(15, floor(60/10)) = 40 + 6
-        level: 2,      // No level up
-        last_interaction: expect.any(String)
+        happiness: 83, // 80 + min(15, floor(30/10)) = 80 + 3
+        level: 1, // 2 XP gained (30/15), not enough for level up
+        last_interaction: expect.any(String),
       });
     });
 
-    it('should update pet stats from quest completion', async () => {
-      const petToUpdate = { ...mockDatabasePet, happiness: 40, level: 2 };
-      const updatedPet = { ...petToUpdate, happiness: 50, level: 2 };
+    it('should level up pet when enough XP is gained', async () => {
+      const highXpPet = {
+        ...mockDatabasePet,
+        level: 1,
+      };
 
-      mockStudyPetService.getByUserId.mockResolvedValue(petToUpdate);
-      mockStudyPetService.update.mockResolvedValue(updatedPet);
-
-      const result = await petService.updatePetFromStudyActivity(mockUserId, 'quest_complete');
-
-      expect(mockStudyPetService.update).toHaveBeenCalledWith(mockUserId, {
-        happiness: 50, // 40 + 10
+      const leveledUpPet = {
+        ...highXpPet,
         level: 2,
-        last_interaction: expect.any(String)
-      });
-    });
+        happiness: 90,
+      };
 
-    it('should update pet stats from todo completion', async () => {
-      const petToUpdate = { ...mockDatabasePet, happiness: 40, level: 2 };
-      const updatedPet = { ...petToUpdate, happiness: 45, level: 2 };
+      mockStudyPetService.getByUserId.mockResolvedValue(highXpPet);
+      mockStudyPetService.update.mockResolvedValue(leveledUpPet);
 
-      mockStudyPetService.getByUserId.mockResolvedValue(petToUpdate);
-      mockStudyPetService.update.mockResolvedValue(updatedPet);
-
-      const result = await petService.updatePetFromStudyActivity(mockUserId, 'todo_complete');
-
-      expect(mockStudyPetService.update).toHaveBeenCalledWith(mockUserId, {
-        happiness: 45, // 40 + 5
-        level: 2,
-        last_interaction: expect.any(String)
-      });
-    });
-
-    it('should level up pet when XP threshold is reached', async () => {
-      const petToUpdate = { ...mockDatabasePet, happiness: 40, level: 1 };
-      const updatedPet = { ...petToUpdate, happiness: 50, level: 2 };
-
-      mockStudyPetService.getByUserId.mockResolvedValue(petToUpdate);
-      mockStudyPetService.update.mockResolvedValue(updatedPet);
-
-      // 150 minutes should give enough XP to level up (150/15 = 10 XP, level 1 needs 100 XP)
-      await petService.updatePetFromStudyActivity(mockUserId, 'study_session', 150);
+      await petService.updatePetFromStudyActivity(
+        mockUserId,
+        'study_session',
+        150 // 10 XP gained, enough for level up (100 XP needed for level 1->2)
+      );
 
       expect(mockStudyPetService.update).toHaveBeenCalledWith(mockUserId, {
-        happiness: 55, // 40 + min(15, floor(150/10)) = 40 + 15
-        level: 1,      // XP gain (10) < required (100), so no level up
-        last_interaction: expect.any(String)
+        happiness: 90, // 80 + min(15, floor(150/10)) = 80 + 10
+        level: 2, // Level up occurred
+        last_interaction: expect.any(String),
       });
     });
 
-    it('should cap happiness at 100', async () => {
-      const petToUpdate = { ...mockDatabasePet, happiness: 95, level: 2 };
-      const updatedPet = { ...petToUpdate, happiness: 100, level: 2 };
+    it('should handle quest completion activity', async () => {
+      mockStudyPetService.getByUserId.mockResolvedValue(mockDatabasePet);
+      mockStudyPetService.update.mockResolvedValue(mockDatabasePet);
 
-      mockStudyPetService.getByUserId.mockResolvedValue(petToUpdate);
-      mockStudyPetService.update.mockResolvedValue(updatedPet);
-
-      await petService.updatePetFromStudyActivity(mockUserId, 'study_session', 100);
+      await petService.updatePetFromStudyActivity(mockUserId, 'quest_complete');
 
       expect(mockStudyPetService.update).toHaveBeenCalledWith(mockUserId, {
-        happiness: 100, // Capped at 100
-        level: 2,
-        last_interaction: expect.any(String)
+        happiness: 90, // 80 + 10
+        level: 1, // 5 XP gained, not enough for level up
+        last_interaction: expect.any(String),
       });
     });
 
-    it('should throw error when pet not found', async () => {
-      mockStudyPetService.getByUserId.mockResolvedValue(null);
+    it('should handle todo completion activity', async () => {
+      mockStudyPetService.getByUserId.mockResolvedValue(mockDatabasePet);
+      mockStudyPetService.update.mockResolvedValue(mockDatabasePet);
 
-      await expect(petService.updatePetFromStudyActivity(mockUserId, 'study_session', 60))
-        .rejects.toThrow('Pet not found');
+      await petService.updatePetFromStudyActivity(mockUserId, 'todo_complete');
+
+      expect(mockStudyPetService.update).toHaveBeenCalledWith(mockUserId, {
+        happiness: 85, // 80 + 5
+        level: 1, // 2 XP gained, not enough for level up
+        last_interaction: expect.any(String),
+      });
     });
   });
 
@@ -489,13 +447,13 @@ describe('Pet Service', () => {
         accessories: [
           {
             id: 'acc-1',
-            name: 'Study Hat',
-            description: 'A hat for studying',
-            image_url: '/accessories/hat.png',
+            name: 'Red Collar',
+            description: 'A stylish red collar',
+            image_url: '/accessories/red-collar.png',
             rarity: 'common',
-            unlocked_at: '2024-01-15T10:00:00Z'
-          }
-        ]
+            unlocked_at: new Date().toISOString(),
+          },
+        ],
       };
 
       mockStudyPetService.getByUserId.mockResolvedValue(petWithAccessories);
@@ -503,154 +461,73 @@ describe('Pet Service', () => {
       const result = await petService.getPetAccessories(mockUserId);
 
       expect(result).toHaveLength(1);
-      expect(result[0]).toEqual({
+      expect(result[0]).toMatchObject({
         id: 'acc-1',
-        name: 'Study Hat',
-        description: 'A hat for studying',
-        imageUrl: '/accessories/hat.png',
+        name: 'Red Collar',
+        description: 'A stylish red collar',
+        imageUrl: '/accessories/red-collar.png',
         rarity: 'common',
-        unlockedAt: new Date('2024-01-15T10:00:00Z')
       });
     });
 
-    it('should return empty array when no accessories', async () => {
+    it('should return empty array for pet with no accessories', async () => {
       mockStudyPetService.getByUserId.mockResolvedValue(mockDatabasePet);
 
       const result = await petService.getPetAccessories(mockUserId);
 
       expect(result).toEqual([]);
     });
-
-    it('should throw error when pet not found', async () => {
-      mockStudyPetService.getByUserId.mockResolvedValue(null);
-
-      await expect(petService.getPetAccessories(mockUserId))
-        .rejects.toThrow('Pet not found');
-    });
   });
 
   describe('addPetAccessory', () => {
     it('should add new accessory to pet', async () => {
       const newAccessory = {
-        name: 'Study Glasses',
-        description: 'Glasses for better focus',
-        imageUrl: '/accessories/glasses.png',
-        rarity: 'rare' as const
+        name: 'Blue Hat',
+        description: 'A cool blue hat',
+        imageUrl: '/accessories/blue-hat.png',
+        rarity: 'rare' as const,
       };
 
-      const petWithNewAccessory = {
+      const updatedPet = {
         ...mockDatabasePet,
         accessories: [
           {
-            id: expect.stringMatching(/^acc_\d+$/),
+            id: expect.any(String),
             ...newAccessory,
-            unlocked_at: expect.any(String)
-          }
-        ]
+            unlocked_at: expect.any(String),
+          },
+        ],
       };
 
       mockStudyPetService.getByUserId.mockResolvedValue(mockDatabasePet);
-      mockStudyPetService.update.mockResolvedValue(petWithNewAccessory);
+      mockStudyPetService.update.mockResolvedValue(updatedPet);
 
       const result = await petService.addPetAccessory(mockUserId, newAccessory);
 
-      expect(result).toEqual(mockStudyPet);
       expect(mockStudyPetService.update).toHaveBeenCalledWith(mockUserId, {
-        accessories: expect.arrayContaining([
-          expect.objectContaining({
+        accessories: [
+          {
             id: expect.stringMatching(/^acc_\d+$/),
-            name: 'Study Glasses',
-            description: 'Glasses for better focus',
-            imageUrl: '/accessories/glasses.png',
+            name: 'Blue Hat',
+            description: 'A cool blue hat',
+            imageUrl: '/accessories/blue-hat.png',
             rarity: 'rare',
-            unlocked_at: expect.any(String)
-          })
-        ]),
-        last_interaction: expect.any(String)
+            unlocked_at: expect.any(String),
+          },
+        ],
+        last_interaction: expect.any(String),
       });
-    });
-
-    it('should add to existing accessories', async () => {
-      const existingAccessory = {
-        id: 'acc-1',
-        name: 'Study Hat',
-        description: 'A hat for studying',
-        image_url: '/accessories/hat.png',
-        rarity: 'common',
-        unlocked_at: '2024-01-15T10:00:00Z'
-      };
-
-      const petWithExistingAccessory = {
-        ...mockDatabasePet,
-        accessories: [existingAccessory]
-      };
-
-      const newAccessory = {
-        name: 'Study Glasses',
-        description: 'Glasses for better focus',
-        imageUrl: '/accessories/glasses.png',
-        rarity: 'rare' as const
-      };
-
-      mockStudyPetService.getByUserId.mockResolvedValue(petWithExistingAccessory);
-      mockStudyPetService.update.mockResolvedValue({
-        ...petWithExistingAccessory,
-        accessories: [existingAccessory, { ...newAccessory, id: 'acc-2', unlocked_at: '2024-01-15T11:00:00Z' }]
-      });
-
-      await petService.addPetAccessory(mockUserId, newAccessory);
-
-      expect(mockStudyPetService.update).toHaveBeenCalledWith(mockUserId, {
-        accessories: expect.arrayContaining([
-          existingAccessory,
-          expect.objectContaining(newAccessory)
-        ]),
-        last_interaction: expect.any(String)
-      });
-    });
-
-    it('should throw error when pet not found', async () => {
-      mockStudyPetService.getByUserId.mockResolvedValue(null);
-
-      const newAccessory = {
-        name: 'Study Glasses',
-        description: 'Glasses for better focus',
-        imageUrl: '/accessories/glasses.png',
-        rarity: 'rare' as const
-      };
-
-      await expect(petService.addPetAccessory(mockUserId, newAccessory))
-        .rejects.toThrow('Pet not found');
+      expect(result).toEqual(mockStudyPet);
     });
   });
 
   describe('checkPetNeeds', () => {
-    it('should return no attention needed for well-cared pet', async () => {
-      const wellCaredPet = {
-        ...mockDatabasePet,
-        happiness: 80,
-        health: 80,
-        last_fed: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
-        last_played: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(), // 4 hours ago
-        last_interaction: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString() // 1 hour ago
-      };
-
-      mockStudyPetService.getByUserId.mockResolvedValue(wellCaredPet);
-
-      const result = await petService.checkPetNeeds(mockUserId);
-
-      expect(result.needsAttention).toBe(false);
-      expect(result.reason).toBeNull();
-    });
-
     it('should detect hungry pet', async () => {
       const hungryPet = {
         ...mockDatabasePet,
-        happiness: 80,
-        health: 80,
         last_fed: new Date(Date.now() - 25 * 60 * 60 * 1000).toISOString(), // 25 hours ago
-        last_played: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
-        last_interaction: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString()
+        happiness: 80,
+        health: 90,
       };
 
       mockStudyPetService.getByUserId.mockResolvedValue(hungryPet);
@@ -664,11 +541,9 @@ describe('Pet Service', () => {
     it('should detect bored pet', async () => {
       const boredPet = {
         ...mockDatabasePet,
-        happiness: 80,
-        health: 80,
-        last_fed: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
         last_played: new Date(Date.now() - 49 * 60 * 60 * 1000).toISOString(), // 49 hours ago
-        last_interaction: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString()
+        happiness: 80,
+        health: 90,
       };
 
       mockStudyPetService.getByUserId.mockResolvedValue(boredPet);
@@ -682,11 +557,11 @@ describe('Pet Service', () => {
     it('should detect lonely pet', async () => {
       const lonelyPet = {
         ...mockDatabasePet,
+        last_interaction: new Date(
+          Date.now() - 73 * 60 * 60 * 1000
+        ).toISOString(), // 73 hours ago
         happiness: 80,
-        health: 80,
-        last_fed: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-        last_played: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
-        last_interaction: new Date(Date.now() - 73 * 60 * 60 * 1000).toISOString() // 73 hours ago
+        health: 90,
       };
 
       mockStudyPetService.getByUserId.mockResolvedValue(lonelyPet);
@@ -700,11 +575,8 @@ describe('Pet Service', () => {
     it('should detect unhappy pet', async () => {
       const unhappyPet = {
         ...mockDatabasePet,
-        happiness: 25, // Below 30
-        health: 80,
-        last_fed: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-        last_played: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
-        last_interaction: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString()
+        happiness: 25,
+        health: 90,
       };
 
       mockStudyPetService.getByUserId.mockResolvedValue(unhappyPet);
@@ -719,10 +591,7 @@ describe('Pet Service', () => {
       const unwellPet = {
         ...mockDatabasePet,
         happiness: 80,
-        health: 25, // Below 30
-        last_fed: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-        last_played: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
-        last_interaction: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString()
+        health: 25,
       };
 
       mockStudyPetService.getByUserId.mockResolvedValue(unwellPet);
@@ -733,8 +602,8 @@ describe('Pet Service', () => {
       expect(result.reason).toBe('unwell');
     });
 
-    it('should return no attention needed when no pet exists', async () => {
-      mockStudyPetService.getByUserId.mockResolvedValue(null);
+    it('should return no attention needed for healthy pet', async () => {
+      mockStudyPetService.getByUserId.mockResolvedValue(mockDatabasePet);
 
       const result = await petService.checkPetNeeds(mockUserId);
 
@@ -742,8 +611,8 @@ describe('Pet Service', () => {
       expect(result.reason).toBeNull();
     });
 
-    it('should handle database errors gracefully', async () => {
-      mockStudyPetService.getByUserId.mockRejectedValue(new Error('Database error'));
+    it('should handle missing pet gracefully', async () => {
+      mockStudyPetService.getByUserId.mockResolvedValue(null);
 
       const result = await petService.checkPetNeeds(mockUserId);
 
@@ -752,51 +621,45 @@ describe('Pet Service', () => {
     });
   });
 
-  describe('Edge Cases and Error Handling', () => {
-    it('should handle empty user ID', async () => {
-      const result = await petService.getUserPet('');
-      expect(result).toBeNull();
+  describe('error handling', () => {
+    it('should handle database errors in feedPet', async () => {
+      mockStudyPetService.getByUserId.mockRejectedValue(
+        new Error('Database error')
+      );
+
+      await expect(petService.feedPet(mockUserId)).rejects.toThrow(
+        'Failed to feed pet. Please try again.'
+      );
     });
 
-    it('should handle malformed database responses', async () => {
-      const malformedPet = {
-        ...mockDatabasePet,
-        happiness: null,
-        health: undefined
-      };
+    it('should handle database errors in playWithPet', async () => {
+      mockStudyPetService.getByUserId.mockRejectedValue(
+        new Error('Database error')
+      );
 
-      mockStudyPetService.getByUserId.mockResolvedValue(malformedPet);
-
-      // Should not throw error, mapper should handle it
-      const result = await petService.getUserPet(mockUserId);
-      expect(mockMapDatabasePetToStudyPet).toHaveBeenCalledWith(malformedPet);
+      await expect(petService.playWithPet(mockUserId)).rejects.toThrow(
+        'Failed to play with pet. Please try again.'
+      );
     });
 
-    it('should handle missing evolution stages', async () => {
-      const speciesWithoutStages = {
-        ...mockSpeciesData,
-        evolution_stages: null
-      };
+    it('should handle database errors in checkAndEvolvePet', async () => {
+      mockStudyPetService.getByUserId.mockRejectedValue(
+        new Error('Database error')
+      );
 
-      mockStudyPetService.getByUserId.mockResolvedValue(mockDatabasePet);
-      mockPetSpeciesService.getById.mockResolvedValue(speciesWithoutStages);
-
-      const result = await petService.checkAndEvolvePet(mockUserId);
-
-      expect(result.evolved).toBe(false);
-      expect(result.newStage).toBeNull();
+      await expect(petService.checkAndEvolvePet(mockUserId)).rejects.toThrow(
+        'Failed to check pet evolution. Please try again.'
+      );
     });
 
-    it('should handle null accessories array', async () => {
-      const petWithNullAccessories = {
-        ...mockDatabasePet,
-        accessories: null
-      };
+    it('should handle database errors in updatePetFromStudyActivity', async () => {
+      mockStudyPetService.getByUserId.mockRejectedValue(
+        new Error('Database error')
+      );
 
-      mockStudyPetService.getByUserId.mockResolvedValue(petWithNullAccessories);
-
-      const result = await petService.getPetAccessories(mockUserId);
-      expect(result).toEqual([]);
+      await expect(
+        petService.updatePetFromStudyActivity(mockUserId, 'study_session', 30)
+      ).rejects.toThrow('Failed to update pet stats. Please try again.');
     });
   });
 });

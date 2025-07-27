@@ -23,14 +23,22 @@ class OfflineService {
   private dbName = 'GameStudyPlatformDB';
   private dbVersion = 1;
   private db: IDBDatabase | null = null;
+  private initPromise: Promise<void> | null = null;
 
   constructor() {
-    this.initDB();
+    // Don't initialize DB immediately in constructor to allow for testing
     this.setupConnectionListeners();
   }
 
   // Initialize IndexedDB
   private async initDB(): Promise<void> {
+    if (this.db) return;
+
+    // Check if IndexedDB is available (not available in some test environments)
+    if (typeof indexedDB === 'undefined') {
+      throw new Error('IndexedDB is not available in this environment');
+    }
+
     return new Promise((resolve, reject) => {
       const request = indexedDB.open(this.dbName, this.dbVersion);
 
@@ -40,12 +48,14 @@ class OfflineService {
         resolve();
       };
 
-      request.onupgradeneeded = (event) => {
+      request.onupgradeneeded = event => {
         const db = (event.target as IDBOpenDBRequest).result;
 
         // Store for offline actions (sync queue)
         if (!db.objectStoreNames.contains('actions')) {
-          const actionsStore = db.createObjectStore('actions', { keyPath: 'id' });
+          const actionsStore = db.createObjectStore('actions', {
+            keyPath: 'id',
+          });
           actionsStore.createIndex('timestamp', 'timestamp', { unique: false });
           actionsStore.createIndex('type', 'type', { unique: false });
         }
@@ -58,8 +68,12 @@ class OfflineService {
 
         // Store for offline study sessions
         if (!db.objectStoreNames.contains('studySessions')) {
-          const sessionsStore = db.createObjectStore('studySessions', { keyPath: 'id' });
-          sessionsStore.createIndex('timestamp', 'timestamp', { unique: false });
+          const sessionsStore = db.createObjectStore('studySessions', {
+            keyPath: 'id',
+          });
+          sessionsStore.createIndex('timestamp', 'timestamp', {
+            unique: false,
+          });
           sessionsStore.createIndex('synced', 'synced', { unique: false });
         }
 
@@ -76,6 +90,17 @@ class OfflineService {
         }
       };
     });
+  }
+
+  // Ensure database is initialized before operations
+  private async ensureDB(): Promise<void> {
+    if (this.initPromise) {
+      await this.initPromise;
+      this.initPromise = null;
+    }
+    if (!this.db) {
+      await this.initDB();
+    }
   }
 
   // Setup connection event listeners
@@ -96,8 +121,12 @@ class OfflineService {
   }
 
   // Queue action for offline sync
-  public async queueOfflineAction(type: string, data: any, endpoint: string): Promise<void> {
-    if (!this.db) await this.initDB();
+  public async queueOfflineAction(
+    type: string,
+    data: any,
+    endpoint: string
+  ): Promise<void> {
+    await this.ensureDB();
 
     const action: OfflineAction = {
       id: uuidv4(),
@@ -120,7 +149,7 @@ class OfflineService {
 
   // Get all queued offline actions
   public async getOfflineActions(): Promise<OfflineAction[]> {
-    if (!this.db) await this.initDB();
+    await this.ensureDB();
 
     return new Promise((resolve, reject) => {
       const transaction = this.db!.transaction(['actions'], 'readonly');
@@ -134,7 +163,7 @@ class OfflineService {
 
   // Remove synced action
   public async removeOfflineAction(id: string): Promise<void> {
-    if (!this.db) await this.initDB();
+    await this.ensureDB();
 
     return new Promise((resolve, reject) => {
       const transaction = this.db!.transaction(['actions'], 'readwrite');
@@ -148,7 +177,7 @@ class OfflineService {
 
   // Cache data for offline use
   public async cacheData(key: string, data: any): Promise<void> {
-    if (!this.db) await this.initDB();
+    await this.ensureDB();
 
     const cacheEntry = {
       key,
@@ -168,7 +197,7 @@ class OfflineService {
 
   // Get cached data
   public async getCachedData(key: string): Promise<any> {
-    if (!this.db) await this.initDB();
+    await this.ensureDB();
 
     return new Promise((resolve, reject) => {
       const transaction = this.db!.transaction(['cache'], 'readonly');
@@ -185,7 +214,7 @@ class OfflineService {
 
   // Save study session offline
   public async saveStudySessionOffline(session: any): Promise<void> {
-    if (!this.db) await this.initDB();
+    await this.ensureDB();
 
     const offlineSession = {
       ...session,
@@ -206,7 +235,7 @@ class OfflineService {
 
   // Get offline study sessions
   public async getOfflineStudySessions(): Promise<any[]> {
-    if (!this.db) await this.initDB();
+    await this.ensureDB();
 
     return new Promise((resolve, reject) => {
       const transaction = this.db!.transaction(['studySessions'], 'readonly');
@@ -220,7 +249,7 @@ class OfflineService {
 
   // Save note offline
   public async saveNoteOffline(note: any): Promise<void> {
-    if (!this.db) await this.initDB();
+    await this.ensureDB();
 
     const offlineNote = {
       ...note,
@@ -241,7 +270,7 @@ class OfflineService {
 
   // Get offline notes
   public async getOfflineNotes(): Promise<any[]> {
-    if (!this.db) await this.initDB();
+    await this.ensureDB();
 
     return new Promise((resolve, reject) => {
       const transaction = this.db!.transaction(['notes'], 'readonly');
@@ -255,7 +284,7 @@ class OfflineService {
 
   // Save user progress offline
   public async saveUserProgressOffline(progress: any): Promise<void> {
-    if (!this.db) await this.initDB();
+    await this.ensureDB();
 
     const progressData = {
       id: 'userProgress',
@@ -276,7 +305,7 @@ class OfflineService {
 
   // Get offline user progress
   public async getOfflineUserProgress(): Promise<any> {
-    if (!this.db) await this.initDB();
+    await this.ensureDB();
 
     return new Promise((resolve, reject) => {
       const transaction = this.db!.transaction(['userProgress'], 'readonly');
@@ -312,7 +341,9 @@ class OfflineService {
           if (action.retryCount < 3) {
             await this.updateOfflineAction(action);
           } else {
-            console.error(`Max retries reached for action ${action.type}, removing`);
+            console.error(
+              `Max retries reached for action ${action.type}, removing`
+            );
             await this.removeOfflineAction(action.id);
           }
         }
@@ -331,7 +362,6 @@ class OfflineService {
 
       // Notify components about sync completion
       window.dispatchEvent(new CustomEvent('offlineSyncComplete'));
-
     } catch (error) {
       console.error('Offline sync failed:', error);
     }
@@ -356,7 +386,7 @@ class OfflineService {
 
   // Update offline action (for retry logic)
   private async updateOfflineAction(action: OfflineAction): Promise<void> {
-    if (!this.db) await this.initDB();
+    await this.ensureDB();
 
     return new Promise((resolve, reject) => {
       const transaction = this.db!.transaction(['actions'], 'readwrite');
@@ -377,11 +407,11 @@ class OfflineService {
       try {
         // Send to server (implement actual API call)
         await this.syncStudySession(session);
-        
+
         // Mark as synced
         session.synced = true;
         await this.updateStudySession(session);
-        
+
         console.log(`Synced study session: ${session.id}`);
       } catch (error) {
         console.error(`Failed to sync study session ${session.id}:`, error);
@@ -398,11 +428,11 @@ class OfflineService {
       try {
         // Send to server (implement actual API call)
         await this.syncNote(note);
-        
+
         // Mark as synced
         note.synced = true;
         await this.updateNote(note);
-        
+
         console.log(`Synced note: ${note.id}`);
       } catch (error) {
         console.error(`Failed to sync note ${note.id}:`, error);
@@ -413,16 +443,16 @@ class OfflineService {
   // Sync user progress
   private async syncUserProgress(): Promise<void> {
     const progress = await this.getOfflineUserProgress();
-    
+
     if (progress && !progress.synced) {
       try {
         // Send to server (implement actual API call)
         await this.syncProgress(progress);
-        
+
         // Mark as synced
         progress.synced = true;
         await this.saveUserProgressOffline(progress);
-        
+
         console.log('Synced user progress');
       } catch (error) {
         console.error('Failed to sync user progress:', error);
@@ -448,7 +478,7 @@ class OfflineService {
 
   // Update methods for marking items as synced
   private async updateStudySession(session: any): Promise<void> {
-    if (!this.db) await this.initDB();
+    await this.ensureDB();
 
     return new Promise((resolve, reject) => {
       const transaction = this.db!.transaction(['studySessions'], 'readwrite');
@@ -461,7 +491,7 @@ class OfflineService {
   }
 
   private async updateNote(note: any): Promise<void> {
-    if (!this.db) await this.initDB();
+    await this.ensureDB();
 
     return new Promise((resolve, reject) => {
       const transaction = this.db!.transaction(['notes'], 'readwrite');
@@ -475,27 +505,33 @@ class OfflineService {
 
   // Clear all offline data (for testing/reset)
   public async clearOfflineData(): Promise<void> {
-    if (!this.db) await this.initDB();
+    await this.ensureDB();
 
-    const stores = ['actions', 'cache', 'studySessions', 'notes', 'userProgress'];
-    
+    const stores = [
+      'actions',
+      'cache',
+      'studySessions',
+      'notes',
+      'userProgress',
+    ];
+
     return new Promise((resolve, reject) => {
       const transaction = this.db!.transaction(stores, 'readwrite');
-      
+
       let completed = 0;
       const total = stores.length;
-      
+
       stores.forEach(storeName => {
         const store = transaction.objectStore(storeName);
         const request = store.clear();
-        
+
         request.onsuccess = () => {
           completed++;
           if (completed === total) {
             resolve();
           }
         };
-        
+
         request.onerror = () => reject(request.error);
       });
     });

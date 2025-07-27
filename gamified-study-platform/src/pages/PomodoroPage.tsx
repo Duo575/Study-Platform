@@ -1,8 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { PomodoroTimer, PomodoroAnalytics } from '../components/features/pomodoro';
+import {
+  PomodoroTimer,
+  PomodoroAnalytics,
+} from '../components/features/pomodoro';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
+import { EnvironmentSelector } from '../components/environment';
+import { AmbientSoundController } from '../components/environment/AmbientSoundController';
+import { MusicPlayer } from '../components/environment/MusicPlayer';
 import { useCourseStore } from '../store/courseStore';
 import { useTodoStore } from '../store/todoStore';
 import { useQuestStore } from '../store/questStore';
@@ -36,7 +42,9 @@ export const PomodoroPage: React.FC = () => {
   ];
 
   const activeTodos = todos.filter(todo => !todo.completed);
-  const availableQuests = activeQuests.filter(quest => quest.status === 'available' || quest.status === 'active');
+  const availableQuests = activeQuests.filter(
+    quest => quest.status === 'available' || quest.status === 'active'
+  );
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -47,15 +55,15 @@ export const PomodoroPage: React.FC = () => {
             🍅 Pomodoro Focus Timer
           </h1>
           <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-            Boost your productivity with the proven Pomodoro Technique. 
-            Focus for 25 minutes, take a 5-minute break, and track your progress.
+            Boost your productivity with the proven Pomodoro Technique. Focus
+            for 25 minutes, take a 5-minute break, and track your progress.
           </p>
         </div>
 
         {/* Tab Navigation */}
         <div className="flex justify-center mb-8">
           <div className="bg-white dark:bg-gray-800 rounded-lg p-1 shadow-sm">
-            {tabs.map((tab) => (
+            {tabs.map(tab => (
               <Button
                 key={tab.id}
                 variant={activeTab === tab.id ? 'primary' : 'ghost'}
@@ -91,6 +99,55 @@ export const PomodoroPage: React.FC = () => {
 
               {/* Context Panel */}
               <div className="space-y-6">
+                {/* Environment Selection */}
+                <Card className="p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                    🌟 Focus Environment
+                  </h3>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Choose your study environment
+                      </label>
+                      <EnvironmentSelector
+                        className="w-full"
+                        showPreview={true}
+                      />
+                    </div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                      Select an environment to enhance your focus with matching
+                      visuals and sounds
+                    </div>
+                  </div>
+                </Card>
+
+                {/* Audio Controls */}
+                <Card className="p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                    🎵 Audio & Ambience
+                  </h3>
+                  <div className="space-y-4">
+                    {/* Ambient Sound Controller */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Environment Sounds
+                      </label>
+                      <AmbientSoundController
+                        className="w-full"
+                        showVolumeControls={true}
+                      />
+                    </div>
+
+                    {/* Music Player */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Study Music
+                      </label>
+                      <MusicPlayer className="w-full" compact={true} />
+                    </div>
+                  </div>
+                </Card>
+
                 {/* Quick Context Selection */}
                 <Card className="p-6">
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
@@ -105,7 +162,7 @@ export const PomodoroPage: React.FC = () => {
                         </label>
                         <select
                           value={selectedTodoId}
-                          onChange={(e) => setSelectedTodoId(e.target.value)}
+                          onChange={e => setSelectedTodoId(e.target.value)}
                           className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                         >
                           <option value="">No specific task</option>
@@ -126,7 +183,7 @@ export const PomodoroPage: React.FC = () => {
                         </label>
                         <select
                           value={selectedQuestId}
-                          onChange={(e) => setSelectedQuestId(e.target.value)}
+                          onChange={e => setSelectedQuestId(e.target.value)}
                           className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                         >
                           <option value="">No specific quest</option>
@@ -157,7 +214,9 @@ export const PomodoroPage: React.FC = () => {
                     </div>
                     <div className="flex items-start gap-2">
                       <span className="text-green-500">✓</span>
-                      <span>Take breaks seriously - they're part of the technique</span>
+                      <span>
+                        Take breaks seriously - they're part of the technique
+                      </span>
                     </div>
                     <div className="flex items-start gap-2">
                       <span className="text-green-500">✓</span>
@@ -176,7 +235,10 @@ export const PomodoroPage: React.FC = () => {
                     🎯 Quick Stats
                   </h3>
                   <div className="text-center text-sm text-gray-600 dark:text-gray-400">
-                    <p>Complete your first Pomodoro session to see your stats here!</p>
+                    <p>
+                      Complete your first Pomodoro session to see your stats
+                      here!
+                    </p>
                   </div>
                 </Card>
               </div>
@@ -198,30 +260,47 @@ export const PomodoroPage: React.FC = () => {
                 🚀 Ready to Focus?
               </h2>
               <p className="text-gray-600 dark:text-gray-400 mb-6 max-w-2xl mx-auto">
-                The Pomodoro Technique is simple: work for 25 minutes, take a 5-minute break, 
-                and repeat. After 4 sessions, take a longer 15-30 minute break. 
-                This helps maintain focus and prevents burnout.
+                The Pomodoro Technique is simple: work for 25 minutes, take a
+                5-minute break, and repeat. After 4 sessions, take a longer
+                15-30 minute break. This helps maintain focus and prevents
+                burnout.
               </p>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
                 <div className="text-center p-4">
                   <div className="text-3xl mb-2">🎯</div>
-                  <div className="font-medium text-gray-900 dark:text-white">Focus</div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">25 minutes</div>
+                  <div className="font-medium text-gray-900 dark:text-white">
+                    Focus
+                  </div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">
+                    25 minutes
+                  </div>
                 </div>
                 <div className="text-center p-4">
                   <div className="text-3xl mb-2">☕</div>
-                  <div className="font-medium text-gray-900 dark:text-white">Short Break</div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">5 minutes</div>
+                  <div className="font-medium text-gray-900 dark:text-white">
+                    Short Break
+                  </div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">
+                    5 minutes
+                  </div>
                 </div>
                 <div className="text-center p-4">
                   <div className="text-3xl mb-2">🔄</div>
-                  <div className="font-medium text-gray-900 dark:text-white">Repeat</div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">3 more times</div>
+                  <div className="font-medium text-gray-900 dark:text-white">
+                    Repeat
+                  </div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">
+                    3 more times
+                  </div>
                 </div>
                 <div className="text-center p-4">
                   <div className="text-3xl mb-2">🏖️</div>
-                  <div className="font-medium text-gray-900 dark:text-white">Long Break</div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">15-30 minutes</div>
+                  <div className="font-medium text-gray-900 dark:text-white">
+                    Long Break
+                  </div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">
+                    15-30 minutes
+                  </div>
                 </div>
               </div>
             </div>

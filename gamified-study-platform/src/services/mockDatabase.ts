@@ -99,30 +99,34 @@ const mockTodos = [
     title: 'Complete React assignment',
     description: 'Build a todo app using React hooks',
     completed: false,
-    priority: 'high',
-    dueDate: new Date('2024-01-28').toISOString(),
+    priority: 'high' as const,
+    estimatedMinutes: 120,
+    dueDate: new Date('2024-01-28'),
     courseId: '1',
-    createdAt: new Date('2024-01-20').toISOString(),
+    createdAt: new Date('2024-01-20'),
   },
   {
     id: '2',
     title: 'Read JavaScript chapter 5',
     description: 'Study closures and scope',
     completed: true,
-    priority: 'medium',
-    dueDate: new Date('2024-01-25').toISOString(),
+    priority: 'medium' as const,
+    estimatedMinutes: 60,
+    dueDate: new Date('2024-01-25'),
     courseId: '2',
-    createdAt: new Date('2024-01-18').toISOString(),
+    createdAt: new Date('2024-01-18'),
+    completedAt: new Date('2024-01-24'),
   },
   {
     id: '3',
     title: 'Design portfolio mockup',
     description: 'Create wireframes for personal portfolio',
     completed: false,
-    priority: 'low',
-    dueDate: new Date('2024-02-01').toISOString(),
+    priority: 'low' as const,
+    estimatedMinutes: 90,
+    dueDate: new Date('2024-02-01'),
     courseId: '3',
-    createdAt: new Date('2024-01-22').toISOString(),
+    createdAt: new Date('2024-01-22'),
   },
 ];
 
@@ -195,15 +199,23 @@ export const mockCourseService = {
 export const mockTodoService = {
   async getByUserId(userId: string) {
     await new Promise(resolve => setTimeout(resolve, 400));
-    return mockTodos;
+    return [...mockTodos]; // Return a copy to prevent mutations
   },
 
   async create(todoData: any) {
     await new Promise(resolve => setTimeout(resolve, 400));
     const newTodo = {
       id: Date.now().toString(),
+      title: todoData.title || 'Untitled Todo',
+      description: todoData.description || '',
+      completed: false,
+      priority: todoData.priority || 'medium',
+      estimatedMinutes: todoData.estimatedMinutes || 30,
+      courseId: todoData.courseId,
+      questId: todoData.questId,
+      dueDate: todoData.dueDate ? new Date(todoData.dueDate) : undefined,
+      createdAt: new Date(),
       ...todoData,
-      createdAt: new Date().toISOString(),
     };
     mockTodos.push(newTodo);
     return newTodo;
@@ -213,7 +225,16 @@ export const mockTodoService = {
     await new Promise(resolve => setTimeout(resolve, 400));
     const index = mockTodos.findIndex(todo => todo.id === id);
     if (index !== -1) {
-      mockTodos[index] = { ...mockTodos[index], ...todoData };
+      // Handle date conversion if needed
+      const updatedData = { ...todoData };
+      if (updatedData.dueDate && typeof updatedData.dueDate === 'string') {
+        updatedData.dueDate = new Date(updatedData.dueDate);
+      }
+      if (updatedData.completed && !mockTodos[index].completedAt) {
+        updatedData.completedAt = new Date();
+      }
+
+      mockTodos[index] = { ...mockTodos[index], ...updatedData };
       return mockTodos[index];
     }
     return null;

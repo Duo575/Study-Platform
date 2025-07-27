@@ -12,7 +12,7 @@ export const ErrorIntegration: React.FC = () => {
     // Global error handler for unhandled promise rejections
     const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
       console.error('Unhandled promise rejection:', event.reason);
-      
+
       // Show user-friendly error message
       addMessage({
         type: 'error',
@@ -20,9 +20,9 @@ export const ErrorIntegration: React.FC = () => {
         message: 'We encountered an unexpected error. Please try again.',
         action: {
           label: 'Reload Page',
-          onClick: () => window.location.reload()
+          onClick: () => window.location.reload(),
         },
-        duration: 8000
+        duration: 8000,
       });
 
       // Prevent the default browser error handling
@@ -32,14 +32,15 @@ export const ErrorIntegration: React.FC = () => {
     // Global error handler for JavaScript errors
     const handleError = (event: ErrorEvent) => {
       console.error('Global error:', event.error);
-      
+
       // Only show error message for non-development environments
       if (process.env.NODE_ENV === 'production') {
         addMessage({
           type: 'error',
           title: 'Application Error',
-          message: 'An unexpected error occurred. The page will reload automatically.',
-          duration: 5000
+          message:
+            'An unexpected error occurred. The page will reload automatically.',
+          duration: 5000,
         });
 
         // Auto-reload after a delay in production
@@ -57,9 +58,9 @@ export const ErrorIntegration: React.FC = () => {
         message: 'Please check your internet connection and try again.',
         action: {
           label: 'Retry',
-          onClick: () => window.location.reload()
+          onClick: () => window.location.reload(),
         },
-        duration: 10000
+        duration: 10000,
       });
     };
 
@@ -70,7 +71,10 @@ export const ErrorIntegration: React.FC = () => {
 
     // Cleanup
     return () => {
-      window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+      window.removeEventListener(
+        'unhandledrejection',
+        handleUnhandledRejection
+      );
       window.removeEventListener('error', handleError);
       window.removeEventListener('offline', handleNetworkError);
     };
@@ -83,16 +87,17 @@ export const ErrorIntegration: React.FC = () => {
         type: 'success',
         title: 'Back Online',
         message: 'Your connection has been restored.',
-        duration: 3000
+        duration: 3000,
       });
     };
 
     const handleOffline = () => {
       addMessage({
         type: 'warning',
-        title: 'You\'re Offline',
-        message: 'Some features may be limited. Your progress will sync when you\'re back online.',
-        persistent: true
+        title: "You're Offline",
+        message:
+          "Some features may be limited. Your progress will sync when you're back online.",
+        persistent: true,
       });
     };
 
@@ -120,7 +125,7 @@ export const handleAPIError = (error: any, addMessage: any) => {
   if (error.response) {
     // Server responded with error status
     const status = error.response.status;
-    
+
     switch (status) {
       case 400:
         title = 'Invalid Request';
@@ -132,7 +137,7 @@ export const handleAPIError = (error: any, addMessage: any) => {
         break;
       case 403:
         title = 'Access Denied';
-        message = 'You don\'t have permission to perform this action.';
+        message = "You don't have permission to perform this action.";
         break;
       case 404:
         title = 'Not Found';
@@ -144,11 +149,13 @@ export const handleAPIError = (error: any, addMessage: any) => {
         break;
       case 500:
         title = 'Server Error';
-        message = 'Our servers are experiencing issues. Please try again later.';
+        message =
+          'Our servers are experiencing issues. Please try again later.';
         break;
       default:
         title = `Error ${status}`;
-        message = error.response.data?.message || 'An unexpected error occurred.';
+        message =
+          error.response.data?.message || 'An unexpected error occurred.';
     }
   } else if (error.request) {
     // Network error
@@ -160,29 +167,32 @@ export const handleAPIError = (error: any, addMessage: any) => {
     type: 'error',
     title,
     message,
-    duration: 6000
+    duration: 6000,
   });
 };
 
 /**
  * Form validation error handler
  */
-export const handleValidationErrors = (errors: Record<string, string>, addMessage: any) => {
+export const handleValidationErrors = (
+  errors: Record<string, string>,
+  addMessage: any
+) => {
   const errorMessages = Object.values(errors);
-  
+
   if (errorMessages.length === 1) {
     addMessage({
       type: 'error',
       title: 'Validation Error',
       message: errorMessages[0],
-      duration: 5000
+      duration: 5000,
     });
   } else if (errorMessages.length > 1) {
     addMessage({
       type: 'error',
       title: 'Multiple Validation Errors',
       message: `Please fix ${errorMessages.length} errors in the form.`,
-      duration: 6000
+      duration: 6000,
     });
   }
 };
@@ -190,13 +200,17 @@ export const handleValidationErrors = (errors: Record<string, string>, addMessag
 /**
  * Success message handler
  */
-export const handleSuccess = (title: string, message?: string, addMessage?: any) => {
+export const handleSuccess = (
+  title: string,
+  message?: string,
+  addMessage?: any
+) => {
   if (addMessage) {
     addMessage({
       type: 'success',
       title,
       message,
-      duration: 4000
+      duration: 4000,
     });
   }
 };
@@ -204,13 +218,17 @@ export const handleSuccess = (title: string, message?: string, addMessage?: any)
 /**
  * Loading state handler
  */
-export const handleLoading = (title: string, message?: string, addMessage?: any) => {
+export const handleLoading = (
+  title: string,
+  message?: string,
+  addMessage?: any
+) => {
   if (addMessage) {
     return addMessage({
       type: 'loading',
       title,
       message,
-      persistent: true
+      persistent: true,
     });
   }
   return null;
@@ -224,25 +242,25 @@ export const useErrorHandler = () => {
 
   return {
     handleAPIError: (error: any) => handleAPIError(error, addMessage),
-    handleValidationErrors: (errors: Record<string, string>) => 
+    handleValidationErrors: (errors: Record<string, string>) =>
       handleValidationErrors(errors, addMessage),
-    handleSuccess: (title: string, message?: string) => 
+    handleSuccess: (title: string, message?: string) =>
       handleSuccess(title, message, addMessage),
-    handleLoading: (title: string, message?: string) => 
+    handleLoading: (title: string, message?: string) =>
       handleLoading(title, message, addMessage),
     removeMessage,
-    addMessage
+    addMessage,
   };
 };
 
 /**
  * Retry mechanism for failed operations
  */
-export const withRetry = async <T>(
+export const withRetry = async function <T>(
   operation: () => Promise<T>,
   maxRetries: number = 3,
   delay: number = 1000
-): Promise<T> => {
+): Promise<T> {
   let lastError: Error;
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
@@ -250,7 +268,7 @@ export const withRetry = async <T>(
       return await operation();
     } catch (error) {
       lastError = error as Error;
-      
+
       if (attempt === maxRetries) {
         throw lastError;
       }
@@ -287,7 +305,7 @@ export const createDebouncedErrorHandler = (
     clearTimeout(timeoutId);
     timeoutId = setTimeout(() => {
       handler(error);
-      
+
       // Reset error count after delay
       setTimeout(() => {
         errorCounts.delete(errorKey);

@@ -1,12 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { motion, useAnimation, useMotionValue, useTransform } from 'framer-motion';
+import {
+  motion,
+  useAnimation,
+  useMotionValue,
+  useTransform,
+} from 'framer-motion';
 import { Sparkles, Heart, Star, Zap, Trophy, Target } from 'lucide-react';
 
 // Floating particles effect
-export const FloatingParticles: React.FC<{ count?: number; color?: string }> = ({ 
-  count = 20, 
-  color = 'blue' 
-}) => {
+export const FloatingParticles: React.FC<{
+  count?: number;
+  color?: string;
+}> = ({ count = 20, color = 'blue' }) => {
   const particles = Array.from({ length: count }, (_, i) => i);
 
   return (
@@ -22,4 +27,16 @@ export const FloatingParticles: React.FC<{ count?: number; color?: string }> = (
           }}
           animate={{
             y: -10,
-            x: Math.random() * window.innerW
+            x: Math.random() * window.innerWidth,
+            rotate: 360,
+          }}
+          transition={{
+            duration: Math.random() * 3 + 2,
+            repeat: Infinity,
+            ease: 'linear',
+          }}
+        />
+      ))}
+    </div>
+  );
+};

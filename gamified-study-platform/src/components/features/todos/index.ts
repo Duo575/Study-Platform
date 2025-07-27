@@ -1,6 +1,9 @@
-export { TodoList } from './TodoList'
-export { TodoListItem } from './TodoListItem'
-export { TodoFilters } from './TodoFilters'
-export { TodoStats } from './TodoStats'
-export { CreateTodoModal } from './CreateTodoModal'
-export { EditTodoModal } from './EditTodoModal'
+export { TodoList } from './TodoList';
+export { TodoListItem } from './TodoListItem';
+export { TodoFilters } from './TodoFilters';
+export { TodoStats } from './TodoStats';
+export { CreateTodoModal } from './CreateTodoModal';
+export { EditTodoModal } from './EditTodoModal';
+export { TodoErrorBoundary } from './TodoErrorBoundary';
+export { TodoItemErrorBoundary } from './TodoItemErrorBoundary';
+export { PerformanceDashboard } from './PerformanceDashboard';

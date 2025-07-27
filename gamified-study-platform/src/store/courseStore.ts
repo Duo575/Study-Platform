@@ -7,6 +7,8 @@ import {
   MOCK_MODE,
 } from '../services/mockDatabase';
 import type { Course, CourseFilters } from '../types';
+import { calculateStudySessionXP } from '../utils/gamification';
+import { useGamificationStore } from './gamificationStore';
 
 interface CourseState {
   courses: Course[];
@@ -354,5 +356,33 @@ export const useCourseStore = create<CourseState>((set, get) => ({
 
   resetFilters: () => {
     set({ filters: defaultFilters });
+  },
+
+  // Award XP for course progress
+  awardCourseProgressXP: async (
+    userId: string,
+    courseId: string,
+    progressType: 'topic_completed' | 'course_completed',
+    metadata?: any
+  ) => {
+    try {
+      let xpAmount = 0;
+
+      if (progressType === 'topic_completed') {
+        xpAmount = calculateStudySessionXP(30, 'medium', true); // Base XP for topic completion
+      } else if (progressType === 'course_completed') {
+        xpAmount = calculateStudySessionXP(120, 'hard', true); // Higher XP for course completion
+      }
+
+      if (xpAmount > 0) {
+        const gamificationStore = useGamificationStore.getState();
+        await gamificationStore.awardXP(userId, xpAmount, progressType, {
+          courseId,
+          ...metadata,
+        });
+      }
+    } catch (error) {
+      console.error('Error awarding course progress XP:', error);
+    }
   },
 }));

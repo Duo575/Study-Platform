@@ -1,49 +1,79 @@
-// Service Worker for advanced caching and offline functionality
-const CACHE_NAME = 'gamified-study-platform-v1';
-const STATIC_CACHE = 'static-cache-v1';
-const DYNAMIC_CACHE = 'dynamic-cache-v1';
-const API_CACHE = 'api-cache-v1';
+/**
+ * Service Worker for caching audio files, environment assets, and progressive loading
+ */
+
+const CACHE_NAME = 'study-platform-v1';
+const STATIC_CACHE_NAME = 'study-platform-static-v1';
+const AUDIO_CACHE_NAME = 'study-platform-audio-v1';
+const ENVIRONMENT_CACHE_NAME = 'study-platform-environments-v1';
 
 // Assets to cache immediately
 const STATIC_ASSETS = [
   '/',
   '/index.html',
   '/manifest.json',
-  '/offline.html', // Fallback page for offline
+  '/favicon.ico',
+  // Add other critical static assets
 ];
 
-// API endpoints to cache
-const API_ENDPOINTS = [
-  '/api/user/profile',
-  '/api/courses',
-  '/api/quests',
-  '/api/achievements',
+// Audio files to cache
+const AUDIO_ASSETS = [
+  '/sounds/page-turn.mp3',
+  '/sounds/pencil-write.mp3',
+  '/sounds/keyboard-type.mp3',
+  '/sounds/mouse-click.mp3',
+  '/sounds/coffee-pour.mp3',
+  '/sounds/cafe-chatter.mp3',
+  '/sounds/birds-chirp.mp3',
+  '/sounds/wind-leaves.mp3',
+];
+
+// Environment assets to cache
+const ENVIRONMENT_ASSETS = [
+  '/environments/classroom-bg.jpg',
+  '/environments/office-bg.jpg',
+  '/environments/cafe-bg.jpg',
+  '/environments/forest-bg.jpg',
 ];
 
 // Install event - cache static assets
 self.addEventListener('install', event => {
-  console.log('Service Worker: Installing...');
+  console.log('Service Worker installing...');
 
   event.waitUntil(
-    caches
-      .open(STATIC_CACHE)
-      .then(cache => {
-        console.log('Service Worker: Caching static assets');
+    Promise.all([
+      // Cache static assets
+      caches.open(STATIC_CACHE_NAME).then(cache => {
+        console.log('Caching static assets');
         return cache.addAll(STATIC_ASSETS);
-      })
-      .then(() => {
-        console.log('Service Worker: Static assets cached');
-        return self.skipWaiting();
-      })
-      .catch(error => {
-        console.error('Service Worker: Failed to cache static assets', error);
-      })
+      }),
+
+      // Cache audio assets
+      caches.open(AUDIO_CACHE_NAME).then(cache => {
+        console.log('Caching audio assets');
+        return cache.addAll(
+          AUDIO_ASSETS.map(url => new Request(url, { mode: 'no-cors' }))
+        );
+      }),
+
+      // Cache environment assets
+      caches.open(ENVIRONMENT_CACHE_NAME).then(cache => {
+        console.log('Caching environment assets');
+        return cache.addAll(
+          ENVIRONMENT_ASSETS.map(url => new Request(url, { mode: 'no-cors' }))
+        );
+      }),
+    ]).then(() => {
+      console.log('Service Worker installed successfully');
+      // Force activation of new service worker
+      return self.skipWaiting();
+    })
   );
 });
 
 // Activate event - clean up old caches
 self.addEventListener('activate', event => {
-  console.log('Service Worker: Activating...');
+  console.log('Service Worker activating...');
 
   event.waitUntil(
     caches
@@ -51,25 +81,28 @@ self.addEventListener('activate', event => {
       .then(cacheNames => {
         return Promise.all(
           cacheNames.map(cacheName => {
+            // Delete old caches
             if (
-              cacheName !== STATIC_CACHE &&
-              cacheName !== DYNAMIC_CACHE &&
-              cacheName !== API_CACHE
+              cacheName !== CACHE_NAME &&
+              cacheName !== STATIC_CACHE_NAME &&
+              cacheName !== AUDIO_CACHE_NAME &&
+              cacheName !== ENVIRONMENT_CACHE_NAME
             ) {
-              console.log('Service Worker: Deleting old cache', cacheName);
+              console.log('Deleting old cache:', cacheName);
               return caches.delete(cacheName);
             }
           })
         );
       })
       .then(() => {
-        console.log('Service Worker: Activated');
+        console.log('Service Worker activated');
+        // Take control of all pages immediately
         return self.clients.claim();
       })
   );
 });
 
-// Fetch event - implement caching strategies
+// Fetch event - serve cached content and implement caching strategies
 self.addEventListener('fetch', event => {
   const { request } = event;
   const url = new URL(request.url);
@@ -79,28 +112,142 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // Handle different types of requests with appropriate strategies
-  if (url.pathname.startsWith('/api/')) {
-    // API requests - Network First with fallback to cache
-    event.respondWith(handleApiRequest(request));
-  } else if (isStaticAsset(url.pathname)) {
-    // Static assets - Cache First
-    event.respondWith(handleStaticAsset(request));
-  } else if (url.pathname === '/' || isNavigationRequest(request)) {
-    // Navigation requests - Network First with offline fallback
-    event.respondWith(handleNavigationRequest(request));
-  } else {
-    // Other requests - Stale While Revalidate
-    event.respondWith(handleOtherRequests(request));
+  // Skip chrome-extension and other non-http(s) requests
+  if (!url.protocol.startsWith('http')) {
+    return;
   }
+
+  event.respondWith(handleFetch(request));
 });
 
-// Handle API requests with Network First strategy
-async function handleApiRequest(request) {
-  const cache = await caches.open(API_CACHE);
+async function handleFetch(request) {
+  const url = new URL(request.url);
 
   try {
-    // Try network first
+    // Strategy 1: Static assets - Cache First
+    if (isStaticAsset(url.pathname)) {
+      return await cacheFirst(request, STATIC_CACHE_NAME);
+    }
+
+    // Strategy 2: Audio files - Cache First with fallback
+    if (isAudioAsset(url.pathname)) {
+      return await cacheFirstWithFallback(request, AUDIO_CACHE_NAME);
+    }
+
+    // Strategy 3: Environment assets - Cache First with progressive loading
+    if (isEnvironmentAsset(url.pathname)) {
+      return await cacheFirstWithProgressiveLoading(
+        request,
+        ENVIRONMENT_CACHE_NAME
+      );
+    }
+
+    // Strategy 4: API requests - Network First with cache fallback
+    if (isApiRequest(url.pathname)) {
+      return await networkFirstWithCache(request, CACHE_NAME);
+    }
+
+    // Strategy 5: Everything else - Network First
+    return await networkFirst(request);
+  } catch (error) {
+    console.error('Fetch error:', error);
+
+    // Return offline fallback for HTML requests
+    if (request.headers.get('accept')?.includes('text/html')) {
+      return await getOfflineFallback();
+    }
+
+    // Return empty response for other requests
+    return new Response('', { status: 408, statusText: 'Request Timeout' });
+  }
+}
+
+// Caching strategies
+
+async function cacheFirst(request, cacheName) {
+  const cache = await caches.open(cacheName);
+  const cachedResponse = await cache.match(request);
+
+  if (cachedResponse) {
+    return cachedResponse;
+  }
+
+  try {
+    const networkResponse = await fetch(request);
+    if (networkResponse.ok) {
+      cache.put(request, networkResponse.clone());
+    }
+    return networkResponse;
+  } catch (error) {
+    console.error('Network request failed:', error);
+    throw error;
+  }
+}
+
+async function cacheFirstWithFallback(request, cacheName) {
+  const cache = await caches.open(cacheName);
+  const cachedResponse = await cache.match(request);
+
+  if (cachedResponse) {
+    return cachedResponse;
+  }
+
+  try {
+    const networkResponse = await fetch(request);
+    if (networkResponse.ok) {
+      cache.put(request, networkResponse.clone());
+      return networkResponse;
+    }
+  } catch (error) {
+    console.error('Audio fetch failed:', error);
+  }
+
+  // Return silent audio fallback
+  return new Response(new ArrayBuffer(0), {
+    headers: { 'Content-Type': 'audio/mpeg' },
+  });
+}
+
+async function cacheFirstWithProgressiveLoading(request, cacheName) {
+  const cache = await caches.open(cacheName);
+  const cachedResponse = await cache.match(request);
+
+  if (cachedResponse) {
+    // Return cached version immediately
+    return cachedResponse;
+  }
+
+  try {
+    const networkResponse = await fetch(request);
+
+    if (networkResponse.ok) {
+      // Cache the response
+      cache.put(request, networkResponse.clone());
+
+      // Return response with progressive loading headers
+      const headers = new Headers(networkResponse.headers);
+      headers.set('X-Progressive-Loading', 'true');
+
+      return new Response(networkResponse.body, {
+        status: networkResponse.status,
+        statusText: networkResponse.statusText,
+        headers: headers,
+      });
+    }
+
+    return networkResponse;
+  } catch (error) {
+    console.error('Environment asset fetch failed:', error);
+
+    // Return placeholder image
+    return await getPlaceholderImage();
+  }
+}
+
+async function networkFirstWithCache(request, cacheName) {
+  const cache = await caches.open(cacheName);
+
+  try {
     const networkResponse = await fetch(request);
 
     if (networkResponse.ok) {
@@ -110,282 +257,282 @@ async function handleApiRequest(request) {
 
     return networkResponse;
   } catch (error) {
-    console.log(
-      'Service Worker: Network failed, trying cache for',
-      request.url
-    );
+    console.error('Network request failed, trying cache:', error);
 
-    // Fallback to cache
     const cachedResponse = await cache.match(request);
     if (cachedResponse) {
       return cachedResponse;
     }
 
-    // Return offline response for API calls
-    return new Response(
-      JSON.stringify({
-        error: 'Offline',
-        message: 'This feature is not available offline',
-      }),
-      {
-        status: 503,
-        statusText: 'Service Unavailable',
-        headers: { 'Content-Type': 'application/json' },
-      }
-    );
-  }
-}
-
-// Handle static assets with Cache First strategy
-async function handleStaticAsset(request) {
-  const cache = await caches.open(STATIC_CACHE);
-
-  // Try cache first
-  const cachedResponse = await cache.match(request);
-  if (cachedResponse) {
-    return cachedResponse;
-  }
-
-  try {
-    // Fallback to network
-    const networkResponse = await fetch(request);
-
-    if (networkResponse.ok) {
-      cache.put(request, networkResponse.clone());
-    }
-
-    return networkResponse;
-  } catch (error) {
-    console.error('Service Worker: Failed to fetch static asset', request.url);
     throw error;
   }
 }
 
-// Handle navigation requests
-async function handleNavigationRequest(request) {
+async function networkFirst(request) {
   try {
-    // Try network first
-    const networkResponse = await fetch(request);
-    return networkResponse;
+    return await fetch(request);
   } catch (error) {
-    console.log('Service Worker: Navigation offline, serving cached page');
-
-    // Fallback to cached index.html for SPA routing
-    const cache = await caches.open(STATIC_CACHE);
-    const cachedResponse = await cache.match('/index.html');
-
-    if (cachedResponse) {
-      return cachedResponse;
-    }
-
-    // Ultimate fallback to offline page
-    return cache.match('/offline.html');
+    console.error('Network request failed:', error);
+    throw error;
   }
 }
 
-// Handle other requests with Stale While Revalidate
-async function handleOtherRequests(request) {
-  const cache = await caches.open(DYNAMIC_CACHE);
+// Helper functions
 
-  // Get from cache immediately
-  const cachedResponse = await cache.match(request);
-
-  // Fetch from network in background
-  const networkPromise = fetch(request)
-    .then(networkResponse => {
-      if (networkResponse.ok) {
-        cache.put(request, networkResponse.clone());
-      }
-      return networkResponse;
-    })
-    .catch(() => null);
-
-  // Return cached version immediately, or wait for network
-  return cachedResponse || networkPromise;
-}
-
-// Utility functions
 function isStaticAsset(pathname) {
-  return /\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot)$/.test(
-    pathname
+  return pathname.match(
+    /\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot)$/
   );
 }
 
-function isNavigationRequest(request) {
+function isAudioAsset(pathname) {
   return (
-    request.mode === 'navigate' ||
-    (request.method === 'GET' &&
-      request.headers.get('accept').includes('text/html'))
+    pathname.match(/\.(mp3|wav|ogg|m4a|aac)$/) ||
+    pathname.startsWith('/sounds/')
   );
 }
 
-// Background sync for offline actions
-self.addEventListener('sync', event => {
-  console.log('Service Worker: Background sync triggered', event.tag);
-
-  if (event.tag === 'background-sync') {
-    event.waitUntil(handleBackgroundSync());
-  }
-});
-
-async function handleBackgroundSync() {
-  try {
-    // Get pending actions from IndexedDB
-    const pendingActions = await getPendingActions();
-
-    for (const action of pendingActions) {
-      try {
-        await syncAction(action);
-        await removePendingAction(action.id);
-      } catch (error) {
-        console.error('Service Worker: Failed to sync action', action, error);
-      }
-    }
-  } catch (error) {
-    console.error('Service Worker: Background sync failed', error);
-  }
+function isEnvironmentAsset(pathname) {
+  return (
+    pathname.startsWith('/environments/') ||
+    pathname.startsWith('/themes/') ||
+    (pathname.match(/\.(jpg|jpeg|png|gif|webp)$/) &&
+      (pathname.includes('environment') || pathname.includes('background')))
+  );
 }
 
-// Push notification handling
-self.addEventListener('push', event => {
-  console.log('Service Worker: Push notification received');
+function isApiRequest(pathname) {
+  return pathname.startsWith('/api/');
+}
 
-  const options = {
-    body: 'You have new study achievements!',
-    icon: '/icons/icon-192x192.png',
-    badge: '/icons/badge-72x72.png',
-    vibrate: [100, 50, 100],
-    data: {
-      dateOfArrival: Date.now(),
-      primaryKey: 1,
-    },
-    actions: [
-      {
-        action: 'explore',
-        title: 'View Progress',
-        icon: '/icons/checkmark.png',
-      },
-      {
-        action: 'close',
-        title: 'Close',
-        icon: '/icons/xmark.png',
-      },
-    ],
-  };
-
-  if (event.data) {
-    const payload = event.data.json();
-    options.body = payload.body || options.body;
-    options.data = { ...options.data, ...payload.data };
-  }
-
-  event.waitUntil(
-    self.registration.showNotification('Study Platform', options)
+async function getOfflineFallback() {
+  const cache = await caches.open(STATIC_CACHE_NAME);
+  return (
+    (await cache.match('/index.html')) ||
+    new Response('Offline', {
+      status: 200,
+      headers: { 'Content-Type': 'text/html' },
+    })
   );
-});
+}
 
-// Notification click handling
-self.addEventListener('notificationclick', event => {
-  console.log('Service Worker: Notification clicked', event.action);
+async function getPlaceholderImage() {
+  // Return a simple 1x1 transparent pixel
+  const pixel = new Uint8Array([
+    0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 0x00, 0x0d,
+    0x49, 0x48, 0x44, 0x52, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01,
+    0x08, 0x06, 0x00, 0x00, 0x00, 0x1f, 0x15, 0xc4, 0x89, 0x00, 0x00, 0x00,
+    0x0a, 0x49, 0x44, 0x41, 0x54, 0x78, 0x9c, 0x63, 0x00, 0x01, 0x00, 0x00,
+    0x05, 0x00, 0x01, 0x0d, 0x0a, 0x2d, 0xb4, 0x00, 0x00, 0x00, 0x00, 0x49,
+    0x45, 0x4e, 0x44, 0xae, 0x42, 0x60, 0x82,
+  ]);
 
-  event.notification.close();
+  return new Response(pixel, {
+    headers: { 'Content-Type': 'image/png' },
+  });
+}
 
-  if (event.action === 'explore') {
-    event.waitUntil(clients.openWindow('/progress'));
-  } else if (event.action === 'close') {
-    // Just close the notification
-    return;
-  } else {
-    // Default action - open the app
-    event.waitUntil(clients.openWindow('/'));
-  }
-});
-
-// Message handling for communication with main thread
+// Message handling for cache management
 self.addEventListener('message', event => {
-  console.log('Service Worker: Message received', event.data);
+  const { type, data } = event.data;
 
-  if (event.data && event.data.type === 'SKIP_WAITING') {
-    self.skipWaiting();
-  }
+  switch (type) {
+    case 'CACHE_AUDIO':
+      handleCacheAudio(data.urls);
+      break;
 
-  if (event.data && event.data.type === 'GET_VERSION') {
-    event.ports[0].postMessage({ version: CACHE_NAME });
-  }
+    case 'CACHE_ENVIRONMENT':
+      handleCacheEnvironment(data.urls);
+      break;
 
-  if (event.data && event.data.type === 'CACHE_URLS') {
-    event.waitUntil(cacheUrls(event.data.urls));
+    case 'PRELOAD_ASSETS':
+      handlePreloadAssets(data.urls);
+      break;
+
+    case 'CLEAR_CACHE':
+      handleClearCache(data.cacheName);
+      break;
+
+    case 'GET_CACHE_STATUS':
+      handleGetCacheStatus();
+      break;
+
+    default:
+      console.log('Unknown message type:', type);
   }
 });
 
-// Cache specific URLs on demand
-async function cacheUrls(urls) {
-  const cache = await caches.open(DYNAMIC_CACHE);
+async function handleCacheAudio(urls) {
+  try {
+    const cache = await caches.open(AUDIO_CACHE_NAME);
+    const requests = urls.map(url => new Request(url, { mode: 'no-cors' }));
+    await cache.addAll(requests);
 
-  for (const url of urls) {
-    try {
-      const response = await fetch(url);
-      if (response.ok) {
-        await cache.put(url, response);
-      }
-    } catch (error) {
-      console.error('Service Worker: Failed to cache URL', url, error);
+    self.clients.matchAll().then(clients => {
+      clients.forEach(client => {
+        client.postMessage({
+          type: 'CACHE_AUDIO_COMPLETE',
+          data: { urls, success: true },
+        });
+      });
+    });
+  } catch (error) {
+    console.error('Failed to cache audio:', error);
+
+    self.clients.matchAll().then(clients => {
+      clients.forEach(client => {
+        client.postMessage({
+          type: 'CACHE_AUDIO_COMPLETE',
+          data: { urls, success: false, error: error.message },
+        });
+      });
+    });
+  }
+}
+
+async function handleCacheEnvironment(urls) {
+  try {
+    const cache = await caches.open(ENVIRONMENT_CACHE_NAME);
+    const requests = urls.map(url => new Request(url, { mode: 'no-cors' }));
+    await cache.addAll(requests);
+
+    self.clients.matchAll().then(clients => {
+      clients.forEach(client => {
+        client.postMessage({
+          type: 'CACHE_ENVIRONMENT_COMPLETE',
+          data: { urls, success: true },
+        });
+      });
+    });
+  } catch (error) {
+    console.error('Failed to cache environment assets:', error);
+
+    self.clients.matchAll().then(clients => {
+      clients.forEach(client => {
+        client.postMessage({
+          type: 'CACHE_ENVIRONMENT_COMPLETE',
+          data: { urls, success: false, error: error.message },
+        });
+      });
+    });
+  }
+}
+
+async function handlePreloadAssets(urls) {
+  try {
+    const cache = await caches.open(CACHE_NAME);
+
+    // Preload assets in batches to avoid overwhelming the network
+    const batchSize = 5;
+    for (let i = 0; i < urls.length; i += batchSize) {
+      const batch = urls.slice(i, i + batchSize);
+      const requests = batch.map(url => new Request(url, { mode: 'no-cors' }));
+
+      await Promise.allSettled(
+        requests.map(async request => {
+          try {
+            const response = await fetch(request);
+            if (response.ok) {
+              await cache.put(request, response);
+            }
+          } catch (error) {
+            console.warn('Failed to preload asset:', request.url, error);
+          }
+        })
+      );
+
+      // Small delay between batches
+      await new Promise(resolve => setTimeout(resolve, 100));
     }
+
+    self.clients.matchAll().then(clients => {
+      clients.forEach(client => {
+        client.postMessage({
+          type: 'PRELOAD_ASSETS_COMPLETE',
+          data: { urls, success: true },
+        });
+      });
+    });
+  } catch (error) {
+    console.error('Failed to preload assets:', error);
+
+    self.clients.matchAll().then(clients => {
+      clients.forEach(client => {
+        client.postMessage({
+          type: 'PRELOAD_ASSETS_COMPLETE',
+          data: { urls, success: false, error: error.message },
+        });
+      });
+    });
   }
 }
 
-// IndexedDB helpers for offline actions
-async function getPendingActions() {
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open('OfflineActions', 1);
+async function handleClearCache(cacheName) {
+  try {
+    if (cacheName) {
+      await caches.delete(cacheName);
+    } else {
+      // Clear all caches
+      const cacheNames = await caches.keys();
+      await Promise.all(cacheNames.map(name => caches.delete(name)));
+    }
 
-    request.onerror = () => reject(request.error);
+    self.clients.matchAll().then(clients => {
+      clients.forEach(client => {
+        client.postMessage({
+          type: 'CLEAR_CACHE_COMPLETE',
+          data: { cacheName, success: true },
+        });
+      });
+    });
+  } catch (error) {
+    console.error('Failed to clear cache:', error);
 
-    request.onsuccess = () => {
-      const db = request.result;
-      const transaction = db.transaction(['actions'], 'readonly');
-      const store = transaction.objectStore('actions');
-      const getAllRequest = store.getAll();
-
-      getAllRequest.onsuccess = () => resolve(getAllRequest.result);
-      getAllRequest.onerror = () => reject(getAllRequest.error);
-    };
-
-    request.onupgradeneeded = () => {
-      const db = request.result;
-      if (!db.objectStoreNames.contains('actions')) {
-        db.createObjectStore('actions', { keyPath: 'id' });
-      }
-    };
-  });
-}
-
-async function removePendingAction(id) {
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open('OfflineActions', 1);
-
-    request.onsuccess = () => {
-      const db = request.result;
-      const transaction = db.transaction(['actions'], 'readwrite');
-      const store = transaction.objectStore('actions');
-      const deleteRequest = store.delete(id);
-
-      deleteRequest.onsuccess = () => resolve();
-      deleteRequest.onerror = () => reject(deleteRequest.error);
-    };
-  });
-}
-
-async function syncAction(action) {
-  const response = await fetch(action.url, {
-    method: action.method,
-    headers: action.headers,
-    body: action.body,
-  });
-
-  if (!response.ok) {
-    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    self.clients.matchAll().then(clients => {
+      clients.forEach(client => {
+        client.postMessage({
+          type: 'CLEAR_CACHE_COMPLETE',
+          data: { cacheName, success: false, error: error.message },
+        });
+      });
+    });
   }
-
-  return response;
 }
+
+async function handleGetCacheStatus() {
+  try {
+    const cacheNames = await caches.keys();
+    const cacheStatus = {};
+
+    for (const cacheName of cacheNames) {
+      const cache = await caches.open(cacheName);
+      const keys = await cache.keys();
+      cacheStatus[cacheName] = {
+        count: keys.length,
+        urls: keys.map(request => request.url),
+      };
+    }
+
+    self.clients.matchAll().then(clients => {
+      clients.forEach(client => {
+        client.postMessage({
+          type: 'CACHE_STATUS_RESPONSE',
+          data: { cacheStatus, success: true },
+        });
+      });
+    });
+  } catch (error) {
+    console.error('Failed to get cache status:', error);
+
+    self.clients.matchAll().then(clients => {
+      clients.forEach(client => {
+        client.postMessage({
+          type: 'CACHE_STATUS_RESPONSE',
+          data: { success: false, error: error.message },
+        });
+      });
+    });
+  }
+}
+
+console.log('Service Worker loaded');

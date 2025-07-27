@@ -1,221 +1,307 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
-  createImageLazyLoader,
-  createOptimizedImageUrl,
-  supportsWebP,
-} from '../../utils/imageOptimization';
+  useNetworkAwareLoading,
+  useLazyLoading,
+} from '../../hooks/usePerformanceOptimization';
+import { assetOptimizer } from '../../services/assetOptimizationService';
+import { LoadingAnimation } from './AnimationComponents';
 
 interface OptimizedImageProps {
   src: string;
   alt: string;
+  className?: string;
+  placeholderSrc?: string;
   width?: number;
   height?: number;
-  className?: string;
-  lazy?: boolean;
+  priority?: 'high' | 'medium' | 'low';
   quality?: number;
-  sizes?: string;
-  priority?: boolean;
+  lazy?: boolean;
   onLoad?: () => void;
-  onError?: () => void;
-  placeholder?: string;
+  onError?: (error: Error) => void;
 }
 
 export const OptimizedImage: React.FC<OptimizedImageProps> = ({
   src,
   alt,
+  className = '',
+  placeholderSrc,
   width,
   height,
-  className = '',
+  priority = 'medium',
+  quality = 80,
   lazy = true,
-  quality = 75,
-  sizes,
-  priority = false,
   onLoad,
   onError,
-  placeholder = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkxvYWRpbmcuLi48L3RleHQ+PC9zdmc+',
 }) => {
-  const [isLoaded, setIsLoaded] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
-  const [webpSupported, setWebpSupported] = useState<boolean | null>(null);
-  const imgRef = useRef<HTMLImageElement>(null);
-  const observerRef = useRef<IntersectionObserver | null>(null);
+  const [currentSrc, setCurrentSrc] = useState<string>('');
+  const [placeholderLoaded, setPlaceholderLoaded] = useState(false);
 
-  // Check WebP support
-  useEffect(() => {
-    supportsWebP().then(setWebpSupported);
-  }, []);
+  const { getOptimalImageQuality, shouldLoadAsset } = useNetworkAwareLoading();
+  const { elementRef, isVisible } = useLazyLoading(0.1);
+  const imageRef = useRef<HTMLImageElement>(null);
 
-  // Set up lazy loading
-  useEffect(() => {
-    if (!lazy || priority) return;
+  // Determine if image should load
+  const shouldLoad = !lazy || isVisible;
+  const optimalQuality = getOptimalImageQuality(quality);
 
-    observerRef.current = createImageLazyLoader();
-
-    if (imgRef.current && observerRef.current) {
-      observerRef.current.observe(imgRef.current);
-    }
-
-    return () => {
-      if (observerRef.current) {
-        observerRef.current.disconnect();
-      }
-    };
-  }, [lazy, priority]);
-
-  // Generate optimized image sources
-  const generateSources = () => {
-    if (webpSupported === null) return [];
-
-    const sources = [];
-
-    // WebP source if supported
-    if (webpSupported) {
-      const webpSrc = createOptimizedImageUrl(src, {
-        width,
-        height,
-        quality,
-        format: 'webp',
-      });
-
-      sources.push({
-        srcSet: webpSrc,
-        type: 'image/webp',
-      });
-    }
-
-    // Fallback JPEG source
-    const jpegSrc = createOptimizedImageUrl(src, {
-      width,
-      height,
-      quality,
-      format: 'jpg',
-    });
-
-    sources.push({
-      srcSet: jpegSrc,
-      type: 'image/jpeg',
-    });
-
-    return sources;
-  };
-
-  const handleLoad = () => {
-    setIsLoaded(true);
-    onLoad?.();
-  };
-
-  const handleError = () => {
-    setHasError(true);
-    onError?.();
-  };
-
-  const sources = generateSources();
-  const fallbackSrc = createOptimizedImageUrl(src, {
+  // Get optimized image URL
+  const optimizedSrc = assetOptimizer.getOptimizedImageUrl(src, {
     width,
     height,
-    quality,
+    quality: optimalQuality,
+    format: 'webp', // Prefer WebP for better compression
   });
 
-  // For priority images, load immediately
-  const shouldLoadImmediately = priority || !lazy;
-  const imageSrc = shouldLoadImmediately ? fallbackSrc : placeholder;
-  const imageDataSrc = shouldLoadImmediately ? undefined : fallbackSrc;
+  useEffect(() => {
+    if (!shouldLoad) return;
+
+    const loadImage = async () => {
+      try {
+        setIsLoading(true);
+        setHasError(false);
+
+        // Load placeholder first if provided
+        if (placeholderSrc && !placeholderLoaded) {
+          try {
+            await assetOptimizer.loadImage(placeholderSrc, 'high');
+            setCurrentSrc(placeholderSrc);
+            setPlaceholderLoaded(true);
+          } catch (error) {
+            console.warn('Failed to load placeholder:', error);
+          }
+        }
+
+        // Check if we should load the full image based on network conditions
+        const estimatedSize = (width || 800) * (height || 600) * 0.1; // Rough estimate
+        if (!shouldLoadAsset(estimatedSize, priority)) {
+          // Use placeholder or low-quality version
+          if (placeholderSrc) {
+            setCurrentSrc(placeholderSrc);
+            setIsLoading(false);
+            return;
+          }
+        }
+
+        // Load the full image
+        const img = await assetOptimizer.loadImage(optimizedSrc, priority);
+        setCurrentSrc(optimizedSrc);
+        setIsLoading(false);
+        onLoad?.();
+      } catch (error) {
+        console.error('Failed to load image:', error);
+        setHasError(true);
+        setIsLoading(false);
+        onError?.(error as Error);
+      }
+    };
+
+    loadImage();
+  }, [
+    shouldLoad,
+    optimizedSrc,
+    placeholderSrc,
+    priority,
+    width,
+    height,
+    onLoad,
+    onError,
+    shouldLoadAsset,
+    placeholderLoaded,
+  ]);
+
+  // Preload image on hover for better UX
+  const handleMouseEnter = () => {
+    if (!currentSrc && priority !== 'high') {
+      assetOptimizer.preloadAssets([
+        { src: optimizedSrc, type: 'image', priority: 'medium' },
+      ]);
+    }
+  };
+
+  if (hasError) {
+    return (
+      <div
+        ref={elementRef}
+        className={`flex items-center justify-center bg-gray-200 text-gray-500 ${className}`}
+        style={{ width, height }}
+      >
+        <span className="text-sm">Failed to load image</span>
+      </div>
+    );
+  }
 
   return (
-    <div className={`relative overflow-hidden ${className}`}>
-      {/* Loading placeholder */}
-      {!isLoaded && !hasError && (
-        <div
-          className="absolute inset-0 bg-gray-200 animate-pulse flex items-center justify-center"
-          style={{ width, height }}
-        >
-          <svg
-            className="w-8 h-8 text-gray-400"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
+    <div
+      ref={elementRef}
+      className={`relative overflow-hidden ${className}`}
+      style={{ width, height }}
+      onMouseEnter={handleMouseEnter}
+    >
+      <AnimatePresence mode="wait">
+        {isLoading && (
+          <motion.div
+            key="loading"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 flex items-center justify-center bg-gray-100"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+            <LoadingAnimation
+              isLoading={true}
+              type="pulse"
+              className="w-8 h-8"
             />
-          </svg>
-        </div>
-      )}
+          </motion.div>
+        )}
 
-      {/* Error state */}
-      {hasError && (
-        <div
-          className="absolute inset-0 bg-gray-100 flex items-center justify-center"
-          style={{ width, height }}
-        >
-          <div className="text-center text-gray-500">
-            <svg
-              className="w-8 h-8 mx-auto mb-2"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-            <p className="text-sm">Failed to load image</p>
-          </div>
-        </div>
-      )}
-
-      {/* Optimized image with multiple sources */}
-      {sources.length > 0 ? (
-        <picture>
-          {sources.map((source, index) => (
-            <source
-              key={index}
-              srcSet={source.srcSet}
-              type={source.type}
-              sizes={sizes}
-            />
-          ))}
-          <img
-            ref={imgRef}
-            src={imageSrc}
-            data-src={imageDataSrc}
+        {currentSrc && (
+          <motion.img
+            key={currentSrc}
+            ref={imageRef}
+            src={currentSrc}
             alt={alt}
-            width={width}
-            height={height}
-            className={`transition-opacity duration-300 ${
-              isLoaded ? 'opacity-100' : 'opacity-0'
-            } ${lazy && !priority ? 'lazy' : ''}`}
-            onLoad={handleLoad}
-            onError={handleError}
-            loading={priority ? 'eager' : 'lazy'}
+            className="w-full h-full object-cover"
+            initial={{ opacity: 0, scale: 1.05 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3, ease: 'easeOut' }}
+            loading={lazy ? 'lazy' : 'eager'}
             decoding="async"
           />
-        </picture>
-      ) : (
-        <img
-          ref={imgRef}
-          src={imageSrc}
-          data-src={imageDataSrc}
-          alt={alt}
-          width={width}
-          height={height}
-          className={`transition-opacity duration-300 ${
-            isLoaded ? 'opacity-100' : 'opacity-0'
-          } ${lazy && !priority ? 'lazy' : ''}`}
-          onLoad={handleLoad}
-          onError={handleError}
-          loading={priority ? 'eager' : 'lazy'}
-          decoding="async"
-        />
+        )}
+      </AnimatePresence>
+
+      {/* Progressive enhancement: Show quality indicator */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="absolute top-2 right-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
+          Q: {optimalQuality}%
+        </div>
       )}
     </div>
   );
 };
 
-export default OptimizedImage;
+// Optimized background image component
+interface OptimizedBackgroundProps {
+  src: string;
+  className?: string;
+  children?: React.ReactNode;
+  overlay?: boolean;
+  overlayOpacity?: number;
+  priority?: 'high' | 'medium' | 'low';
+}
+
+export const OptimizedBackground: React.FC<OptimizedBackgroundProps> = ({
+  src,
+  className = '',
+  children,
+  overlay = false,
+  overlayOpacity = 0.3,
+  priority = 'low',
+}) => {
+  const [backgroundLoaded, setBackgroundLoaded] = useState(false);
+  const { getOptimalImageQuality } = useNetworkAwareLoading();
+
+  const optimalQuality = getOptimalImageQuality(60); // Lower quality for backgrounds
+  const optimizedSrc = assetOptimizer.getOptimizedImageUrl(src, {
+    quality: optimalQuality,
+    format: 'webp',
+  });
+
+  useEffect(() => {
+    assetOptimizer
+      .loadImage(optimizedSrc, priority)
+      .then(() => setBackgroundLoaded(true))
+      .catch(error => console.warn('Failed to load background:', error));
+  }, [optimizedSrc, priority]);
+
+  return (
+    <div className={`relative ${className}`}>
+      <AnimatePresence>
+        {backgroundLoaded && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.8 }}
+            className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+            style={{ backgroundImage: `url(${optimizedSrc})` }}
+          />
+        )}
+      </AnimatePresence>
+
+      {overlay && (
+        <div
+          className="absolute inset-0 bg-black"
+          style={{ opacity: overlayOpacity }}
+        />
+      )}
+
+      <div className="relative z-10">{children}</div>
+    </div>
+  );
+};
+
+// Image gallery with progressive loading
+interface ImageGalleryProps {
+  images: Array<{
+    src: string;
+    alt: string;
+    thumbnail?: string;
+  }>;
+  className?: string;
+  itemClassName?: string;
+}
+
+export const OptimizedImageGallery: React.FC<ImageGalleryProps> = ({
+  images,
+  className = '',
+  itemClassName = '',
+}) => {
+  const [loadedCount, setLoadedCount] = useState(0);
+
+  const handleImageLoad = () => {
+    setLoadedCount(prev => prev + 1);
+  };
+
+  return (
+    <div className={`grid gap-4 ${className}`}>
+      {/* Progress indicator */}
+      {loadedCount < images.length && (
+        <div className="mb-4">
+          <div className="flex justify-between text-sm text-gray-600 mb-2">
+            <span>Loading images...</span>
+            <span>
+              {loadedCount}/{images.length}
+            </span>
+          </div>
+          <div className="w-full bg-gray-200 rounded-full h-2">
+            <motion.div
+              className="bg-blue-500 h-2 rounded-full"
+              initial={{ width: 0 }}
+              animate={{ width: `${(loadedCount / images.length) * 100}%` }}
+              transition={{ duration: 0.3 }}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Image grid */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        {images.map((image, index) => (
+          <OptimizedImage
+            key={image.src}
+            src={image.src}
+            alt={image.alt}
+            placeholderSrc={image.thumbnail}
+            className={`aspect-square ${itemClassName}`}
+            priority={index < 4 ? 'high' : 'low'} // Prioritize first 4 images
+            onLoad={handleImageLoad}
+          />
+        ))}
+      </div>
+    </div>
+  );
+};

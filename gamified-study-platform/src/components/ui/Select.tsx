@@ -7,13 +7,16 @@ interface SelectOption {
 }
 
 interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
-  options: SelectOption[];
+  options?: SelectOption[];
   error?: string;
   fullWidth?: boolean;
 }
 
 export const Select = forwardRef<HTMLSelectElement, SelectProps>(
-  ({ options, error, fullWidth = true, className, ...props }, ref) => {
+  (
+    { options, error, fullWidth = true, className, children, ...props },
+    ref
+  ) => {
     return (
       <div className={clsx(fullWidth && 'w-full')}>
         <select
@@ -26,11 +29,13 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
           )}
           {...props}
         >
-          {options.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
+          {options
+            ? options.map(option => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))
+            : children}
         </select>
         {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
       </div>

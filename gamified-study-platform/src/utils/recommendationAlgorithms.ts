@@ -1,8 +1,7 @@
-import type { 
-  StudySession, 
-  SubjectPerformance, 
+import type {
+  StudySession,
+  SubjectPerformance,
   StudentLearningProfile,
-  StudyAnalytics 
 } from '../types';
 
 /**
@@ -27,7 +26,9 @@ export interface LearningEfficiency {
 /**
  * Analyze user's study patterns from session data
  */
-export const analyzeStudyPatterns = (sessions: StudySession[]): StudyPattern => {
+export const analyzeStudyPatterns = (
+  sessions: StudySession[]
+): StudyPattern => {
   if (sessions.length === 0) {
     return {
       peakHours: [],
@@ -40,7 +41,7 @@ export const analyzeStudyPatterns = (sessions: StudySession[]): StudyPattern => 
 
   // Analyze peak performance hours
   const hourCounts: { [hour: number]: { count: number; totalXP: number } } = {};
-  
+
   sessions.forEach(session => {
     const hour = new Date(session.startTime).getHours();
     if (!hourCounts[hour]) {
@@ -63,7 +64,9 @@ export const analyzeStudyPatterns = (sessions: StudySession[]): StudyPattern => 
     .map(item => item.hour);
 
   // Calculate average session length
-  const averageSessionLength = sessions.reduce((sum, session) => sum + session.duration, 0) / sessions.length;
+  const averageSessionLength =
+    sessions.reduce((sum, session) => sum + session.duration, 0) /
+    sessions.length;
 
   // Calculate consistency score
   const consistencyScore = calculateConsistencyScore(sessions);
@@ -74,7 +77,10 @@ export const analyzeStudyPatterns = (sessions: StudySession[]): StudyPattern => 
   return {
     peakHours,
     averageSessionLength,
-    preferredBreakLength: Math.max(5, Math.min(30, Math.round(averageSessionLength * 0.2))),
+    preferredBreakLength: Math.max(
+      5,
+      Math.min(30, Math.round(averageSessionLength * 0.2))
+    ),
     consistencyScore,
     productivityTrend,
   };
@@ -88,19 +94,17 @@ export const calculateConsistencyScore = (sessions: StudySession[]): number => {
 
   const now = new Date();
   const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-  
+
   // Get sessions from last 30 days
-  const recentSessions = sessions.filter(session => 
-    new Date(session.startTime) >= thirtyDaysAgo
+  const recentSessions = sessions.filter(
+    session => new Date(session.startTime) >= thirtyDaysAgo
   );
 
   if (recentSessions.length === 0) return 0;
 
   // Calculate study days
   const studyDays = new Set(
-    recentSessions.map(session => 
-      new Date(session.startTime).toDateString()
-    )
+    recentSessions.map(session => new Date(session.startTime).toDateString())
   ).size;
 
   // Base consistency score
@@ -108,11 +112,15 @@ export const calculateConsistencyScore = (sessions: StudySession[]): number => {
 
   // Bonus for regular intervals
   const intervals = calculateStudyIntervals(recentSessions);
-  const avgInterval = intervals.reduce((sum, interval) => sum + interval, 0) / intervals.length;
+  const avgInterval =
+    intervals.reduce((sum, interval) => sum + interval, 0) / intervals.length;
   const idealInterval = 1; // 1 day
-  const intervalConsistency = Math.max(0, 1 - Math.abs(avgInterval - idealInterval) / idealInterval);
-  
-  score *= (0.7 + 0.3 * intervalConsistency);
+  const intervalConsistency = Math.max(
+    0,
+    1 - Math.abs(avgInterval - idealInterval) / idealInterval
+  );
+
+  score *= 0.7 + 0.3 * intervalConsistency;
 
   return Math.min(100, Math.round(score));
 };
@@ -120,12 +128,14 @@ export const calculateConsistencyScore = (sessions: StudySession[]): number => {
 /**
  * Calculate productivity trend over time
  */
-export const calculateProductivityTrend = (sessions: StudySession[]): 'improving' | 'stable' | 'declining' => {
+export const calculateProductivityTrend = (
+  sessions: StudySession[]
+): 'improving' | 'stable' | 'declining' => {
   if (sessions.length < 6) return 'stable';
 
   // Sort sessions by date
-  const sortedSessions = [...sessions].sort((a, b) => 
-    new Date(a.startTime).getTime() - new Date(b.startTime).getTime()
+  const sortedSessions = [...sessions].sort(
+    (a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime()
   );
 
   // Split into two halves
@@ -134,8 +144,11 @@ export const calculateProductivityTrend = (sessions: StudySession[]): 'improving
   const secondHalf = sortedSessions.slice(midPoint);
 
   // Calculate average XP for each half
-  const firstHalfAvgXP = firstHalf.reduce((sum, s) => sum + (s.xpEarned || 0), 0) / firstHalf.length;
-  const secondHalfAvgXP = secondHalf.reduce((sum, s) => sum + (s.xpEarned || 0), 0) / secondHalf.length;
+  const firstHalfAvgXP =
+    firstHalf.reduce((sum, s) => sum + (s.xpEarned || 0), 0) / firstHalf.length;
+  const secondHalfAvgXP =
+    secondHalf.reduce((sum, s) => sum + (s.xpEarned || 0), 0) /
+    secondHalf.length;
 
   const improvement = (secondHalfAvgXP - firstHalfAvgXP) / firstHalfAvgXP;
 
@@ -150,15 +163,17 @@ export const calculateProductivityTrend = (sessions: StudySession[]): 'improving
 export const calculateStudyIntervals = (sessions: StudySession[]): number[] => {
   if (sessions.length < 2) return [];
 
-  const sortedSessions = [...sessions].sort((a, b) => 
-    new Date(a.startTime).getTime() - new Date(b.startTime).getTime()
+  const sortedSessions = [...sessions].sort(
+    (a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime()
   );
 
   const intervals: number[] = [];
   for (let i = 1; i < sortedSessions.length; i++) {
     const prevDate = new Date(sortedSessions[i - 1].startTime);
     const currentDate = new Date(sortedSessions[i].startTime);
-    const daysDiff = Math.floor((currentDate.getTime() - prevDate.getTime()) / (24 * 60 * 60 * 1000));
+    const daysDiff = Math.floor(
+      (currentDate.getTime() - prevDate.getTime()) / (24 * 60 * 60 * 1000)
+    );
     intervals.push(daysDiff);
   }
 
@@ -182,21 +197,25 @@ export const analyzeLearningEfficiency = (
   }
 
   // Calculate retention rate based on consistency scores
-  const avgConsistencyScore = performances.reduce((sum, p) => sum + p.consistencyScore, 0) / performances.length;
+  const avgConsistencyScore =
+    performances.reduce((sum, p) => sum + p.consistencyScore, 0) /
+    performances.length;
   const retentionRate = avgConsistencyScore / 100;
 
   // Calculate comprehension speed based on XP earned per minute
   const totalXP = sessions.reduce((sum, s) => sum + (s.xpEarned || 0), 0);
   const totalMinutes = sessions.reduce((sum, s) => sum + s.duration, 0);
   const xpPerMinute = totalMinutes > 0 ? totalXP / totalMinutes : 0;
-  
+
   // Normalize comprehension speed (assuming 1 XP per minute is average)
   const comprehensionSpeed = Math.min(1, xpPerMinute);
 
   // Determine optimal difficulty based on performance scores
-  const avgPerformanceScore = performances.reduce((sum, p) => sum + p.performanceScore, 0) / performances.length;
+  const avgPerformanceScore =
+    performances.reduce((sum, p) => sum + p.performanceScore, 0) /
+    performances.length;
   let optimalDifficulty: 'easy' | 'medium' | 'hard';
-  
+
   if (avgPerformanceScore < 60) {
     optimalDifficulty = 'easy';
   } else if (avgPerformanceScore > 80) {
@@ -206,10 +225,11 @@ export const analyzeLearningEfficiency = (
   }
 
   // Determine preferred pace based on session lengths and performance
-  const avgSessionLength = sessions.length > 0 
-    ? sessions.reduce((sum, s) => sum + s.duration, 0) / sessions.length 
-    : 45;
-  
+  const avgSessionLength =
+    sessions.length > 0
+      ? sessions.reduce((sum, s) => sum + s.duration, 0) / sessions.length
+      : 45;
+
   let preferredPace: 'slow' | 'moderate' | 'fast';
   if (avgSessionLength > 60 && avgPerformanceScore > 70) {
     preferredPace = 'slow'; // Long sessions with good performance = thorough learner
@@ -298,34 +318,50 @@ export const generateMethodRecommendations = (
 
   // Learning style recommendations
   if (learningProfile.learningStyle.includes('visual')) {
-    recommendations.push('Use mind maps, diagrams, and color-coding to enhance visual learning');
+    recommendations.push(
+      'Use mind maps, diagrams, and color-coding to enhance visual learning'
+    );
   }
-  
+
   if (learningProfile.learningStyle.includes('auditory')) {
-    recommendations.push('Try explaining concepts aloud or using audio resources');
+    recommendations.push(
+      'Try explaining concepts aloud or using audio resources'
+    );
   }
-  
+
   if (learningProfile.learningStyle.includes('kinesthetic')) {
-    recommendations.push('Incorporate hands-on activities and movement into your study sessions');
+    recommendations.push(
+      'Incorporate hands-on activities and movement into your study sessions'
+    );
   }
 
   // Difficulty recommendations
   if (efficiency.optimalDifficulty === 'easy') {
-    recommendations.push('Start with easier topics to build confidence before tackling challenging material');
+    recommendations.push(
+      'Start with easier topics to build confidence before tackling challenging material'
+    );
   } else if (efficiency.optimalDifficulty === 'hard') {
-    recommendations.push('Challenge yourself with advanced topics to maintain engagement');
+    recommendations.push(
+      'Challenge yourself with advanced topics to maintain engagement'
+    );
   }
 
   // Pace recommendations
   if (efficiency.preferredPace === 'fast') {
-    recommendations.push('Use active recall and spaced repetition for efficient learning');
+    recommendations.push(
+      'Use active recall and spaced repetition for efficient learning'
+    );
   } else if (efficiency.preferredPace === 'slow') {
-    recommendations.push('Take time for deep understanding and thorough note-taking');
+    recommendations.push(
+      'Take time for deep understanding and thorough note-taking'
+    );
   }
 
   // Retention recommendations
   if (efficiency.retentionRate < 0.7) {
-    recommendations.push('Implement spaced repetition and regular review sessions to improve retention');
+    recommendations.push(
+      'Implement spaced repetition and regular review sessions to improve retention'
+    );
   }
 
   return recommendations;
@@ -341,14 +377,14 @@ export const calculateRecommendationConfidence = (
 ): number => {
   // Base confidence on amount of data
   let confidence = Math.min(0.9, dataPoints / 20);
-  
+
   // Adjust for consistency
-  confidence *= (0.5 + 0.5 * (consistencyScore / 100));
-  
+  confidence *= 0.5 + 0.5 * (consistencyScore / 100);
+
   // Adjust for time span (more recent data is more reliable)
   const timeSpanFactor = Math.min(1, timeSpan / 30); // 30 days for full confidence
-  confidence *= (0.7 + 0.3 * timeSpanFactor);
-  
+  confidence *= 0.7 + 0.3 * timeSpanFactor;
+
   return Math.max(0.1, Math.min(0.95, confidence));
 };
 
@@ -370,11 +406,11 @@ export const prioritizeRecommendations = (
   return recommendations
     .map((rec, index) => ({
       index,
-      priority: 
+      priority:
         impactScores[rec.impact] * 0.4 +
         feasibilityScores[rec.feasibility] * 0.3 +
         urgencyScores[rec.urgency] * 0.2 +
-        rec.confidence * 0.1
+        rec.confidence * 0.1,
     }))
     .sort((a, b) => b.priority - a.priority);
 };

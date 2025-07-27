@@ -204,12 +204,12 @@ export interface Achievement {
   progress?: AchievementProgress;
 }
 
-export type AchievementCategory = 
-  | 'study_time' 
-  | 'consistency' 
-  | 'quest_completion' 
-  | 'pet_care' 
-  | 'social' 
+export type AchievementCategory =
+  | 'study_time'
+  | 'consistency'
+  | 'quest_completion'
+  | 'pet_care'
+  | 'social'
   | 'special_event';
 
 export interface AchievementProgress {
@@ -517,7 +517,12 @@ export interface PetState {
 
 // Event types
 export interface StudyEvent {
-  type: 'session_start' | 'session_end' | 'quest_complete' | 'level_up' | 'achievement_unlock';
+  type:
+    | 'session_start'
+    | 'session_end'
+    | 'quest_complete'
+    | 'level_up'
+    | 'achievement_unlock';
   timestamp: Date;
   data: Record<string, any>;
   userId: string;
@@ -652,7 +657,10 @@ export interface RoutineSuggestion {
   dismissedAt?: Date;
 }
 
-export type SuggestionType = 'time_optimization' | 'conflict_resolution' | 'productivity_boost';
+export type SuggestionType =
+  | 'time_optimization'
+  | 'conflict_resolution'
+  | 'productivity_boost';
 
 export interface ScheduleConflict {
   conflictingSlotId: string;
@@ -787,7 +795,12 @@ export interface SubjectPerformance {
 
 export interface PerformanceRecommendation {
   id: string;
-  type: 'study_time' | 'consistency' | 'quest_focus' | 'deadline_management' | 'break_schedule';
+  type:
+    | 'study_time'
+    | 'consistency'
+    | 'quest_focus'
+    | 'deadline_management'
+    | 'break_schedule';
   priority: 'high' | 'medium' | 'low';
   title: string;
   description: string;
@@ -799,7 +812,12 @@ export interface PerformanceRecommendation {
 
 export interface InterventionStrategy {
   id: string;
-  type: 'intensive_study' | 'schedule_adjustment' | 'goal_modification' | 'resource_addition' | 'peer_support';
+  type:
+    | 'intensive_study'
+    | 'schedule_adjustment'
+    | 'goal_modification'
+    | 'resource_addition'
+    | 'peer_support';
   urgency: 'critical' | 'high' | 'medium';
   title: string;
   description: string;
@@ -839,7 +857,11 @@ export interface SubjectPriority {
 }
 
 export interface PriorityFactor {
-  type: 'deadline_proximity' | 'performance_gap' | 'importance_weight' | 'prerequisite_dependency';
+  type:
+    | 'deadline_proximity'
+    | 'performance_gap'
+    | 'importance_weight'
+    | 'prerequisite_dependency';
   impact: number; // 0-100
   description: string;
 }
@@ -927,14 +949,14 @@ export interface AIMessage {
   reactions?: MessageReaction[];
 }
 
-export type AIMessageType = 
-  | 'question' 
-  | 'explanation' 
-  | 'suggestion' 
-  | 'motivation' 
-  | 'reminder' 
-  | 'celebration' 
-  | 'analysis' 
+export type AIMessageType =
+  | 'question'
+  | 'explanation'
+  | 'suggestion'
+  | 'motivation'
+  | 'reminder'
+  | 'celebration'
+  | 'analysis'
   | 'planning';
 
 export interface MessageMetadata {
@@ -973,25 +995,30 @@ export interface StudentLearningProfile {
   improvementAreas: string[];
 }
 
-export type LearningStyle = 
-  | 'visual' 
-  | 'auditory' 
-  | 'kinesthetic' 
-  | 'reading_writing' 
-  | 'logical' 
-  | 'social' 
+export type LearningStyle =
+  | 'visual'
+  | 'auditory'
+  | 'kinesthetic'
+  | 'reading_writing'
+  | 'logical'
+  | 'social'
   | 'solitary';
 
-export type ExplanationType = 
-  | 'step_by_step' 
-  | 'examples' 
-  | 'analogies' 
-  | 'diagrams' 
-  | 'practice_problems' 
+export type ExplanationType =
+  | 'step_by_step'
+  | 'examples'
+  | 'analogies'
+  | 'diagrams'
+  | 'practice_problems'
   | 'real_world_applications';
 
 export interface MotivationTrigger {
-  type: 'progress_tracking' | 'competition' | 'rewards' | 'social_recognition' | 'personal_growth';
+  type:
+    | 'progress_tracking'
+    | 'competition'
+    | 'rewards'
+    | 'social_recognition'
+    | 'personal_growth';
   effectiveness: number; // 1-10
   description: string;
 }
@@ -1063,7 +1090,11 @@ export interface StudyResource {
 }
 
 export interface AdaptiveElement {
-  type: 'difficulty_adjustment' | 'pace_modification' | 'method_change' | 'resource_suggestion';
+  type:
+    | 'difficulty_adjustment'
+    | 'pace_modification'
+    | 'method_change'
+    | 'resource_suggestion';
   trigger: string;
   action: string;
   conditions: Record<string, any>;
@@ -1097,20 +1128,20 @@ export interface AIInsight {
   isValid: boolean;
 }
 
-export type InsightType = 
-  | 'performance_pattern' 
-  | 'study_habit' 
-  | 'knowledge_gap' 
-  | 'motivation_trend' 
-  | 'time_optimization' 
+export type InsightType =
+  | 'performance_pattern'
+  | 'study_habit'
+  | 'knowledge_gap'
+  | 'motivation_trend'
+  | 'time_optimization'
   | 'resource_recommendation';
 
-export type InsightCategory = 
-  | 'productivity' 
-  | 'learning_efficiency' 
-  | 'motivation' 
-  | 'time_management' 
-  | 'content_mastery' 
+export type InsightCategory =
+  | 'productivity'
+  | 'learning_efficiency'
+  | 'motivation'
+  | 'time_management'
+  | 'content_mastery'
   | 'goal_achievement';
 
 export interface AIQuestionAnswer {
@@ -1131,7 +1162,12 @@ export interface QuestionContext {
   courseId?: string;
   topic?: string;
   difficulty?: 'basic' | 'intermediate' | 'advanced';
-  questionType: 'concept' | 'procedure' | 'application' | 'analysis' | 'synthesis';
+  questionType:
+    | 'concept'
+    | 'procedure'
+    | 'application'
+    | 'analysis'
+    | 'synthesis';
   userLevel?: 'beginner' | 'intermediate' | 'advanced';
 }
 
@@ -1147,12 +1183,12 @@ export interface AIMotivation {
   userResponse?: 'positive' | 'neutral' | 'negative';
 }
 
-export type MotivationType = 
-  | 'encouragement' 
-  | 'celebration' 
-  | 'reminder' 
-  | 'challenge' 
-  | 'tip' 
+export type MotivationType =
+  | 'encouragement'
+  | 'celebration'
+  | 'reminder'
+  | 'challenge'
+  | 'tip'
   | 'milestone_recognition';
 
 export interface MotivationContext {
@@ -1390,7 +1426,12 @@ export interface GroupChallenge {
   createdAt: Date;
 }
 
-export type ChallengeType = 'study_time' | 'quest_completion' | 'streak_maintenance' | 'collaboration' | 'custom';
+export type ChallengeType =
+  | 'study_time'
+  | 'quest_completion'
+  | 'streak_maintenance'
+  | 'collaboration'
+  | 'custom';
 export type ChallengeStatus = 'upcoming' | 'active' | 'completed' | 'cancelled';
 
 export interface ChallengeGoal {
@@ -1496,7 +1537,12 @@ export interface GroupLeaderboard {
   lastUpdated: Date;
 }
 
-export type LeaderboardType = 'xp' | 'study_time' | 'quests_completed' | 'streak_days' | 'contribution';
+export type LeaderboardType =
+  | 'xp'
+  | 'study_time'
+  | 'quests_completed'
+  | 'streak_days'
+  | 'contribution';
 export type LeaderboardPeriod = 'daily' | 'weekly' | 'monthly' | 'all_time';
 
 export interface LeaderboardEntry {
@@ -1532,22 +1578,22 @@ export interface GroupActivity {
   groupId: string;
   userId: string;
   username: string;
-  type: ActivityType;
+  type: SocialActivityType;
   description: string;
   data?: Record<string, any>;
   timestamp: Date;
   isVisible: boolean;
 }
 
-export type ActivityType = 
-  | 'member_joined' 
-  | 'member_left' 
-  | 'quest_completed' 
-  | 'achievement_unlocked' 
-  | 'challenge_started' 
-  | 'challenge_completed' 
-  | 'study_session_started' 
-  | 'milestone_reached' 
+export type SocialActivityType =
+  | 'member_joined'
+  | 'member_left'
+  | 'quest_completed'
+  | 'achievement_unlocked'
+  | 'challenge_started'
+  | 'challenge_completed'
+  | 'study_session_started'
+  | 'milestone_reached'
   | 'level_up';
 
 export interface SocialProfile {
@@ -1610,7 +1656,12 @@ export interface GroupMessage {
   isDeleted: boolean;
 }
 
-export type MessageType = 'text' | 'system' | 'achievement' | 'challenge' | 'study_update';
+export type MessageType =
+  | 'text'
+  | 'system'
+  | 'achievement'
+  | 'challenge'
+  | 'study_update';
 
 export interface MessageAttachment {
   id: string;
@@ -1696,4 +1747,168 @@ export interface ChallengeFilters {
   search?: string;
   sortBy?: 'start_date' | 'end_date' | 'participants' | 'created_at';
   sortOrder?: 'asc' | 'desc';
+}
+
+// Store and Economy Types
+export interface StoreItem {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  currency: 'coins' | 'premium_coins';
+  category: StoreCategory;
+  rarity: 'common' | 'rare' | 'epic' | 'legendary';
+  imageUrl?: string;
+  stock?: number;
+  isLimited: boolean;
+  unlockRequirements?: UnlockRequirement[];
+  effects?: ItemEffect[];
+  tags: string[];
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export type StoreCategory =
+  | 'pet_food'
+  | 'pet_accessories'
+  | 'themes'
+  | 'environments'
+  | 'music_packs'
+  | 'power_ups'
+  | 'decorations';
+
+export interface InventoryItem {
+  id: string;
+  userId: string;
+  itemId: string;
+  quantity: number;
+  acquiredAt: Date;
+  usedCount?: number;
+  lastUsed?: Date;
+  isEquipped?: boolean;
+  metadata?: Record<string, any>;
+}
+
+export interface UserEconomy {
+  coins: number;
+  premiumCoins: number;
+  totalEarned: number;
+  totalSpent: number;
+  purchaseHistory: Purchase[];
+  inventory: InventoryItem[];
+  dailyCoinLimit: number;
+  dailyCoinsEarned: number;
+  lastCoinEarned?: Date;
+}
+
+export interface Purchase {
+  id: string;
+  userId: string;
+  itemId: string;
+  quantity: number;
+  totalCost: number;
+  currency: 'coins' | 'premium_coins';
+  purchasedAt: Date;
+  status: 'pending' | 'completed' | 'failed' | 'refunded';
+  transactionId?: string;
+}
+
+export interface PurchaseResult {
+  success: boolean;
+  item: StoreItem;
+  quantity: number;
+  totalCost: number;
+  newBalance: number;
+  inventoryItem?: InventoryItem;
+  transaction?: CoinTransaction;
+  error?: string;
+}
+
+export interface PurchaseEligibility {
+  eligible: boolean;
+  canPurchase: boolean;
+  reason?: string;
+  missingCoins?: number;
+  unmetRequirements?: UnlockRequirement[];
+}
+
+export interface UnlockRequirement {
+  type:
+    | 'level'
+    | 'achievement'
+    | 'quest_completion'
+    | 'time_played'
+    | 'coins_spent'
+    | 'study_hours'
+    | 'quests_completed'
+    | 'pet_evolution';
+  value: number;
+  target: number;
+  current: number;
+  description: string;
+  met: boolean;
+}
+
+export interface ItemEffect {
+  type:
+    | 'xp_boost'
+    | 'coin_boost'
+    | 'pet_happiness'
+    | 'pet_health'
+    | 'cosmetic'
+    | 'health'
+    | 'happiness'
+    | 'energy'
+    | 'evolution_boost'
+    | 'xp_multiplier'
+    | 'coin_multiplier';
+  value: number;
+  duration?: number; // in minutes, undefined for permanent effects
+  description: string;
+}
+
+export interface StoreFilters {
+  category: StoreCategory | 'all';
+  rarity: 'common' | 'rare' | 'epic' | 'legendary' | 'all';
+  sortBy: 'name' | 'price' | 'rarity' | 'created_at' | 'newest';
+  sortOrder: 'asc' | 'desc';
+  showOwned?: boolean;
+  search?: string;
+  priceRange?: {
+    min: number;
+    max: number;
+  };
+}
+
+export interface CoinTransaction {
+  id: string;
+  userId: string;
+  amount: number;
+  type: 'earned' | 'spent' | 'bonus' | 'refund';
+  source:
+    | 'study_session'
+    | 'quest_completion'
+    | 'store_purchase'
+    | 'daily_bonus'
+    | 'achievement';
+  description: string;
+  relatedId?: string; // ID of related quest, purchase, etc.
+  timestamp: Date;
+}
+
+export interface StoreError {
+  code: string;
+  message: string;
+  details?: any;
+}
+
+export interface StoreState {
+  items: StoreItem[];
+  categories: StoreCategory[];
+  userInventory: InventoryItem[];
+  userEconomy: UserEconomy;
+  purchaseHistory: Purchase[];
+  isLoading: boolean;
+  error: string | null;
+  filters: StoreFilters;
 }

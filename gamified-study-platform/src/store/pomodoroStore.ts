@@ -1,41 +1,50 @@
 import { create } from 'zustand';
-import { 
-  PomodoroTimer, 
-  PomodoroSession, 
-  PomodoroSettings, 
+import {
+  PomodoroTimer,
+  PomodoroSession,
+  PomodoroSettings,
   PomodoroAnalytics,
-  BreakActivity 
+  BreakActivity,
 } from '../types';
 import { PomodoroService } from '../services/pomodoroService';
+import { calculateStudySessionXP } from '../utils/gamification';
+import { useGamificationStore } from './gamificationStore';
+import { studySessionTracker } from '../services/studySessionTracker';
+import { studyPetIntegrationService } from '../services/studyPetIntegrationService';
 
 interface PomodoroState {
   // Timer state
   timer: PomodoroTimer;
-  
+
   // Session data
   sessions: PomodoroSession[];
   analytics: PomodoroAnalytics | null;
   breakActivities: BreakActivity[];
-  
+
   // UI state
   isLoading: boolean;
   error: string | null;
-  
+
   // Actions
-  startTimer: (userId: string, courseId?: string, todoItemId?: string, questId?: string) => Promise<void>;
+  startTimer: (
+    userId: string,
+    courseId?: string,
+    todoItemId?: string,
+    questId?: string
+  ) => Promise<void>;
   pauseTimer: () => void;
   resumeTimer: () => void;
   stopTimer: (userId: string, completed?: boolean) => Promise<void>;
   skipSession: (userId: string) => Promise<void>;
   updateSettings: (settings: Partial<PomodoroSettings>) => void;
-  
+
   // Data actions
   loadSessions: (userId: string) => Promise<void>;
   loadAnalytics: (userId: string) => Promise<void>;
-  
+
   // Timer tick (called every second)
   tick: () => void;
-  
+
   // Reset state
   reset: () => void;
 }
@@ -61,22 +70,28 @@ export const usePomodoroStore = create<PomodoroState>((set, get) => ({
   error: null,
 
   // Start a new timer session
-  startTimer: async (userId: string, courseId?: string, todoItemId?: string, questId?: string) => {
+  startTimer: async (
+    userId: string,
+    courseId?: string,
+    todoItemId?: string,
+    questId?: string
+  ) => {
     const { timer } = get();
-    
+
     if (timer.isActive) return;
 
     try {
       set({ isLoading: true, error: null });
-      
+
       // Create new session
       const session = await PomodoroService.createSession(userId, {
         type: timer.sessionType,
-        duration: timer.sessionType === 'work' 
-          ? timer.settings.workDuration 
-          : timer.sessionType === 'short_break'
-          ? timer.settings.shortBreakDuration
-          : timer.settings.longBreakDuration,
+        duration:
+          timer.sessionType === 'work'
+            ? timer.settings.workDuration
+            : timer.sessionType === 'short_break'
+              ? timer.settings.shortBreakDuration
+              : timer.settings.longBreakDuration,
         sessionNumber: timer.sessionNumber,
         cycleId: timer.cycleId,
         courseId,
@@ -84,11 +99,12 @@ export const usePomodoroStore = create<PomodoroState>((set, get) => ({
         questId,
       });
 
-      const timeRemaining = timer.sessionType === 'work' 
-        ? timer.settings.workDuration * 60
-        : timer.sessionType === 'short_break'
-        ? timer.settings.shortBreakDuration * 60
-        : timer.settings.longBreakDuration * 60;
+      const timeRemaining =
+        timer.sessionType === 'work'
+          ? timer.settings.workDuration * 60
+          : timer.sessionType === 'short_break'
+            ? timer.settings.shortBreakDuration * 60
+            : timer.settings.longBreakDuration * 60;
 
       set({
         timer: {
@@ -103,11 +119,10 @@ export const usePomodoroStore = create<PomodoroState>((set, get) => ({
 
       // Start the timer interval
       get().startTimerInterval();
-      
     } catch (error) {
-      set({ 
+      set({
         error: error instanceof Error ? error.message : 'Failed to start timer',
-        isLoading: false 
+        isLoading: false,
       });
     }
   },
@@ -118,9 +133,9 @@ export const usePomodoroStore = create<PomodoroState>((set, get) => ({
     if (!timer.isActive || timer.isPaused) return;
 
     set({
-      timer: { ...timer, isPaused: true }
+      timer: { ...timer, isPaused: true },
     });
-    
+
     get().clearTimerInterval();
   },
 
@@ -130,9 +145,9 @@ export const usePomodoroStore = create<PomodoroState>((set, get) => ({
     if (!timer.isActive || !timer.isPaused) return;
 
     set({
-      timer: { ...timer, isPaused: false }
+      timer: { ...timer, isPaused: false },
     });
-    
+
     get().startTimerInterval();
   },
 
@@ -143,16 +158,48 @@ export const usePomodoroStore = create<PomodoroState>((set, get) => ({
 
     try {
       set({ isLoading: true });
-      
-      // Complete the session
+
+      // Calculate XP for completed work sessions and integrate with pet system
+      let xpEarned = 0;
+      if (completed && timer.sessionType === 'work') {
+        const sessionDuration = timer.settings.workDuration;
+        xpEarned = calculateStudySessionXP(sessionDuration, 'medium', true);
+
+        // Award XP through gamification system
+        const gamificationStore = useGamificationStore.getState();
+        await gamificationStore.awardXP(userId, xpEarned, 'pomodoro_session', {
+          sessionType: timer.sessionType,
+          duration: sessionDuration,
+          courseId: timer.currentSession.courseId,
+          todoItemId: timer.currentSession.todoItemId,
+        });
+
+        // Integrate with pet system for pomodoro completion
+        try {
+          await studyPetIntegrationService.handleStudySessionComplete(
+            userId,
+            sessionDuration,
+            'good', // Pomodoro sessions are considered good quality by default
+            timer.currentSession.courseId
+          );
+        } catch (error) {
+          console.error(
+            'Error integrating pomodoro session with pet system:',
+            error
+          );
+        }
+      }
+
+      // Complete the session with XP
       await PomodoroService.completeSession(
         timer.currentSession.id,
-        completed
+        completed,
+        xpEarned
       );
 
       // Move to next session type
       const nextState = get().getNextSessionState(completed);
-      
+
       set({
         timer: {
           ...timer,
@@ -165,15 +212,14 @@ export const usePomodoroStore = create<PomodoroState>((set, get) => ({
       });
 
       get().clearTimerInterval();
-      
+
       // Reload sessions and analytics
       await get().loadSessions(userId);
       await get().loadAnalytics(userId);
-      
     } catch (error) {
-      set({ 
+      set({
         error: error instanceof Error ? error.message : 'Failed to stop timer',
-        isLoading: false 
+        isLoading: false,
       });
     }
   },
@@ -187,9 +233,9 @@ export const usePomodoroStore = create<PomodoroState>((set, get) => ({
   updateSettings: (newSettings: Partial<PomodoroSettings>) => {
     const { timer } = get();
     const settings = { ...timer.settings, ...newSettings };
-    
+
     set({
-      timer: { ...timer, settings }
+      timer: { ...timer, settings },
     });
   },
 
@@ -200,9 +246,10 @@ export const usePomodoroStore = create<PomodoroState>((set, get) => ({
       const sessions = await PomodoroService.getUserSessions(userId);
       set({ sessions, isLoading: false });
     } catch (error) {
-      set({ 
-        error: error instanceof Error ? error.message : 'Failed to load sessions',
-        isLoading: false 
+      set({
+        error:
+          error instanceof Error ? error.message : 'Failed to load sessions',
+        isLoading: false,
       });
     }
   },
@@ -214,9 +261,10 @@ export const usePomodoroStore = create<PomodoroState>((set, get) => ({
       const analytics = await PomodoroService.getAnalytics(userId);
       set({ analytics, isLoading: false });
     } catch (error) {
-      set({ 
-        error: error instanceof Error ? error.message : 'Failed to load analytics',
-        isLoading: false 
+      set({
+        error:
+          error instanceof Error ? error.message : 'Failed to load analytics',
+        isLoading: false,
       });
     }
   },
@@ -227,20 +275,20 @@ export const usePomodoroStore = create<PomodoroState>((set, get) => ({
     if (!timer.isActive || timer.isPaused || timer.timeRemaining <= 0) return;
 
     const newTimeRemaining = timer.timeRemaining - 1;
-    
+
     if (newTimeRemaining <= 0) {
       // Session completed - need userId to complete
       if (userId) {
         get().stopTimer(userId, true);
       }
-      
+
       // Play sound if enabled
       if (timer.settings.soundEnabled) {
         get().playNotificationSound();
       }
     } else {
       set({
-        timer: { ...timer, timeRemaining: newTimeRemaining }
+        timer: { ...timer, timeRemaining: newTimeRemaining },
       });
     }
   },
@@ -270,28 +318,30 @@ export const usePomodoroStore = create<PomodoroState>((set, get) => ({
 
   getNextSessionState: (completed: boolean) => {
     const { timer } = get();
-    
+
     if (!completed) {
       // If not completed, stay on same session type
       return {
         sessionType: timer.sessionType,
         sessionNumber: timer.sessionNumber,
-        timeRemaining: timer.sessionType === 'work' 
-          ? timer.settings.workDuration * 60
-          : timer.sessionType === 'short_break'
-          ? timer.settings.shortBreakDuration * 60
-          : timer.settings.longBreakDuration * 60,
+        timeRemaining:
+          timer.sessionType === 'work'
+            ? timer.settings.workDuration * 60
+            : timer.sessionType === 'short_break'
+              ? timer.settings.shortBreakDuration * 60
+              : timer.settings.longBreakDuration * 60,
       };
     }
 
     // Determine next session type
     if (timer.sessionType === 'work') {
-      const isLongBreak = timer.sessionNumber % timer.settings.sessionsUntilLongBreak === 0;
+      const isLongBreak =
+        timer.sessionNumber % timer.settings.sessionsUntilLongBreak === 0;
       const nextType = isLongBreak ? 'long_break' : 'short_break';
-      const nextDuration = isLongBreak 
-        ? timer.settings.longBreakDuration 
+      const nextDuration = isLongBreak
+        ? timer.settings.longBreakDuration
         : timer.settings.shortBreakDuration;
-      
+
       return {
         sessionType: nextType,
         sessionNumber: timer.sessionNumber,
@@ -299,17 +349,17 @@ export const usePomodoroStore = create<PomodoroState>((set, get) => ({
       };
     } else {
       // After break, go to work
-      const nextSessionNumber = timer.sessionType === 'long_break' 
-        ? 1 
-        : timer.sessionNumber + 1;
-      
+      const nextSessionNumber =
+        timer.sessionType === 'long_break' ? 1 : timer.sessionNumber + 1;
+
       return {
         sessionType: 'work' as const,
         sessionNumber: nextSessionNumber,
         timeRemaining: timer.settings.workDuration * 60,
-        cycleId: timer.sessionType === 'long_break' 
-          ? crypto.randomUUID() 
-          : timer.cycleId,
+        cycleId:
+          timer.sessionType === 'long_break'
+            ? crypto.randomUUID()
+            : timer.cycleId,
       };
     }
   },
@@ -317,7 +367,9 @@ export const usePomodoroStore = create<PomodoroState>((set, get) => ({
   playNotificationSound: () => {
     // Simple notification sound
     try {
-      const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBTuR2O/Eeyw');
+      const audio = new Audio(
+        'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBTuR2O/Eeyw'
+      );
       audio.play().catch(() => {
         // Ignore audio play errors
       });

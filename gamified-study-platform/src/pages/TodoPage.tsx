@@ -1,15 +1,24 @@
-import React, { useEffect, useState } from 'react'
-import { useTodoSelectors } from '../store/todoStore'
-import { TodoList } from '../components/features/todos/TodoList'
-import { TodoFilters } from '../components/features/todos/TodoFilters'
-import { TodoStats } from '../components/features/todos/TodoStats'
-import { CreateTodoModal } from '../components/features/todos/CreateTodoModal'
-import { Button } from '../components/ui/Button'
-import { LoadingSpinner } from '../components/ui/LoadingSpinner'
-import { Alert } from '../components/ui/Alert'
-import { EmptyState } from '../components/ui/EmptyState'
-import { XPAnimation } from '../components/gamification/XPAnimation'
-import { Plus, ListTodo, Target, Clock, AlertTriangle } from 'lucide-react'
+import React, { useEffect, useState } from 'react';
+import { useTodoSelectors } from '../store/todoStore';
+import { TodoList } from '../components/features/todos/TodoList';
+import { TodoFilters } from '../components/features/todos/TodoFilters';
+import { TodoStats } from '../components/features/todos/TodoStats';
+import { CreateTodoModal } from '../components/features/todos/CreateTodoModal';
+import { TodoErrorBoundary } from '../components/features/todos/TodoErrorBoundary';
+import { Button } from '../components/ui/Button';
+import { LoadingSpinner } from '../components/ui/LoadingSpinner';
+import { Alert } from '../components/ui/Alert';
+import { EmptyState } from '../components/ui/EmptyState';
+import { XPAnimation } from '../components/gamification/XPAnimation';
+import { PerformanceDashboard } from '../components/features/todos/PerformanceDashboard';
+import {
+  Plus,
+  ListTodo,
+  Target,
+  Clock,
+  AlertTriangle,
+  Activity,
+} from 'lucide-react';
 
 export const TodoPage: React.FC = () => {
   const {
@@ -22,38 +31,43 @@ export const TodoPage: React.FC = () => {
     fetchTodos,
     fetchStats,
     clearError,
-    hasActiveFilters
-  } = useTodoSelectors()
+    hasActiveFilters,
+  } = useTodoSelectors();
 
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
-  const [xpAnimation, setXpAnimation] = useState<{ show: boolean; amount: number }>({
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isPerformanceDashboardOpen, setIsPerformanceDashboardOpen] =
+    useState(false);
+  const [xpAnimation, setXpAnimation] = useState<{
+    show: boolean;
+    amount: number;
+  }>({
     show: false,
-    amount: 0
-  })
+    amount: 0,
+  });
 
   // Fetch todos and stats on component mount
   useEffect(() => {
-    fetchTodos()
-    fetchStats()
-  }, [fetchTodos, fetchStats])
+    fetchTodos();
+    fetchStats();
+  }, [fetchTodos, fetchStats]);
 
   const handleTodoToggle = async (xpEarned: number) => {
     if (xpEarned > 0) {
-      setXpAnimation({ show: true, amount: xpEarned })
-      setTimeout(() => setXpAnimation({ show: false, amount: 0 }), 3000)
+      setXpAnimation({ show: true, amount: xpEarned });
+      setTimeout(() => setXpAnimation({ show: false, amount: 0 }), 3000);
     }
-  }
+  };
 
   const handlePageChange = (page: number) => {
-    fetchTodos(page)
-  }
+    fetchTodos(page);
+  };
 
   if (isLoading && todos.length === 0) {
     return (
       <div className="flex items-center justify-center min-h-96">
         <LoadingSpinner size="lg" />
       </div>
-    )
+    );
   }
 
   return (
@@ -69,14 +83,28 @@ export const TodoPage: React.FC = () => {
             Organize your tasks and earn XP for completing them
           </p>
         </div>
-        
-        <Button
-          onClick={() => setIsCreateModalOpen(true)}
-          className="flex items-center gap-2"
-        >
-          <Plus className="h-4 w-4" />
-          Add Todo
-        </Button>
+
+        <div className="flex items-center gap-2">
+          {/* Performance Dashboard Button (only in development) */}
+          {process.env.NODE_ENV === 'development' && (
+            <Button
+              variant="outline"
+              onClick={() => setIsPerformanceDashboardOpen(true)}
+              className="flex items-center gap-2"
+            >
+              <Activity className="h-4 w-4" />
+              Performance
+            </Button>
+          )}
+
+          <Button
+            onClick={() => setIsCreateModalOpen(true)}
+            className="flex items-center gap-2"
+          >
+            <Plus className="h-4 w-4" />
+            Add Todo
+          </Button>
+        </div>
       </div>
 
       {/* Error Alert */}
@@ -106,7 +134,9 @@ export const TodoPage: React.FC = () => {
                 <ListTodo className="h-5 w-5 text-blue-600 dark:text-blue-400" />
               </div>
               <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Total Tasks</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Total Tasks
+                </p>
                 <p className="text-xl font-semibold text-gray-900 dark:text-white">
                   {stats.total}
                 </p>
@@ -120,7 +150,9 @@ export const TodoPage: React.FC = () => {
                 <Target className="h-5 w-5 text-green-600 dark:text-green-400" />
               </div>
               <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Completion Rate</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Completion Rate
+                </p>
                 <p className="text-xl font-semibold text-gray-900 dark:text-white">
                   {stats.completionRate}%
                 </p>
@@ -134,7 +166,9 @@ export const TodoPage: React.FC = () => {
                 <Clock className="h-5 w-5 text-purple-600 dark:text-purple-400" />
               </div>
               <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Est. Time</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Est. Time
+                </p>
                 <p className="text-xl font-semibold text-gray-900 dark:text-white">
                   {Math.round(stats.totalEstimatedTime / 60)}h
                 </p>
@@ -148,7 +182,9 @@ export const TodoPage: React.FC = () => {
                 <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400" />
               </div>
               <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Overdue</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Overdue
+                </p>
                 <p className="text-xl font-semibold text-gray-900 dark:text-white">
                   {stats.overdue}
                 </p>
@@ -165,12 +201,16 @@ export const TodoPage: React.FC = () => {
       <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
         {todos.length === 0 ? (
           <EmptyState
-            icon={ListTodo}
-            title={hasActiveFilters() ? "No todos match your filters" : "No todos yet"}
+            icon={<ListTodo className="h-12 w-12 text-gray-400" />}
+            title={
+              hasActiveFilters()
+                ? 'No todos match your filters'
+                : 'No todos yet'
+            }
             description={
-              hasActiveFilters() 
-                ? "Try adjusting your filters to see more todos."
-                : "Create your first todo to get started with organizing your tasks."
+              hasActiveFilters()
+                ? 'Try adjusting your filters to see more todos.'
+                : 'Create your first todo to get started with organizing your tasks.'
             }
             action={
               !hasActiveFilters() ? (
@@ -182,11 +222,13 @@ export const TodoPage: React.FC = () => {
             }
           />
         ) : (
-          <TodoList
-            todos={todos}
-            onToggle={handleTodoToggle}
-            isLoading={isLoading}
-          />
+          <TodoErrorBoundary>
+            <TodoList
+              todos={todos}
+              onToggle={handleTodoToggle}
+              isLoading={isLoading}
+            />
+          </TodoErrorBoundary>
         )}
       </div>
 
@@ -202,11 +244,11 @@ export const TodoPage: React.FC = () => {
             >
               Previous
             </Button>
-            
+
             <span className="text-sm text-gray-600 dark:text-gray-400 px-3">
               Page {currentPage} of {totalPages}
             </span>
-            
+
             <Button
               variant="outline"
               size="sm"
@@ -224,6 +266,12 @@ export const TodoPage: React.FC = () => {
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
       />
+
+      {/* Performance Dashboard */}
+      <PerformanceDashboard
+        isOpen={isPerformanceDashboardOpen}
+        onClose={() => setIsPerformanceDashboardOpen(false)}
+      />
     </div>
-  )
-}
+  );
+};
