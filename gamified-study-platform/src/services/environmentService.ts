@@ -49,7 +49,7 @@ export class EnvironmentManagerService implements EnvironmentManager {
       // Validate each environment
       const validEnvironments: Environment[] = [];
       for (const envData of environmentsData) {
-        const validation = validateEnvironment(envData);
+        const validation = this.validateEnvironment(envData);
         if (validation.isValid && isEnvironment(envData)) {
           validEnvironments.push(envData);
         } else {
@@ -77,7 +77,7 @@ export class EnvironmentManagerService implements EnvironmentManager {
       if (!environment) {
         // Try to fetch from data source
         const environmentData = await this.fetchEnvironmentById(environmentId);
-        const validation = validateEnvironment(environmentData);
+        const validation = this.validateEnvironment(environmentData);
 
         if (!validation.isValid || !isEnvironment(environmentData)) {
           throw new Error(
@@ -100,7 +100,7 @@ export class EnvironmentManagerService implements EnvironmentManager {
   /**
    * Switch to a different environment
    */
-  switchEnvironment(environmentId: string): void {
+  async switchEnvironment(environmentId: string): Promise<void> {
     try {
       const environment = this.environments.find(
         env => env.id === environmentId
@@ -633,11 +633,16 @@ export class EnvironmentManagerService implements EnvironmentManager {
   /**
    * Validate environment configuration
    */
-  validateEnvironmentConfig(environment: any): {
+  validateEnvironment(environment: any): {
     isValid: boolean;
     errors: string[];
   } {
-    return validateEnvironment(environment);
+    // The imported validateEnvironment returns a different type, so we need to adapt it
+    const result = validateEnvironment(environment);
+    if (typeof result === 'boolean') {
+      return { isValid: result, errors: [] };
+    }
+    return result as { isValid: boolean; errors: string[] };
   }
 
   /**

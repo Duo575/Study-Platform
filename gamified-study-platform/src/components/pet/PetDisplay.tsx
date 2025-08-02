@@ -480,7 +480,9 @@ export const PetDisplay: React.FC<PetDisplayProps> = ({
               onClick={handleFeedPet}
               disabled={isInteracting}
               className={`flex-1 flex items-center justify-center space-x-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors bounce-hover ${
-                petStatus?.hunger > 70 ? 'attention-pulse' : ''
+                petStatus?.hunger && petStatus.hunger > 70
+                  ? 'attention-pulse'
+                  : ''
               }`}
               whileTap={{ scale: 0.95 }}
             >
@@ -499,7 +501,9 @@ export const PetDisplay: React.FC<PetDisplayProps> = ({
               onClick={handlePlayWithPet}
               disabled={isInteracting}
               className={`flex-1 flex items-center justify-center space-x-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors elastic-hover ${
-                petStatus?.happiness < 50 ? 'attention-bounce' : ''
+                petStatus?.happiness && petStatus.happiness < 50
+                  ? 'attention-bounce'
+                  : ''
               }`}
               whileTap={{ scale: 0.95 }}
             >
@@ -518,7 +522,9 @@ export const PetDisplay: React.FC<PetDisplayProps> = ({
               onClick={handleCarePet}
               disabled={isInteracting}
               className={`flex-1 flex items-center justify-center space-x-2 px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors smooth-hover ${
-                petStatus?.health < 40 ? 'attention-shake' : ''
+                petStatus?.health && petStatus.health < 40
+                  ? 'attention-shake'
+                  : ''
               }`}
               whileTap={{ scale: 0.95 }}
             >

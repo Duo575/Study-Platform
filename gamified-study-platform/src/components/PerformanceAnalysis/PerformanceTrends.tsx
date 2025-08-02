@@ -64,7 +64,7 @@ export function PerformanceTrends({
             {/* Subject Filter */}
             <Select
               value={selectedSubject}
-              onChange={value => setSelectedSubject(value)}
+              onChange={e => setSelectedSubject(e.target.value)}
               className="w-48"
             >
               <option value="all">All Subjects</option>
@@ -78,7 +78,7 @@ export function PerformanceTrends({
             {/* Metric Filter */}
             <Select
               value={selectedMetric}
-              onChange={value => setSelectedMetric(value as TrendMetric)}
+              onChange={e => setSelectedMetric(e.target.value as TrendMetric)}
               className="w-40"
             >
               <option value="performance">Performance</option>
@@ -90,7 +90,7 @@ export function PerformanceTrends({
             {/* Time Range Filter */}
             <Select
               value={timeRange}
-              onChange={value => setTimeRange(value as TimeRange)}
+              onChange={e => setTimeRange(e.target.value as TimeRange)}
               className="w-32"
             >
               <option value="7d">7 Days</option>

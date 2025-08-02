@@ -99,6 +99,8 @@ export const UnlockNotification: React.FC<UnlockNotificationProps> = ({
             unlock={unlock}
             index={index}
             onDismiss={() => handleDismiss(unlock.content.id)}
+            position={position}
+            autoHideDuration={autoHideDuration}
           />
         ))}
       </AnimatePresence>
@@ -110,12 +112,16 @@ interface UnlockNotificationCardProps {
   unlock: UnlockResult;
   index: number;
   onDismiss: () => void;
+  position: string;
+  autoHideDuration: number;
 }
 
 const UnlockNotificationCard: React.FC<UnlockNotificationCardProps> = ({
   unlock,
   index,
   onDismiss,
+  position,
+  autoHideDuration,
 }) => {
   const { content, celebrationLevel, message } = unlock;
 

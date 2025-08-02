@@ -112,6 +112,10 @@ export function isBoolean(value: unknown): value is boolean {
   return typeof value === 'boolean';
 }
 
+export function isObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
 export function isDate(value: unknown): value is Date {
   return value instanceof Date && !isNaN(value.getTime());
 }
@@ -467,4 +471,39 @@ export function isValidCourse(value: unknown): value is BasicCourse {
 
 export function isValidGameStats(value: unknown): value is BasicGameStats {
   return isGameStats(value);
+}
+
+// Environment type guards
+interface BasicEnvironment {
+  id: string;
+  name: string;
+  type: string;
+  audioUrl?: string;
+  visualUrl?: string;
+  isUnlocked: boolean;
+}
+
+export function isEnvironment(value: unknown): value is BasicEnvironment {
+  return (
+    isObject(value) &&
+    isString(value.id) &&
+    isString(value.name) &&
+    isString(value.type) &&
+    isBoolean(value.isUnlocked) &&
+    (value.audioUrl === undefined || isString(value.audioUrl)) &&
+    (value.visualUrl === undefined || isString(value.visualUrl))
+  );
+}
+
+export function isEnvironmentArray(
+  value: unknown
+): value is BasicEnvironment[] {
+  return Array.isArray(value) && value.every(isEnvironment);
+}
+
+export function validateEnvironment(value: unknown): BasicEnvironment {
+  if (!isEnvironment(value)) {
+    throw new Error('Invalid environment object');
+  }
+  return value;
 }

@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react'
-import { ProgressDashboard } from '../components/features/progress'
-import { LoadingSpinner } from '../components/ui/LoadingSpinner'
-import { ErrorMessage } from '../components/ui/ErrorMessage'
-import { StudyAnalytics, Course, Achievement, StudySession } from '../types'
+import React, { useState, useEffect } from 'react';
+import { ProgressDashboard } from '../components/features/progress';
+import { LoadingSpinner } from '../components/ui/LoadingSpinner';
+import { ErrorMessage } from '../components/ui/ErrorMessage';
+import { StudyAnalytics, Course, Achievement, StudySession } from '../types';
 
 // Mock data for demonstration - in a real app, this would come from your API/store
 const mockAnalytics: StudyAnalytics = {
@@ -15,22 +15,32 @@ const mockAnalytics: StudyAnalytics = {
   levelProgress: {
     currentLevel: 3,
     xpProgress: 750,
-    xpToNextLevel: 1000
+    xpToNextLevel: 1000,
   },
   subjectBreakdown: [
-    { courseId: '1', courseName: 'Mathematics', timeSpent: 480, percentage: 38.4 },
+    {
+      courseId: '1',
+      courseName: 'Mathematics',
+      timeSpent: 480,
+      percentage: 38.4,
+    },
     { courseId: '2', courseName: 'Physics', timeSpent: 360, percentage: 28.8 },
-    { courseId: '3', courseName: 'Chemistry', timeSpent: 250, percentage: 20.0 },
-    { courseId: '4', courseName: 'Biology', timeSpent: 160, percentage: 12.8 }
+    {
+      courseId: '3',
+      courseName: 'Chemistry',
+      timeSpent: 250,
+      percentage: 20.0,
+    },
+    { courseId: '4', courseName: 'Biology', timeSpent: 160, percentage: 12.8 },
   ],
   weeklyProgress: [
     { week: '2024-01-01', studyTime: 180, questsCompleted: 2, xpEarned: 150 },
     { week: '2024-01-08', studyTime: 240, questsCompleted: 3, xpEarned: 200 },
     { week: '2024-01-15', studyTime: 300, questsCompleted: 4, xpEarned: 280 },
     { week: '2024-01-22', studyTime: 280, questsCompleted: 3, xpEarned: 220 },
-    { week: '2024-01-29', studyTime: 250, questsCompleted: 2, xpEarned: 180 }
-  ]
-}
+    { week: '2024-01-29', studyTime: 250, questsCompleted: 2, xpEarned: 180 },
+  ],
+};
 
 const mockCourses: Course[] = [
   {
@@ -44,10 +54,10 @@ const mockCourses: Course[] = [
       hoursStudied: 8,
       topicsCompleted: 15,
       totalTopics: 20,
-      lastStudied: new Date('2024-01-28')
+      lastStudied: new Date('2024-01-28'),
     },
     createdAt: new Date('2024-01-01'),
-    updatedAt: new Date('2024-01-28')
+    updatedAt: new Date('2024-01-28'),
   },
   {
     id: '2',
@@ -60,10 +70,10 @@ const mockCourses: Course[] = [
       hoursStudied: 6,
       topicsCompleted: 12,
       totalTopics: 20,
-      lastStudied: new Date('2024-01-27')
+      lastStudied: new Date('2024-01-27'),
     },
     createdAt: new Date('2024-01-01'),
-    updatedAt: new Date('2024-01-27')
+    updatedAt: new Date('2024-01-27'),
   },
   {
     id: '3',
@@ -76,10 +86,10 @@ const mockCourses: Course[] = [
       hoursStudied: 4.2,
       topicsCompleted: 9,
       totalTopics: 20,
-      lastStudied: new Date('2024-01-26')
+      lastStudied: new Date('2024-01-26'),
     },
     createdAt: new Date('2024-01-01'),
-    updatedAt: new Date('2024-01-26')
+    updatedAt: new Date('2024-01-26'),
   },
   {
     id: '4',
@@ -92,12 +102,12 @@ const mockCourses: Course[] = [
       hoursStudied: 2.7,
       topicsCompleted: 6,
       totalTopics: 20,
-      lastStudied: new Date('2024-01-25')
+      lastStudied: new Date('2024-01-25'),
     },
     createdAt: new Date('2024-01-01'),
-    updatedAt: new Date('2024-01-25')
-  }
-]
+    updatedAt: new Date('2024-01-25'),
+  },
+];
 
 const mockAchievements: Achievement[] = [
   {
@@ -108,7 +118,7 @@ const mockAchievements: Achievement[] = [
     rarity: 'common',
     xpReward: 50,
     iconUrl: '',
-    unlockedAt: new Date('2024-01-02')
+    unlockedAt: new Date('2024-01-02'),
   },
   {
     id: '2',
@@ -118,7 +128,7 @@ const mockAchievements: Achievement[] = [
     rarity: 'rare',
     xpReward: 200,
     iconUrl: '',
-    unlockedAt: new Date('2024-01-15')
+    unlockedAt: new Date('2024-01-15'),
   },
   {
     id: '3',
@@ -128,7 +138,7 @@ const mockAchievements: Achievement[] = [
     rarity: 'epic',
     xpReward: 300,
     iconUrl: '',
-    unlockedAt: new Date('2024-01-20')
+    unlockedAt: new Date('2024-01-20'),
   },
   {
     id: '4',
@@ -141,8 +151,8 @@ const mockAchievements: Achievement[] = [
     progress: {
       current: 18,
       target: 20,
-      description: 'Study for 20 hours total'
-    }
+      description: 'Study for 20 hours total',
+    },
   },
   {
     id: '5',
@@ -155,10 +165,10 @@ const mockAchievements: Achievement[] = [
     progress: {
       current: 7,
       target: 30,
-      description: 'Study for 30 consecutive days'
-    }
-  }
-]
+      description: 'Study for 30 consecutive days',
+    },
+  },
+];
 
 const mockStudySessions: StudySession[] = [
   {
@@ -168,7 +178,7 @@ const mockStudySessions: StudySession[] = [
     endTime: new Date('2024-01-28T10:30:00'),
     duration: 90,
     type: 'pomodoro',
-    xpEarned: 45
+    xpEarned: 45,
   },
   {
     id: '2',
@@ -177,7 +187,7 @@ const mockStudySessions: StudySession[] = [
     endTime: new Date('2024-01-27T15:00:00'),
     duration: 60,
     type: 'free_study',
-    xpEarned: 30
+    xpEarned: 30,
   },
   {
     id: '3',
@@ -186,57 +196,57 @@ const mockStudySessions: StudySession[] = [
     endTime: new Date('2024-01-26T11:15:00'),
     duration: 75,
     type: 'pomodoro',
-    xpEarned: 38
-  }
-]
+    xpEarned: 38,
+  },
+];
 
 export function ProgressPage() {
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [timeRange, setTimeRange] = useState('week')
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [timeRange, setTimeRange] = useState('week');
 
   // Simulate loading data
   useEffect(() => {
     const loadData = async () => {
       try {
-        setIsLoading(true)
+        setIsLoading(true);
         // Simulate API call delay
-        await new Promise(resolve => setTimeout(resolve, 1000))
-        setIsLoading(false)
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        setIsLoading(false);
       } catch (err) {
-        setError('Failed to load progress data')
-        setIsLoading(false)
+        setError('Failed to load progress data');
+        setIsLoading(false);
       }
-    }
+    };
 
-    loadData()
-  }, [timeRange])
+    loadData();
+  }, [timeRange]);
 
   const handleTimeRangeChange = (newRange: string) => {
-    setTimeRange(newRange)
-  }
+    setTimeRange(newRange);
+  };
 
   const handleRetry = () => {
-    setError(null)
-    setIsLoading(true)
+    setError(null);
+    setIsLoading(true);
     // Simulate retry
-    setTimeout(() => setIsLoading(false), 1000)
-  }
+    setTimeout(() => setIsLoading(false), 1000);
+  };
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <LoadingSpinner size="lg" />
       </div>
-    )
+    );
   }
 
   if (error) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <ErrorMessage error={error} onRetry={handleRetry} />
+        <ErrorMessage message={error} onRetry={handleRetry} />
       </div>
-    )
+    );
   }
 
   return (
@@ -249,5 +259,5 @@ export function ProgressPage() {
         onTimeRangeChange={handleTimeRangeChange}
       />
     </div>
-  )
+  );
 }

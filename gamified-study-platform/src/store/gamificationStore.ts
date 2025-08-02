@@ -40,6 +40,13 @@ interface GamificationState {
     streakBonusEarned: boolean;
   };
 
+  // Additional properties for pet evolution
+  totalStudyTime: number;
+  streakDays: number;
+  level: number;
+  questsCompleted: number;
+  coins: number;
+
   // Loading states
   isLoading: boolean;
   error: string | null;
@@ -79,6 +86,10 @@ interface GamificationActions {
   updateStreak: (studyDate?: Date) => void;
   checkStreakStatus: () => boolean;
 
+  // Coin actions
+  spendCoins: (amount: number) => boolean;
+  addCoins: (amount: number) => void;
+
   // Utility actions
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
@@ -96,6 +107,11 @@ const initialState: GamificationState = {
     lastStudyDate: null,
     streakBonusEarned: false,
   },
+  totalStudyTime: 0,
+  streakDays: 0,
+  level: 1,
+  questsCompleted: 0,
+  coins: 100,
   isLoading: false,
   error: null,
 };
@@ -341,6 +357,20 @@ export const useGamificationStore = create<
           if (!streakData.lastStudyDate) return false;
 
           return isStreakActive(streakData.lastStudyDate);
+        },
+
+        spendCoins: (amount: number) => {
+          const { coins } = get();
+          if (coins >= amount) {
+            set({ coins: coins - amount });
+            return true;
+          }
+          return false;
+        },
+
+        addCoins: (amount: number) => {
+          const { coins } = get();
+          set({ coins: coins + amount });
         },
 
         setLoading: (loading: boolean) => {

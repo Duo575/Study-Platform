@@ -1,7 +1,9 @@
 import React from 'react';
 
 interface ProgressBarProps {
-  progress: number;
+  progress?: number;
+  value?: number;
+  max?: number;
   color?: 'blue' | 'green' | 'purple' | 'red' | 'yellow' | string;
   height?: string;
   size?: 'xs' | 'sm' | 'md' | 'lg';
@@ -10,13 +12,23 @@ interface ProgressBarProps {
 
 export const ProgressBar: React.FC<ProgressBarProps> = ({
   progress,
+  value,
+  max = 100,
   color = 'blue',
   height = 'h-2',
   size = 'md',
   className = '',
 }) => {
+  // Calculate progress from value/max or use progress directly
+  const calculatedProgress =
+    progress !== undefined
+      ? progress
+      : value !== undefined
+        ? (value / max) * 100
+        : 0;
+
   // Ensure progress is between 0 and 100
-  const clampedProgress = Math.min(Math.max(progress, 0), 100);
+  const clampedProgress = Math.min(Math.max(calculatedProgress, 0), 100);
 
   // Get color classes
   const getColorClass = (colorName: string) => {

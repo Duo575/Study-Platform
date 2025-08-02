@@ -432,7 +432,6 @@ export function checkAchievementProgress(
     target: targetNum,
     progress,
     completed,
-    current,
   };
 }
 
@@ -448,5 +447,5 @@ export function getUnlockedAchievements(
 ): any[] {
   return achievements
     .map(achievement => checkAchievementProgress(achievement, userStats))
-    .filter(achievement => achievement.completed && !achievement.claimed);
+    .filter(achievement => achievement.completed);
 }

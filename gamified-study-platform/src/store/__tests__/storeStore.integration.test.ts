@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { useStoreStore } from '../storeStore';
-import StoreManager from '../../services/StoreManager';
+import StoreManager from '../../services/storeManager';
 
 describe('Store Integration with StoreManager', () => {
   let store: ReturnType<typeof useStoreStore>;
@@ -124,13 +124,16 @@ describe('Store Integration with StoreManager', () => {
     expect(updatedItem?.description).toBe('Updated description');
   });
 
-  it('should verify StoreManager singleton integration', () => {
+  it('should verify StoreManager singleton integration', async () => {
     const managerFromStore = StoreManager.getInstance();
     expect(managerFromStore).toBe(storeManager);
 
+    // Initialize the store first
+    await store.initializeStore();
+
     // Verify that both store and direct manager access return same items
-    const storeItems = store.getStoreItems();
+    const storeState = useStoreStore.getState();
     const managerItems = storeManager.getStoreItems();
-    expect(storeItems).toEqual(managerItems);
+    expect(storeState.items).toEqual(managerItems);
   });
 });

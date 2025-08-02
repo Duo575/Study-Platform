@@ -31,7 +31,7 @@ interface ThemeActions {
   purchaseTheme: (themeId: string) => Promise<boolean>;
 
   // Theme preview
-  previewTheme: (themeId: string, duration?: number) => void;
+  startPreviewTheme: (themeId: string, duration?: number) => void;
   stopPreview: () => void;
 
   // Theme customization
@@ -440,7 +440,7 @@ export const useThemeStore = create<ThemeStoreState & ThemeActions>()(
           }
         },
 
-        previewTheme: (themeId: string, duration = 10000) => {
+        startPreviewTheme: (themeId: string, duration = 10000) => {
           const { themes, currentTheme, previewTimeout } = get();
           const theme = themes.find(t => t.id === themeId);
 
@@ -510,8 +510,11 @@ export const useThemeStore = create<ThemeStoreState & ThemeActions>()(
           const { customizations: currentCustomizations } = get();
 
           const themeCustomization: ThemeCustomization = {
+            id: `custom-${themeId}-${Date.now()}`, // Add missing id
             themeId,
+            userId: 'current-user', // Add missing userId (should be from auth context)
             customizations,
+            isPublic: false, // Add missing isPublic
             createdAt: new Date(),
             updatedAt: new Date(),
           };

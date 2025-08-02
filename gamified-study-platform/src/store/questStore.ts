@@ -311,7 +311,7 @@ export const useQuestStore = create<QuestState>((set, get) => ({
       if (questIndex !== -1) {
         const updatedQuest = {
           ...quests[questIndex],
-          status: 'completed',
+          status: 'completed' as QuestStatus,
           completedAt: new Date(),
         };
 

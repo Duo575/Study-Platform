@@ -24,7 +24,9 @@ const moodEmojis: Record<PetMood['current'], string> = {
   excited: '🤩',
   happy: '😊',
   content: '😌',
+  neutral: '😐',
   sad: '😢',
+  depressed: '😞',
   sleepy: '😴',
   hungry: '🍽️',
 };
@@ -33,7 +35,9 @@ const moodColors: Record<PetMood['current'], string> = {
   excited: 'text-yellow-500',
   happy: 'text-green-500',
   content: 'text-blue-500',
+  neutral: 'text-gray-400',
   sad: 'text-gray-500',
+  depressed: 'text-gray-600',
   sleepy: 'text-purple-500',
   hungry: 'text-orange-500',
 };
@@ -42,7 +46,9 @@ const moodBackgrounds: Record<PetMood['current'], string> = {
   excited: 'bg-yellow-100 border-yellow-300',
   happy: 'bg-green-100 border-green-300',
   content: 'bg-blue-100 border-blue-300',
+  neutral: 'bg-gray-50 border-gray-200',
   sad: 'bg-gray-100 border-gray-300',
+  depressed: 'bg-gray-200 border-gray-400',
   sleepy: 'bg-purple-100 border-purple-300',
   hungry: 'bg-orange-100 border-orange-300',
 };

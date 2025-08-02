@@ -44,9 +44,30 @@ describe('Pet Adoption Workflow Integration Tests', () => {
         intelligence: 70,
       },
       evolutionStages: [
-        { name: 'kitten', requirements: { level: 1 } },
-        { name: 'cat', requirements: { level: 5 } },
-        { name: 'wise-cat', requirements: { level: 10 } },
+        {
+          id: 'kitten-stage',
+          name: 'kitten',
+          description: 'A young kitten',
+          imageUrl: '/pets/kitten.png',
+          requiredLevel: 1,
+          unlockedAbilities: [],
+        },
+        {
+          id: 'cat-stage',
+          name: 'cat',
+          description: 'An adult cat',
+          imageUrl: '/pets/cat.png',
+          requiredLevel: 5,
+          unlockedAbilities: [],
+        },
+        {
+          id: 'wise-cat-stage',
+          name: 'wise-cat',
+          description: 'A wise old cat',
+          imageUrl: '/pets/wise-cat.png',
+          requiredLevel: 10,
+          unlockedAbilities: [],
+        },
       ],
     },
     {
@@ -59,32 +80,67 @@ describe('Pet Adoption Workflow Integration Tests', () => {
         intelligence: 60,
       },
       evolutionStages: [
-        { name: 'puppy', requirements: { level: 1 } },
-        { name: 'dog', requirements: { level: 5 } },
-        { name: 'wise-dog', requirements: { level: 10 } },
+        {
+          id: 'puppy-stage',
+          name: 'puppy',
+          description: 'A young puppy',
+          imageUrl: '/pets/puppy.png',
+          requiredLevel: 1,
+          unlockedAbilities: [],
+        },
+        {
+          id: 'dog-stage',
+          name: 'dog',
+          description: 'An adult dog',
+          imageUrl: '/pets/dog.png',
+          requiredLevel: 5,
+          unlockedAbilities: [],
+        },
+        {
+          id: 'wise-dog-stage',
+          name: 'wise-dog',
+          description: 'A wise old dog',
+          imageUrl: '/pets/wise-dog.png',
+          requiredLevel: 10,
+          unlockedAbilities: [],
+        },
       ],
     },
   ];
 
   const mockAdoptedPet: StudyPet = {
     id: 'pet-123',
-    userId: mockUserId,
+
     name: 'Fluffy',
-    speciesId: 'cat-species',
+    species: mockSpecies[0],
     level: 1,
     happiness: 80,
     health: 90,
     lastFed: new Date(),
     lastPlayed: new Date(),
     evolution: {
-      stage: 'kitten',
+      stage: {
+        id: 'kitten-stage',
+        name: 'kitten',
+        description: 'A young kitten',
+        imageUrl: '/pets/kitten.png',
+        requiredLevel: 1,
+        unlockedAbilities: [],
+      },
       progress: 0,
-      nextStage: 'cat',
-      requirements: { level: 5 },
+      nextStageRequirements: [
+        {
+          id: 'level-req-1',
+          type: 'level',
+          description: 'Reach level 5',
+          target: 5,
+          current: 1,
+          completed: false,
+        },
+      ],
     },
     accessories: [],
     createdAt: new Date(),
-    updatedAt: new Date(),
   };
 
   beforeEach(() => {
@@ -463,6 +519,7 @@ describe('Pet Adoption Workflow Integration Tests', () => {
             happiness: 40, // Below play threshold
             hunger: 50, // Above feed threshold
             energy: 70,
+            mood: 'hungry',
             needsAttention: true,
             timeSinceLastFed: 60,
             timeSinceLastPlayed: 120,
@@ -497,6 +554,7 @@ describe('Pet Adoption Workflow Integration Tests', () => {
             happiness: 30,
             hunger: 60,
             energy: 70,
+            mood: 'hungry',
             needsAttention: true,
             timeSinceLastFed: 60,
             timeSinceLastPlayed: 120,

@@ -152,17 +152,38 @@ export const createMockStudyPet = (
   id: 'test-pet',
   userId: 'test-user',
   name: 'Test Pet',
-  speciesId: 'test-species',
+  species: {
+    id: 'test-species',
+    name: 'Test Species',
+    description: 'A test pet species',
+    baseStats: { happiness: 80, health: 90, intelligence: 50 },
+    evolutionStages: [],
+  },
   level: 1,
   happiness: 80,
   health: 90,
   lastFed: new Date(),
   lastPlayed: new Date(),
   evolution: {
-    stage: 'baby',
+    stage: {
+      id: 'baby',
+      name: 'baby',
+      description: 'Baby stage',
+      imageUrl: '/pets/baby.png',
+      unlockedAbilities: [],
+      requirements: { level: 1 },
+    },
     progress: 0,
-    nextStage: 'adult',
-    requirements: { level: 5 },
+    nextStageRequirements: [
+      {
+        id: 'level-5',
+        type: 'level',
+        target: 5,
+        current: 0,
+        completed: false,
+        description: 'Reach level 5',
+      },
+    ],
   },
   accessories: [],
   createdAt: new Date(),
@@ -182,8 +203,22 @@ export const createMockPetSpecies = (
     intelligence: 50,
   },
   evolutionStages: [
-    { name: 'baby', requirements: { level: 1 } },
-    { name: 'adult', requirements: { level: 5 } },
+    {
+      id: 'baby',
+      name: 'baby',
+      description: 'Baby stage',
+      imageUrl: '/pets/baby.png',
+      unlockedAbilities: [],
+      requirements: { level: 1 },
+    },
+    {
+      id: 'adult',
+      name: 'adult',
+      description: 'Adult stage',
+      imageUrl: '/pets/adult.png',
+      unlockedAbilities: [],
+      requirements: { level: 5 },
+    },
   ],
   ...overrides,
 });
@@ -193,6 +228,7 @@ export const createMockMusicTrack = (
 ): MusicTrack => ({
   id: 'test-track',
   title: 'Test Track',
+  artist: 'Test Artist',
   duration: 180,
   url: '/test-track.mp3',
   genre: 'lofi',
@@ -222,6 +258,8 @@ export const createMockStoreItem = (
   currency: 'coins',
   rarity: 'common',
   imageUrl: '/test-item.png',
+  isLimited: false,
+  tags: ['test', 'mock'],
   createdAt: new Date(),
   updatedAt: new Date(),
   ...overrides,
@@ -433,7 +471,16 @@ export const expectServiceCalledTimes = (
 
 // Mock implementations for specific test scenarios
 export const mockSuccessfulPetAdoption = () => {
-  const mockPet = createMockStudyPet({ name: 'Fluffy', speciesId: 'cat' });
+  const mockPet = createMockStudyPet({
+    name: 'Fluffy',
+    species: {
+      id: 'cat',
+      name: 'Cat',
+      description: 'A friendly cat',
+      baseStats: { happiness: 80, health: 90, intelligence: 60 },
+      evolutionStages: [],
+    },
+  });
   mockPetService.adoptPet.mockResolvedValue(mockPet);
   return mockPet;
 };

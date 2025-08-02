@@ -5,7 +5,7 @@ import { useAuthContext } from '../contexts/AuthContext';
 export const usePomodoro = () => {
   const { user } = useAuthContext();
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
-  
+
   const {
     timer,
     sessions,
@@ -29,7 +29,7 @@ export const usePomodoro = () => {
   useEffect(() => {
     if (timer.isActive && !timer.isPaused) {
       intervalRef.current = setInterval(() => {
-        tick(user?.id);
+        tick();
       }, 1000);
     } else {
       if (intervalRef.current) {
@@ -62,12 +62,13 @@ export const usePomodoro = () => {
 
   // Get progress percentage
   const getProgress = (): number => {
-    const totalTime = timer.sessionType === 'work' 
-      ? timer.settings.workDuration * 60
-      : timer.sessionType === 'short_break'
-      ? timer.settings.shortBreakDuration * 60
-      : timer.settings.longBreakDuration * 60;
-    
+    const totalTime =
+      timer.sessionType === 'work'
+        ? timer.settings.workDuration * 60
+        : timer.sessionType === 'short_break'
+          ? timer.settings.shortBreakDuration * 60
+          : timer.settings.longBreakDuration * 60;
+
     return ((totalTime - timer.timeRemaining) / totalTime) * 100;
   };
 
@@ -95,13 +96,15 @@ export const usePomodoro = () => {
     const today = new Date().toISOString().split('T')[0];
     const todayStats = analytics.dailyStats.find(stat => stat.date === today);
 
-    return todayStats || {
-      date: today,
-      sessionsCompleted: 0,
-      focusTime: 0,
-      completionRate: 0,
-      xpEarned: 0,
-    };
+    return (
+      todayStats || {
+        date: today,
+        sessionsCompleted: 0,
+        focusTime: 0,
+        completionRate: 0,
+        xpEarned: 0,
+      }
+    );
   };
 
   // Get this week's stats
@@ -109,13 +112,15 @@ export const usePomodoro = () => {
     if (!analytics) return null;
 
     const thisWeek = analytics.weeklyStats[analytics.weeklyStats.length - 1];
-    return thisWeek || {
-      weekStart: new Date().toISOString().split('T')[0],
-      sessionsCompleted: 0,
-      focusTime: 0,
-      averageCompletionRate: 0,
-      xpEarned: 0,
-    };
+    return (
+      thisWeek || {
+        weekStart: new Date().toISOString().split('T')[0],
+        sessionsCompleted: 0,
+        focusTime: 0,
+        averageCompletionRate: 0,
+        xpEarned: 0,
+      }
+    );
   };
 
   // Start timer with context
@@ -125,7 +130,7 @@ export const usePomodoro = () => {
     questId?: string;
   }) => {
     if (!user?.id) return;
-    
+
     await startTimer(
       user.id,
       context?.courseId,
@@ -155,18 +160,18 @@ export const usePomodoro = () => {
     formattedTime: formatTime(timer.timeRemaining),
     progress: getProgress(),
     sessionInfo: getCurrentSessionInfo(),
-    
+
     // Session data
     sessions,
     analytics,
     breakActivities,
     todayStats: getTodayStats(),
     weekStats: getWeekStats(),
-    
+
     // UI state
     isLoading,
     error,
-    
+
     // Actions
     startTimer: startTimerWithContext,
     pauseTimer,
@@ -175,7 +180,7 @@ export const usePomodoro = () => {
     skipSession: skipCurrentSession,
     updateSettings,
     reset,
-    
+
     // Data refresh
     refreshData: () => {
       if (user?.id) {

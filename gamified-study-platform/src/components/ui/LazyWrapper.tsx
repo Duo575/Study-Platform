@@ -24,7 +24,7 @@ export const LazyWrapper: React.FC<LazyWrapperProps> = ({
     >
       <LoadingAnimation
         isLoading={true}
-        type="orbit"
+        type="spinner"
         message={loadingMessage}
         className="text-center"
       />

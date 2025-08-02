@@ -7,7 +7,7 @@ import type { ThemeManager, Theme, ThemeCustomization } from '../types';
 export class ThemeManagerService implements ThemeManager {
   private themes: Theme[] = [];
   private currentTheme: Theme | null = null;
-  private previewTheme: Theme | null = null;
+  private currentPreviewTheme: Theme | null = null;
   private originalTheme: Theme | null = null;
   private previewTimeout: NodeJS.Timeout | null = null;
   private defaultTheme: Theme;
@@ -354,7 +354,7 @@ export class ThemeManagerService implements ThemeManager {
 
       // Store original theme for restoration
       this.originalTheme = this.currentTheme;
-      this.previewTheme = theme;
+      this.currentPreviewTheme = theme;
 
       // Apply preview theme
       this.applyThemeVariables(theme);
@@ -389,7 +389,7 @@ export class ThemeManagerService implements ThemeManager {
       this.originalTheme = null;
     }
 
-    this.previewTheme = null;
+    this.currentPreviewTheme = null;
     console.log('Stopped theme preview');
   }
 
@@ -398,7 +398,7 @@ export class ThemeManagerService implements ThemeManager {
    */
   resetToDefaultTheme(): void {
     this.applyTheme(this.defaultTheme.id);
-    this.previewTheme = null;
+    this.currentPreviewTheme = null;
   }
 
   /**
@@ -923,7 +923,7 @@ export class ThemeManagerService implements ThemeManager {
 
     // Clear state
     this.currentTheme = null;
-    this.previewTheme = null;
+    this.currentPreviewTheme = null;
     this.originalTheme = null;
     this.customizations.clear();
   }

@@ -147,7 +147,6 @@ export function ResponsiveImage({
         aria-describedby={ariaDescribedBy}
         aria-labelledby={ariaLabelledBy}
         aria-hidden={decorative}
-        longDesc={longDesc}
         {...props}
       />
     </div>

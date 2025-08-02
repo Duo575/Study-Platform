@@ -124,7 +124,7 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
   if (hasError) {
     return (
       <div
-        ref={elementRef}
+        ref={elementRef as React.RefObject<HTMLDivElement>}
         className={`flex items-center justify-center bg-gray-200 text-gray-500 ${className}`}
         style={{ width, height }}
       >
@@ -135,7 +135,7 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
 
   return (
     <div
-      ref={elementRef}
+      ref={elementRef as React.RefObject<HTMLDivElement>}
       className={`relative overflow-hidden ${className}`}
       style={{ width, height }}
       onMouseEnter={handleMouseEnter}

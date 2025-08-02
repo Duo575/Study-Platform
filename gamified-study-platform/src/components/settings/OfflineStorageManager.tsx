@@ -370,7 +370,7 @@ export const OfflineStorageManager: React.FC = () => {
                             {type}:
                           </span>
                           <span className="text-gray-900 dark:text-white">
-                            {count}
+                            {String(count)}
                           </span>
                         </div>
                       )

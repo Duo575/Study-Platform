@@ -310,7 +310,7 @@ export function useFontSize() {
 
 // Hook for managing ARIA live regions
 export function useLiveRegion() {
-  const liveRegionRef = useRef<HTMLDivElement>(null);
+  const liveRegionRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     // Create live region if it doesn't exist
@@ -321,7 +321,7 @@ export function useLiveRegion() {
       liveRegion.className = 'sr-only';
       liveRegion.id = 'live-region';
       document.body.appendChild(liveRegion);
-      liveRegionRef.current = liveRegion;
+      (liveRegionRef as any).current = liveRegion;
     }
 
     return () => {

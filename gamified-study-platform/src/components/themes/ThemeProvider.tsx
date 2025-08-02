@@ -36,7 +36,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     isPreviewingTheme,
     loadThemes,
     applyTheme: storeApplyTheme,
-    previewTheme: storePreviewTheme,
+    startPreviewTheme: storePreviewTheme,
     stopPreview: storeStopPreview,
   } = useThemeStore();
 
@@ -110,7 +110,9 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   const applyTheme = async (themeId: string) => {
     try {
       await storeApplyTheme(themeId);
-      await themeService.applyTheme(themeId);
+      if (themeService) {
+        await themeService.applyTheme(themeId);
+      }
     } catch (error) {
       console.error('Error applying theme:', error);
       throw error;
@@ -119,23 +121,31 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
 
   const previewTheme = (themeId: string, duration?: number) => {
     storePreviewTheme(themeId, duration);
-    themeService.previewTheme(themeId, duration);
+    if (themeService) {
+      themeService.previewTheme(themeId, duration);
+    }
   };
 
   const stopPreview = () => {
     storeStopPreview();
-    themeService.stopPreview();
+    if (themeService) {
+      themeService.stopPreview();
+    }
   };
 
   const customizeTheme = (
     themeId: string,
     customizations: Record<string, string>
   ) => {
-    themeService.customizeTheme(themeId, customizations);
+    if (themeService) {
+      themeService.customizeTheme(themeId, customizations);
+    }
   };
 
   const resetCustomizations = (themeId: string) => {
-    themeService.resetCustomizations(themeId);
+    if (themeService) {
+      themeService.resetCustomizations(themeId);
+    }
   };
 
   const contextValue: ThemeContextValue = {

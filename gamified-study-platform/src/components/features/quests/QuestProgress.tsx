@@ -3,7 +3,7 @@ import { useQuestStore } from '../../../store/questStore';
 import { Card } from '../../ui/Card';
 import { ProgressBar } from '../../ui/ProgressBar';
 import { Badge } from '../../ui/Badge';
-import * as questUtils from '../../../utils/questUtils';
+import questUtils from '../../../utils/questUtils';
 import type { Quest, QuestType } from '../../../types';
 
 interface QuestProgressProps {

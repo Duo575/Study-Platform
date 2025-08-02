@@ -508,10 +508,12 @@ describe('Type Guards', () => {
           progress: 60,
           nextStageRequirements: [
             {
+              id: 'level-req-1',
               type: 'level_reached',
               target: 10,
               current: 3,
               description: 'Reach level 10',
+              completed: false,
             },
           ],
         },

@@ -235,9 +235,9 @@ export function useNetworkInfo() {
   useEffect(() => {
     // @ts-ignore - navigator.connection is not in TypeScript types yet
     const connection =
-      navigator.connection ||
-      navigator.mozConnection ||
-      navigator.webkitConnection;
+      (navigator as any).connection ||
+      (navigator as any).mozConnection ||
+      (navigator as any).webkitConnection;
 
     if (connection) {
       const updateNetworkInfo = () => {

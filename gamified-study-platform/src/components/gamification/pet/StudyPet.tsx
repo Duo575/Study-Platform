@@ -77,7 +77,10 @@ export function StudyPet({ userId, className = '' }: StudyPetProps) {
 
   if (showPetSelection) {
     return (
-      <PetSelection userId={userId} onComplete={handlePetAdoptionComplete} />
+      <PetSelection
+        onSelect={handlePetAdoptionComplete}
+        onClose={() => setShowPetSelection(false)}
+      />
     );
   }
 

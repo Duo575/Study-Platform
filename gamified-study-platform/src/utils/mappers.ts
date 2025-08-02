@@ -62,19 +62,25 @@ export function mapDatabasePetToStudyPet(
 
     if (nextStageReqs.level) {
       evolutionRequirements.push({
+        id: `level_${nextStageReqs.level}`,
         type: 'level_reached',
         target: nextStageReqs.level,
         current: typeof dbPet.level === 'number' ? dbPet.level : 1,
         description: `Reach level ${nextStageReqs.level}`,
+        completed:
+          (typeof dbPet.level === 'number' ? dbPet.level : 1) >=
+          nextStageReqs.level,
       });
     }
 
     if (nextStageReqs.study_hours) {
       evolutionRequirements.push({
+        id: `study_hours_${nextStageReqs.study_hours}`,
         type: 'study_hours',
         target: nextStageReqs.study_hours,
         current: 0, // Would need to be calculated from study sessions
         description: `Study for ${nextStageReqs.study_hours} hours`,
+        completed: false,
       });
     }
   }

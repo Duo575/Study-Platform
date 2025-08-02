@@ -354,7 +354,7 @@ export class CoinEarningSystem {
 
     // Award the coins
     if (totalCoins > 0) {
-      await storeStore.addCoins(totalCoins);
+      storeStore.updateCoins(totalCoins);
     }
 
     // Create earning result

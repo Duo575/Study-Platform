@@ -25,7 +25,7 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({
     applyTheme,
     purchaseTheme,
     unlockTheme,
-    previewTheme: startPreview,
+    startPreviewTheme: startPreview,
     stopPreview,
     loadThemes,
   } = useThemeStore();

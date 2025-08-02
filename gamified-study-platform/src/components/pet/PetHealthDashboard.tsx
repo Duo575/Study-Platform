@@ -445,15 +445,17 @@ export const PetHealthDashboard: React.FC<PetHealthDashboardProps> = ({
             <div>
               <span className="text-gray-600">Last fed:</span>
               <span className="ml-2 font-medium">
-                {Math.floor(petStatus.timeSinceLastFed / 60)}h{' '}
-                {petStatus.timeSinceLastFed % 60}m ago
+                {petStatus.timeSinceLastFed
+                  ? `${Math.floor(petStatus.timeSinceLastFed / 60)}h ${petStatus.timeSinceLastFed % 60}m ago`
+                  : 'Never'}
               </span>
             </div>
             <div>
               <span className="text-gray-600">Last played:</span>
               <span className="ml-2 font-medium">
-                {Math.floor(petStatus.timeSinceLastPlayed / 60)}h{' '}
-                {petStatus.timeSinceLastPlayed % 60}m ago
+                {petStatus.timeSinceLastPlayed
+                  ? `${Math.floor(petStatus.timeSinceLastPlayed / 60)}h ${petStatus.timeSinceLastPlayed % 60}m ago`
+                  : 'Never'}
               </span>
             </div>
             <div>

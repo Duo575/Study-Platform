@@ -26,6 +26,9 @@
       "@/pages/*": ["./src/pages/*"]
     },
 
+    /* Testing */
+    "types": ["vitest/globals", "@testing-library/jest-dom"],
+
     /* Linting */
     "strict": true,
     "noUnusedLocals": false,

@@ -1,13 +1,13 @@
 import { supabase } from '../lib/supabase';
 import { gamificationService } from './gamificationService';
 import { ACHIEVEMENT_DEFINITIONS } from '../utils/constants';
-import type { 
-  Achievement, 
-  AchievementCategory, 
+import type {
+  Achievement,
+  AchievementCategory,
   AchievementProgress,
   User,
   GameStats,
-  StudySession
+  StudySession,
 } from '../types';
 
 /**
@@ -31,7 +31,14 @@ export interface AchievementDefinition {
  * Achievement requirement conditions
  */
 export interface AchievementRequirement {
-  type: 'study_time' | 'consistency' | 'quest_completion' | 'pet_care' | 'social' | 'special_event' | 'composite';
+  type:
+    | 'study_time'
+    | 'consistency'
+    | 'quest_completion'
+    | 'pet_care'
+    | 'social'
+    | 'special_event'
+    | 'composite';
   conditions: AchievementCondition[];
   operator?: 'AND' | 'OR'; // For composite requirements
 }
@@ -62,9 +69,11 @@ export interface AchievementUnlock {
 export interface SeasonalEvent {
   id: string;
   name: string;
+  title: string;
   description: string;
   startDate: Date;
   endDate: Date;
+  isActive: boolean;
   achievements: string[]; // Achievement IDs
   specialRewards: {
     xpMultiplier?: number;
@@ -118,7 +127,8 @@ export const achievementService = {
     try {
       const { data, error } = await supabase
         .from('user_achievements')
-        .select(`
+        .select(
+          `
           id,
           unlocked_at,
           progress,
@@ -131,22 +141,27 @@ export const achievementService = {
             xp_reward,
             rarity
           )
-        `)
+        `
+        )
         .eq('user_id', userId)
         .order('unlocked_at', { ascending: false });
 
       if (error) throw error;
 
-      return data.map(item => ({
-        id: item.achievement_definitions.id,
-        title: item.achievement_definitions.name,
-        description: item.achievement_definitions.description,
-        category: item.achievement_definitions.category,
-        rarity: item.achievement_definitions.rarity,
-        xpReward: item.achievement_definitions.xp_reward,
-        iconUrl: item.achievement_definitions.icon_url || `/achievements/${item.achievement_definitions.id}.png`,
+      return data.map((item: any) => ({
+        id: item.achievement_definitions?.id || item.id,
+        title: item.achievement_definitions?.name || item.name,
+        description:
+          item.achievement_definitions?.description || item.description,
+        category: item.achievement_definitions?.category || item.category,
+        rarity: item.achievement_definitions?.rarity || item.rarity,
+        xpReward: item.achievement_definitions?.xp_reward || item.xp_reward,
+        iconUrl:
+          item.achievement_definitions?.icon_url ||
+          item.icon_url ||
+          `/achievements/${item.achievement_definitions?.id || item.id}.png`,
         unlockedAt: new Date(item.unlocked_at),
-        progress: item.progress
+        progress: item.progress,
       }));
     } catch (error) {
       console.error('Error fetching user achievements:', error);
@@ -157,13 +172,15 @@ export const achievementService = {
   /**
    * Check and award achievements for a user
    */
-  async checkAndAwardAchievements(userId: string): Promise<AchievementUnlock[]> {
+  async checkAndAwardAchievements(
+    userId: string
+  ): Promise<AchievementUnlock[]> {
     try {
       // Get user's current stats and data
       const [gameStats, studySessions, userAchievements] = await Promise.all([
         this.getUserGameStats(userId),
         this.getUserStudySessions(userId),
-        this.getUserAchievements(userId)
+        this.getUserAchievements(userId),
       ]);
 
       if (!gameStats) return [];
@@ -177,7 +194,11 @@ export const achievementService = {
         if (unlockedAchievementIds.has(definition.id)) continue;
 
         // Skip seasonal achievements that are expired
-        if (definition.isSeasonalEvent && definition.eventEndDate && definition.eventEndDate < new Date()) {
+        if (
+          definition.isSeasonalEvent &&
+          definition.eventEndDate &&
+          definition.eventEndDate < new Date()
+        ) {
           continue;
         }
 
@@ -204,7 +225,10 @@ export const achievementService = {
   /**
    * Unlock a specific achievement for a user
    */
-  async unlockAchievement(userId: string, definition: AchievementDefinition): Promise<AchievementUnlock | null> {
+  async unlockAchievement(
+    userId: string,
+    definition: AchievementDefinition
+  ): Promise<AchievementUnlock | null> {
     try {
       // Insert the achievement unlock
       const { data, error } = await supabase
@@ -213,7 +237,7 @@ export const achievementService = {
           user_id: userId,
           achievement_id: definition.id,
           unlocked_at: new Date().toISOString(),
-          progress: { completed: true }
+          progress: { completed: true },
         })
         .select()
         .single();
@@ -221,13 +245,17 @@ export const achievementService = {
       if (error) throw error;
 
       // Award XP
-      await gamificationService.awardXP(userId, definition.xpReward, `Achievement: ${definition.title}`);
+      await gamificationService.awardXP(
+        userId,
+        definition.xpReward,
+        `Achievement: ${definition.title}`
+      );
 
       return {
         achievement: definition,
         unlockedAt: new Date(data.unlocked_at),
         xpAwarded: definition.xpReward,
-        isNew: true
+        isNew: true,
       };
     } catch (error) {
       console.error('Error unlocking achievement:', error);
@@ -238,23 +266,29 @@ export const achievementService = {
   /**
    * Get achievement progress for a user
    */
-  async getAchievementProgress(userId: string, achievementId: string): Promise<AchievementProgress | null> {
+  async getAchievementProgress(
+    userId: string,
+    achievementId: string
+  ): Promise<AchievementProgress | null> {
     try {
-      const definition = (await this.getAchievementDefinitions()).find(d => d.id === achievementId);
+      const definition = (await this.getAchievementDefinitions()).find(
+        d => d.id === achievementId
+      );
       if (!definition) return null;
 
       // Get user data
       const [gameStats, studySessions] = await Promise.all([
         this.getUserGameStats(userId),
-        this.getUserStudySessions(userId)
+        this.getUserStudySessions(userId),
       ]);
 
       if (!gameStats) return null;
 
-      return this.calculateAchievementProgress(
-        definition.requirements,
-        { gameStats, studySessions, userId }
-      );
+      return this.calculateAchievementProgress(definition.requirements, {
+        gameStats,
+        studySessions,
+        userId,
+      });
     } catch (error) {
       console.error('Error getting achievement progress:', error);
       return null;
@@ -264,7 +298,9 @@ export const achievementService = {
   /**
    * Get achievements by category
    */
-  async getAchievementsByCategory(category: AchievementCategory): Promise<AchievementDefinition[]> {
+  async getAchievementsByCategory(
+    category: AchievementCategory
+  ): Promise<AchievementDefinition[]> {
     const definitions = await this.getAchievementDefinitions();
     return definitions.filter(d => d.category === category);
   },
@@ -285,11 +321,15 @@ export const achievementService = {
       return data.map(event => ({
         id: event.id,
         name: event.name,
+        title: event.name, // Add required title property
         description: event.description,
         startDate: new Date(event.start_date),
         endDate: new Date(event.end_date),
+        isActive:
+          new Date() >= new Date(event.start_date) &&
+          new Date() <= new Date(event.end_date), // Add required isActive property
         achievements: event.achievement_ids || [],
-        specialRewards: event.special_rewards || {}
+        specialRewards: event.special_rewards || {},
       }));
     } catch (error) {
       console.error('Error fetching seasonal events:', error);
@@ -304,7 +344,8 @@ export const achievementService = {
     try {
       const { data, error } = await supabase
         .from('user_badges')
-        .select(`
+        .select(
+          `
           id,
           unlocked_at,
           badges (
@@ -317,22 +358,24 @@ export const achievementService = {
             is_limited_edition,
             event_id
           )
-        `)
+        `
+        )
         .eq('user_id', userId)
         .order('unlocked_at', { ascending: false });
 
       if (error) throw error;
 
-      return data.map(item => ({
-        id: item.badges.id,
-        name: item.badges.name,
-        description: item.badges.description,
-        iconUrl: item.badges.icon_url,
-        rarity: item.badges.rarity,
-        category: item.badges.category,
+      return data.map((item: any) => ({
+        id: item.badges?.id || item.id,
+        name: item.badges?.name || item.name,
+        description: item.badges?.description || item.description,
+        iconUrl: item.badges?.icon_url || item.icon_url,
+        rarity: item.badges?.rarity || item.rarity,
+        category: item.badges?.category || item.category,
         unlockedAt: new Date(item.unlocked_at),
-        isLimitedEdition: item.badges.is_limited_edition,
-        eventId: item.badges.event_id
+        isLimitedEdition:
+          item.badges?.is_limited_edition || item.is_limited_edition,
+        eventId: item.badges?.event_id || item.event_id,
       }));
     } catch (error) {
       console.error('Error fetching user badges:', error);
@@ -345,13 +388,11 @@ export const achievementService = {
    */
   async awardBadge(userId: string, badgeId: string): Promise<boolean> {
     try {
-      const { error } = await supabase
-        .from('user_badges')
-        .insert({
-          user_id: userId,
-          badge_id: badgeId,
-          unlocked_at: new Date().toISOString()
-        });
+      const { error } = await supabase.from('user_badges').insert({
+        user_id: userId,
+        badge_id: badgeId,
+        unlocked_at: new Date().toISOString(),
+      });
 
       if (error) throw error;
       return true;
@@ -464,7 +505,10 @@ export const achievementService = {
 
     switch (metric) {
       case 'total_study_time':
-        current = this.calculateTotalStudyTime(studySessions, condition.timeframe);
+        current = this.calculateTotalStudyTime(
+          studySessions,
+          condition.timeframe
+        );
         description = `Study for ${target} minutes total`;
         break;
       case 'streak_days':
@@ -487,39 +531,57 @@ export const achievementService = {
     return {
       current: Math.min(current, target),
       target,
-      description
+      description,
     };
   },
 
   // Helper methods for calculating metrics
-  calculateTotalStudyTime(sessions: any[], timeframe: string = 'all_time'): number {
-    const filteredSessions = this.filterSessionsByTimeframe(sessions, timeframe);
-    return filteredSessions.reduce((total, session) => total + (session.duration || 0), 0);
+  calculateTotalStudyTime(
+    sessions: any[],
+    timeframe: string = 'all_time'
+  ): number {
+    const filteredSessions = this.filterSessionsByTimeframe(
+      sessions,
+      timeframe
+    );
+    return filteredSessions.reduce(
+      (total, session) => total + (session.duration || 0),
+      0
+    );
   },
 
-  getStudySessionCount(sessions: any[], timeframe: string = 'all_time'): number {
+  getStudySessionCount(
+    sessions: any[],
+    timeframe: string = 'all_time'
+  ): number {
     return this.filterSessionsByTimeframe(sessions, timeframe).length;
   },
 
   calculateConsecutiveStudyDays(sessions: any[]): number {
     if (sessions.length === 0) return 0;
 
-    const studyDates = [...new Set(
-      sessions.map(session => new Date(session.started_at).toDateString())
-    )].sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
+    const studyDates = [
+      ...new Set(
+        sessions.map(session => new Date(session.started_at).toDateString())
+      ),
+    ].sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
 
     let consecutive = 1;
     const today = new Date().toDateString();
 
     if (studyDates[0] !== today) {
-      const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toDateString();
+      const yesterday = new Date(
+        Date.now() - 24 * 60 * 60 * 1000
+      ).toDateString();
       if (studyDates[0] !== yesterday) return 0;
     }
 
     for (let i = 1; i < studyDates.length; i++) {
       const current = new Date(studyDates[i - 1]);
       const previous = new Date(studyDates[i]);
-      const dayDiff = Math.floor((current.getTime() - previous.getTime()) / (24 * 60 * 60 * 1000));
+      const dayDiff = Math.floor(
+        (current.getTime() - previous.getTime()) / (24 * 60 * 60 * 1000)
+      );
 
       if (dayDiff === 1) {
         consecutive++;
@@ -531,16 +593,28 @@ export const achievementService = {
     return consecutive;
   },
 
-  getEarlyMorningSessions(sessions: any[], timeframe: string = 'all_time'): number {
-    const filteredSessions = this.filterSessionsByTimeframe(sessions, timeframe);
+  getEarlyMorningSessions(
+    sessions: any[],
+    timeframe: string = 'all_time'
+  ): number {
+    const filteredSessions = this.filterSessionsByTimeframe(
+      sessions,
+      timeframe
+    );
     return filteredSessions.filter(session => {
       const hour = new Date(session.started_at).getHours();
       return hour >= 5 && hour < 7; // 5 AM to 7 AM
     }).length;
   },
 
-  getLateNightSessions(sessions: any[], timeframe: string = 'all_time'): number {
-    const filteredSessions = this.filterSessionsByTimeframe(sessions, timeframe);
+  getLateNightSessions(
+    sessions: any[],
+    timeframe: string = 'all_time'
+  ): number {
+    const filteredSessions = this.filterSessionsByTimeframe(
+      sessions,
+      timeframe
+    );
     return filteredSessions.filter(session => {
       const hour = new Date(session.started_at).getHours();
       return hour >= 22 || hour < 2; // 10 PM to 2 AM
@@ -548,7 +622,10 @@ export const achievementService = {
   },
 
   getWeekendSessions(sessions: any[], timeframe: string = 'all_time'): number {
-    const filteredSessions = this.filterSessionsByTimeframe(sessions, timeframe);
+    const filteredSessions = this.filterSessionsByTimeframe(
+      sessions,
+      timeframe
+    );
     return filteredSessions.filter(session => {
       const day = new Date(session.started_at).getDay();
       return day === 0 || day === 6; // Sunday or Saturday
@@ -575,10 +652,15 @@ export const achievementService = {
         return sessions;
     }
 
-    return sessions.filter(session => new Date(session.started_at) >= cutoffDate);
+    return sessions.filter(
+      session => new Date(session.started_at) >= cutoffDate
+    );
   },
 
-  async getQuestsCompleted(userId: string, timeframe: string = 'all_time'): Promise<number> {
+  async getQuestsCompleted(
+    userId: string,
+    timeframe: string = 'all_time'
+  ): Promise<number> {
     try {
       let query = supabase
         .from('quests')
@@ -657,10 +739,15 @@ export const achievementService = {
       rarity: dbItem.rarity,
       xpReward: dbItem.xp_reward,
       iconUrl: dbItem.icon_url,
-      requirements: dbItem.requirements || { type: 'study_time', conditions: [] },
+      requirements: dbItem.requirements || {
+        type: 'study_time',
+        conditions: [],
+      },
       isHidden: dbItem.is_hidden,
       isSeasonalEvent: dbItem.is_seasonal_event,
-      eventEndDate: dbItem.event_end_date ? new Date(dbItem.event_end_date) : undefined
+      eventEndDate: dbItem.event_end_date
+        ? new Date(dbItem.event_end_date)
+        : undefined,
     };
   },
 
@@ -679,12 +766,12 @@ export const achievementService = {
           {
             metric: Object.keys(def.requirements)[0],
             operator: '>=',
-            value: Object.values(def.requirements)[0] as number
-          }
-        ]
-      }
+            value: Object.values(def.requirements)[0] as number,
+          },
+        ],
+      },
     }));
-  }
+  },
 };
 
 export default achievementService;

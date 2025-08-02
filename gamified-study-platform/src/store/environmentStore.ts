@@ -350,8 +350,8 @@ export const useEnvironmentStore = create<
             ) {
               // Import and use audio service for ambient sound playback
               Promise.all([
-                import('../../services/audioService'),
-                import('../../services/audioPreloader'),
+                import('../services/audioService'),
+                import('../services/audioPreloader'),
               ])
                 .then(([{ audioService }, { audioPreloader }]) => {
                   // Preload ambient sound if not already cached

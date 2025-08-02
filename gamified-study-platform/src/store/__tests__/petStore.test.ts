@@ -7,34 +7,31 @@ import type {
   PetFood,
   PetToy,
 } from '../../types';
+import { petService } from '../../services/petService';
+import { petHungerSystem } from '../../services/petHungerSystem';
 
-// Mock the pet service
-const mockPetService = {
-  adoptPet: vi.fn(),
-  getUserPet: vi.fn(),
-  getPetSpecies: vi.fn(),
-  feedPet: vi.fn(),
-  playWithPet: vi.fn(),
-  checkAndEvolvePet: vi.fn(),
-  updatePetFromStudyActivity: vi.fn(),
-  getPetAccessories: vi.fn(),
-  addPetAccessory: vi.fn(),
-  checkPetNeeds: vi.fn(),
-};
-
-// Mock the pet hunger system
-const mockPetHungerSystem = {
-  calculateHungerFromTime: vi.fn(),
-  calculateHealthImpact: vi.fn(),
-  calculateHappinessImpact: vi.fn(),
-};
-
-vi.mock('../petService', () => ({
-  petService: mockPetService,
+// Mock the services at the top level
+vi.mock('../../services/petService', () => ({
+  petService: {
+    adoptPet: vi.fn(),
+    getUserPet: vi.fn(),
+    getPetSpecies: vi.fn(),
+    feedPet: vi.fn(),
+    playWithPet: vi.fn(),
+    checkAndEvolvePet: vi.fn(),
+    updatePetFromStudyActivity: vi.fn(),
+    getPetAccessories: vi.fn(),
+    addPetAccessory: vi.fn(),
+    checkPetNeeds: vi.fn(),
+  },
 }));
 
-vi.mock('../services/petHungerSystem', () => ({
-  petHungerSystem: mockPetHungerSystem,
+vi.mock('../../services/petHungerSystem', () => ({
+  petHungerSystem: {
+    calculateHungerFromTime: vi.fn(),
+    calculateHealthImpact: vi.fn(),
+    calculateHappinessImpact: vi.fn(),
+  },
 }));
 
 describe('usePetStore', () => {
@@ -46,38 +43,44 @@ describe('usePetStore', () => {
 
   const mockStudyPet: StudyPetExtended = {
     id: 'pet-123',
-    userId: mockUserId,
     name: 'Fluffy',
-    speciesId: 'cat-species',
+    species: {
+      id: 'cat-species',
+      name: 'Cat',
+      description: 'A friendly cat',
+      baseStats: { happiness: 80, health: 90, intelligence: 50 },
+      evolutionStages: [],
+    },
     level: 1,
     happiness: 80,
     health: 90,
     lastFed: new Date(),
     lastPlayed: new Date(),
     evolution: {
-      stage: 'baby',
+      stage: {
+        id: 'baby-stage',
+        name: 'baby',
+        description: 'Baby stage',
+        imageUrl: '/baby.png',
+        unlockedAbilities: [],
+      },
       progress: 0,
-      nextStage: 'adult',
-      requirements: { level: 5 },
+      nextStageRequirements: [],
     },
     accessories: [],
     createdAt: new Date(),
-    updatedAt: new Date(),
-    hunger: 30,
-    energy: 70,
+    // StudyPetExtended specific properties
     mood: {
       current: 'happy',
       factors: [],
-      lastChanged: new Date(),
+      lastUpdated: new Date(),
+      trend: 'stable',
     },
-    activities: [],
-    inventory: [],
-    evolutionHistory: [],
-    preferences: {
-      favoriteFood: 'basic-kibble',
-      favoriteActivity: 'play',
-      sleepSchedule: { bedtime: 22, wakeup: 8 },
-    },
+    moodHistory: [],
+    totalStudyTime: 0,
+    favoriteSubjects: [],
+    achievements: [],
+    evolutionStage: 'baby',
   };
 
   const mockSpecies: PetSpecies[] = [
@@ -101,6 +104,28 @@ describe('usePetStore', () => {
     // Reset store state before each test
     usePetStore.getState().reset();
     vi.clearAllMocks();
+
+    // Set up default mock return values
+    vi.mocked(petService.getUserPet).mockResolvedValue(null);
+    vi.mocked(petService.getPetSpecies).mockResolvedValue([]);
+    vi.mocked(petService.adoptPet).mockResolvedValue(mockStudyPet);
+    vi.mocked(petService.feedPet).mockResolvedValue(mockStudyPet);
+    vi.mocked(petService.playWithPet).mockResolvedValue(mockStudyPet);
+    vi.mocked(petService.checkAndEvolvePet).mockResolvedValue({
+      evolved: false,
+      pet: mockStudyPet,
+    });
+    vi.mocked(petService.updatePetFromStudyActivity).mockResolvedValue(
+      mockStudyPet
+    );
+    vi.mocked(petService.getPetAccessories).mockResolvedValue([]);
+    vi.mocked(petService.addPetAccessory).mockResolvedValue(mockStudyPet);
+    vi.mocked(petService.checkPetNeeds).mockResolvedValue([]);
+
+    // Set up hunger system mocks
+    vi.mocked(petHungerSystem.calculateHungerFromTime).mockReturnValue(40);
+    vi.mocked(petHungerSystem.calculateHealthImpact).mockReturnValue(85);
+    vi.mocked(petHungerSystem.calculateHappinessImpact).mockReturnValue(75);
   });
 
   afterEach(() => {
@@ -131,7 +156,7 @@ describe('usePetStore', () => {
 
   describe('fetchUserPet', () => {
     it('should fetch user pet successfully', async () => {
-      mockPetService.getUserPet.mockResolvedValue(mockStudyPet);
+      vi.mocked(petService).getUserPet.mockResolvedValue(mockStudyPet);
       const store = usePetStore.getState();
 
       await store.fetchUserPet(mockUserId);
@@ -140,11 +165,11 @@ describe('usePetStore', () => {
       expect(state.pet).toEqual(mockStudyPet);
       expect(state.isLoading).toBe(false);
       expect(state.error).toBeNull();
-      expect(mockPetService.getUserPet).toHaveBeenCalledWith(mockUserId);
+      expect(vi.mocked(petService).getUserPet).toHaveBeenCalledWith(mockUserId);
     });
 
     it('should handle no pet found', async () => {
-      mockPetService.getUserPet.mockResolvedValue(null);
+      vi.mocked(petService).getUserPet.mockResolvedValue(null);
       const store = usePetStore.getState();
 
       await store.fetchUserPet(mockUserId);
@@ -156,7 +181,9 @@ describe('usePetStore', () => {
     });
 
     it('should handle fetch errors', async () => {
-      mockPetService.getUserPet.mockRejectedValue(new Error('Database error'));
+      vi.mocked(petService).getUserPet.mockRejectedValue(
+        new Error('Database error')
+      );
       const store = usePetStore.getState();
 
       await store.fetchUserPet(mockUserId);
@@ -168,7 +195,7 @@ describe('usePetStore', () => {
     });
 
     it('should check pet needs after fetching pet', async () => {
-      mockPetService.getUserPet.mockResolvedValue(mockStudyPet);
+      vi.mocked(petService).getUserPet.mockResolvedValue(mockStudyPet);
       const store = usePetStore.getState();
       const checkPetNeedsSpy = vi
         .spyOn(store, 'checkPetNeeds')
@@ -182,7 +209,7 @@ describe('usePetStore', () => {
 
   describe('fetchPetSpecies', () => {
     it('should fetch pet species successfully', async () => {
-      mockPetService.getPetSpecies.mockResolvedValue(mockSpecies);
+      vi.mocked(petService).getPetSpecies.mockResolvedValue(mockSpecies);
       const store = usePetStore.getState();
 
       await store.fetchPetSpecies();
@@ -194,7 +221,7 @@ describe('usePetStore', () => {
     });
 
     it('should handle fetch species errors', async () => {
-      mockPetService.getPetSpecies.mockRejectedValue(
+      vi.mocked(petService).getPetSpecies.mockRejectedValue(
         new Error('Database error')
       );
       const store = usePetStore.getState();
@@ -210,7 +237,7 @@ describe('usePetStore', () => {
 
   describe('adoptPet', () => {
     it('should adopt pet successfully', async () => {
-      mockPetService.adoptPet.mockResolvedValue(mockStudyPet);
+      vi.mocked(petService).adoptPet.mockResolvedValue(mockStudyPet);
       const store = usePetStore.getState();
 
       await store.adoptPet(mockUserId, mockPetData);
@@ -221,14 +248,16 @@ describe('usePetStore', () => {
       expect(state.isAdopting).toBe(false);
       expect(state.error).toBeNull();
       expect(state.lastInteraction).toBeInstanceOf(Date);
-      expect(mockPetService.adoptPet).toHaveBeenCalledWith(
+      expect(vi.mocked(petService).adoptPet).toHaveBeenCalledWith(
         mockUserId,
         mockPetData
       );
     });
 
     it('should handle adoption errors', async () => {
-      mockPetService.adoptPet.mockRejectedValue(new Error('Adoption failed'));
+      vi.mocked(petService).adoptPet.mockRejectedValue(
+        new Error('Adoption failed')
+      );
       const store = usePetStore.getState();
 
       await store.adoptPet(mockUserId, mockPetData);
@@ -245,7 +274,7 @@ describe('usePetStore', () => {
       const adoptionPromise = new Promise(resolve => {
         resolveAdoption = resolve;
       });
-      mockPetService.adoptPet.mockReturnValue(adoptionPromise);
+      vi.mocked(petService).adoptPet.mockReturnValue(adoptionPromise);
 
       const store = usePetStore.getState();
       const adoptPromise = store.adoptPet(mockUserId, mockPetData);
@@ -269,7 +298,7 @@ describe('usePetStore', () => {
   describe('feedPet', () => {
     it('should feed pet successfully', async () => {
       const fedPet = { ...mockStudyPet, happiness: 95, health: 100 };
-      mockPetService.feedPet.mockResolvedValue(fedPet);
+      vi.mocked(petService).feedPet.mockResolvedValue(fedPet);
       const store = usePetStore.getState();
 
       await store.feedPet(mockUserId);
@@ -281,11 +310,13 @@ describe('usePetStore', () => {
       expect(state.needsAttention).toBe(false);
       expect(state.attentionReason).toBeNull();
       expect(state.lastInteraction).toBeInstanceOf(Date);
-      expect(mockPetService.feedPet).toHaveBeenCalledWith(mockUserId);
+      expect(vi.mocked(petService).feedPet).toHaveBeenCalledWith(mockUserId);
     });
 
     it('should handle feeding errors', async () => {
-      mockPetService.feedPet.mockRejectedValue(new Error('Feeding failed'));
+      vi.mocked(petService).feedPet.mockRejectedValue(
+        new Error('Feeding failed')
+      );
       const store = usePetStore.getState();
 
       await store.feedPet(mockUserId);
@@ -301,7 +332,7 @@ describe('usePetStore', () => {
       const feedPromise = new Promise(resolve => {
         resolveFeed = resolve;
       });
-      mockPetService.feedPet.mockReturnValue(feedPromise);
+      vi.mocked(petService).feedPet.mockReturnValue(feedPromise);
 
       const store = usePetStore.getState();
       const feedingPromise = store.feedPet(mockUserId);
@@ -327,7 +358,7 @@ describe('usePetStore', () => {
   describe('playWithPet', () => {
     it('should play with pet successfully', async () => {
       const playedPet = { ...mockStudyPet, happiness: 100 };
-      mockPetService.playWithPet.mockResolvedValue(playedPet);
+      vi.mocked(petService).playWithPet.mockResolvedValue(playedPet);
       const store = usePetStore.getState();
 
       await store.playWithPet(mockUserId);
@@ -338,11 +369,15 @@ describe('usePetStore', () => {
       expect(state.isInteracting).toBe(false);
       expect(state.needsAttention).toBe(false);
       expect(state.attentionReason).toBeNull();
-      expect(mockPetService.playWithPet).toHaveBeenCalledWith(mockUserId);
+      expect(vi.mocked(petService).playWithPet).toHaveBeenCalledWith(
+        mockUserId
+      );
     });
 
     it('should handle playing errors', async () => {
-      mockPetService.playWithPet.mockRejectedValue(new Error('Playing failed'));
+      vi.mocked(petService).playWithPet.mockRejectedValue(
+        new Error('Playing failed')
+      );
       const store = usePetStore.getState();
 
       await store.playWithPet(mockUserId);
@@ -360,7 +395,7 @@ describe('usePetStore', () => {
         ...mockStudyPet,
         evolution: { ...mockStudyPet.evolution, stage: 'adult' },
       };
-      mockPetService.checkAndEvolvePet.mockResolvedValue({
+      vi.mocked(petService).checkAndEvolvePet.mockResolvedValue({
         pet: evolvedPet,
         evolved: true,
         newStage: 'adult',
@@ -377,7 +412,7 @@ describe('usePetStore', () => {
     });
 
     it('should not evolve pet when not possible', async () => {
-      mockPetService.checkAndEvolvePet.mockResolvedValue({
+      vi.mocked(petService).checkAndEvolvePet.mockResolvedValue({
         pet: mockStudyPet,
         evolved: false,
         newStage: null,
@@ -393,7 +428,7 @@ describe('usePetStore', () => {
     });
 
     it('should handle evolution errors', async () => {
-      mockPetService.checkAndEvolvePet.mockRejectedValue(
+      vi.mocked(petService).checkAndEvolvePet.mockRejectedValue(
         new Error('Evolution failed')
       );
       const store = usePetStore.getState();
@@ -410,7 +445,9 @@ describe('usePetStore', () => {
   describe('updateFromStudyActivity', () => {
     it('should update pet from study activity', async () => {
       const updatedPet = { ...mockStudyPet, happiness: 85 };
-      mockPetService.updatePetFromStudyActivity.mockResolvedValue(updatedPet);
+      vi.mocked(petService).updatePetFromStudyActivity.mockResolvedValue(
+        updatedPet
+      );
       const store = usePetStore.getState();
       const checkEvolutionSpy = vi
         .spyOn(store, 'checkEvolution')
@@ -420,16 +457,14 @@ describe('usePetStore', () => {
 
       const state = usePetStore.getState();
       expect(state.pet).toEqual(updatedPet);
-      expect(mockPetService.updatePetFromStudyActivity).toHaveBeenCalledWith(
-        mockUserId,
-        'study_session',
-        30
-      );
+      expect(
+        vi.mocked(petService).updatePetFromStudyActivity
+      ).toHaveBeenCalledWith(mockUserId, 'study_session', 30);
       expect(checkEvolutionSpy).toHaveBeenCalledWith(mockUserId);
     });
 
     it('should handle study activity update errors silently', async () => {
-      mockPetService.updatePetFromStudyActivity.mockRejectedValue(
+      vi.mocked(petService).updatePetFromStudyActivity.mockRejectedValue(
         new Error('Update failed')
       );
       const store = usePetStore.getState();
@@ -454,17 +489,21 @@ describe('usePetStore', () => {
           unlockedAt: new Date(),
         },
       ];
-      mockPetService.getPetAccessories.mockResolvedValue(mockAccessories);
+      vi.mocked(petService).getPetAccessories.mockResolvedValue(
+        mockAccessories
+      );
       const store = usePetStore.getState();
 
       const result = await store.fetchAccessories(mockUserId);
 
       expect(result).toEqual(mockAccessories);
-      expect(mockPetService.getPetAccessories).toHaveBeenCalledWith(mockUserId);
+      expect(vi.mocked(petService).getPetAccessories).toHaveBeenCalledWith(
+        mockUserId
+      );
     });
 
     it('should handle fetch accessories errors', async () => {
-      mockPetService.getPetAccessories.mockRejectedValue(
+      vi.mocked(petService).getPetAccessories.mockRejectedValue(
         new Error('Fetch failed')
       );
       const store = usePetStore.getState();
@@ -478,7 +517,7 @@ describe('usePetStore', () => {
   describe('unlockAccessory', () => {
     it('should unlock accessory successfully', async () => {
       const updatedPet = { ...mockStudyPet };
-      mockPetService.addPetAccessory.mockResolvedValue(updatedPet);
+      vi.mocked(petService).addPetAccessory.mockResolvedValue(updatedPet);
       const store = usePetStore.getState();
 
       const accessory = {
@@ -493,14 +532,14 @@ describe('usePetStore', () => {
       const state = usePetStore.getState();
       expect(state.pet).toEqual(updatedPet);
       expect(state.isLoading).toBe(false);
-      expect(mockPetService.addPetAccessory).toHaveBeenCalledWith(
+      expect(vi.mocked(petService).addPetAccessory).toHaveBeenCalledWith(
         mockUserId,
         accessory
       );
     });
 
     it('should handle unlock accessory errors', async () => {
-      mockPetService.addPetAccessory.mockRejectedValue(
+      vi.mocked(petService).addPetAccessory.mockRejectedValue(
         new Error('Unlock failed')
       );
       const store = usePetStore.getState();
@@ -591,7 +630,7 @@ describe('usePetStore', () => {
     });
 
     it('should use food item', async () => {
-      mockPetService.feedPet.mockResolvedValue(mockStudyPet);
+      vi.mocked(petService).feedPet.mockResolvedValue(mockStudyPet);
       const store = usePetStore.getState();
       const feedPetSpy = vi.spyOn(store, 'feedPet').mockResolvedValue();
 
@@ -604,7 +643,7 @@ describe('usePetStore', () => {
     });
 
     it('should use toy item', async () => {
-      mockPetService.playWithPet.mockResolvedValue(mockStudyPet);
+      vi.mocked(petService).playWithPet.mockResolvedValue(mockStudyPet);
       const store = usePetStore.getState();
       const playWithPetSpy = vi.spyOn(store, 'playWithPet').mockResolvedValue();
 
@@ -713,9 +752,9 @@ describe('usePetStore', () => {
   describe('pet status and needs', () => {
     beforeEach(() => {
       // Mock hunger system calculations
-      mockPetHungerSystem.calculateHungerFromTime.mockReturnValue(40);
-      mockPetHungerSystem.calculateHealthImpact.mockReturnValue(85);
-      mockPetHungerSystem.calculateHappinessImpact.mockReturnValue(75);
+      vi.mocked(petHungerSystem).calculateHungerFromTime.mockReturnValue(40);
+      vi.mocked(petHungerSystem).calculateHealthImpact.mockReturnValue(85);
+      vi.mocked(petHungerSystem).calculateHappinessImpact.mockReturnValue(75);
     });
 
     it('should update pet status', async () => {
@@ -732,12 +771,14 @@ describe('usePetStore', () => {
     });
 
     it('should check pet needs', async () => {
-      mockPetService.checkPetNeeds.mockResolvedValue({
+      // Clear the default mock and set up specific mock for this test
+      vi.mocked(petService.checkPetNeeds).mockClear();
+      vi.mocked(petService.checkPetNeeds).mockResolvedValue({
         needsAttention: true,
         reason: 'hungry',
       });
-      const store = usePetStore.getState();
 
+      const store = usePetStore.getState();
       await store.checkPetNeeds(mockUserId);
 
       const state = usePetStore.getState();

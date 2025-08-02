@@ -486,6 +486,14 @@ export const usePetStore = create<PetState & PetActions>()(
                 (pet as any).energy ||
                   100 - Math.floor(timeSinceLastPlayed / 120)
               ),
+              mood:
+                currentHunger >= 80
+                  ? 'hungry'
+                  : adjustedHappiness >= 80
+                    ? 'happy'
+                    : timeSinceLastPlayed > 2880
+                      ? 'playful'
+                      : 'idle',
               needsAttention:
                 timeSinceLastFed > 1440 ||
                 timeSinceLastPlayed > 2880 ||
@@ -508,9 +516,13 @@ export const usePetStore = create<PetState & PetActions>()(
 
             // Mock evolution eligibility check
             const eligibility: EvolutionEligibility = {
+              isEligible: pet.level >= 5 && pet.happiness >= 80,
               canEvolve: pet.level >= 5 && pet.happiness >= 80,
               nextStage: pet.evolution.stage,
-              missingRequirements: [],
+              requirements: pet.evolution.nextStageRequirements,
+              completedRequirements: pet.evolution.nextStageRequirements
+                .filter(req => req.completed)
+                .map(req => req.id),
               progress: Math.min(100, pet.level * 20 + pet.happiness * 0.5),
             };
 
@@ -598,17 +610,27 @@ export const usePetStore = create<PetState & PetActions>()(
             const needs: PetNeed[] = [];
             if (reason === 'hungry') {
               needs.push({
+                id: 'hunger-need',
                 type: 'food',
-                urgency: 'high',
+                name: 'Hunger',
                 description: 'Your pet is hungry and needs food',
+                urgency: 'high',
+                value: 20,
+                lastSatisfied: new Date(Date.now() - 3600000), // 1 hour ago
+                icon: '🍖',
                 timeRemaining: 60,
               });
             }
             if (reason === 'bored') {
               needs.push({
+                id: 'boredom-need',
                 type: 'play',
-                urgency: 'medium',
+                name: 'Boredom',
                 description: 'Your pet wants to play',
+                urgency: 'medium',
+                value: 40,
+                lastSatisfied: new Date(Date.now() - 7200000), // 2 hours ago
+                icon: '🎾',
                 timeRemaining: 120,
               });
             }

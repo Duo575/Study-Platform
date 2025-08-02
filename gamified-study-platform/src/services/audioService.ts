@@ -144,9 +144,15 @@ export class AudioManagerService implements AudioManager {
 
     try {
       this.gainNodes.master.gain.value = this.settings.masterVolume;
-      this.gainNodes.ambient.gain.value = this.settings.ambientVolume;
-      this.gainNodes.music.gain.value = this.settings.musicVolume;
-      this.gainNodes.effects.gain.value = this.settings.soundEffectsVolume;
+      if (this.gainNodes.ambient) {
+        this.gainNodes.ambient.gain.value = this.settings.ambientVolume;
+      }
+      if (this.gainNodes.music) {
+        this.gainNodes.music.gain.value = this.settings.musicVolume;
+      }
+      if (this.gainNodes.effects) {
+        this.gainNodes.effects.gain.value = this.settings.soundEffectsVolume;
+      }
     } catch (error) {
       console.error('Error updating gain node volumes:', error);
     }
@@ -193,6 +199,7 @@ export class AudioManagerService implements AudioManager {
         track = {
           id: trackId,
           title: `Track ${trackId}`,
+          artist: 'Unknown Artist',
           duration: 180,
           url: `/audio/music/${trackId}.mp3`,
           genre: 'lofi',

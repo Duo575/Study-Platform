@@ -33,7 +33,7 @@ export function OfflineDataSync({
           {
             timestamp: Date.now(),
             type: 'auto',
-            status: 'success',
+            status: 'success' as const,
             message: 'Automatic sync completed successfully',
           },
         ].slice(-10)
@@ -47,7 +47,7 @@ export function OfflineDataSync({
           {
             timestamp: Date.now(),
             type: 'auto',
-            status: 'error',
+            status: 'error' as const,
             message: event.detail?.message || 'Sync failed',
           },
         ].slice(-10)
@@ -78,7 +78,7 @@ export function OfflineDataSync({
           {
             timestamp: Date.now(),
             type: 'manual',
-            status: 'success',
+            status: 'success' as const,
             message: 'Manual sync completed successfully',
           },
         ].slice(-10)
@@ -90,7 +90,7 @@ export function OfflineDataSync({
           {
             timestamp: Date.now(),
             type: 'manual',
-            status: 'error',
+            status: 'error' as const,
             message:
               error instanceof Error ? error.message : 'Manual sync failed',
           },
@@ -113,7 +113,7 @@ export function OfflineDataSync({
             {
               timestamp: Date.now(),
               type: 'manual',
-              status: 'success',
+              status: 'success' as const,
               message: 'Offline data cleared successfully',
             },
           ].slice(-10)
@@ -125,7 +125,7 @@ export function OfflineDataSync({
             {
               timestamp: Date.now(),
               type: 'manual',
-              status: 'error',
+              status: 'error' as const,
               message: 'Failed to clear offline data',
             },
           ].slice(-10)

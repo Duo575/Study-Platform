@@ -94,7 +94,7 @@ export const PerformanceAnalysis = lazy(() =>
 
 export const DataExportInterface = lazy(() =>
   import('../features/DataExport').then(module => ({
-    default: module.DataExport,
+    default: module.default,
   }))
 );
 
@@ -120,13 +120,13 @@ export const UserManagement = lazy(() =>
 // Lazy load social features
 export const StudyGroups = lazy(() =>
   import('../features/StudyRooms').then(module => ({
-    default: module.StudyRooms,
+    default: module.default,
   }))
 );
 
 export const SocialFeed = lazy(() =>
   import('../features/GroupChat').then(module => ({
-    default: module.GroupChat,
+    default: module.default,
   }))
 );
 

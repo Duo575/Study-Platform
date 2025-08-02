@@ -102,9 +102,10 @@ export function usePetOfflineStorage() {
           petId,
           foodId,
           foodName,
+          foodType: 'regular', // Default food type
           timestamp: new Date(),
           healthChange: effects.health,
-          happinessChange: effects.happiness,
+          happinessGain: effects.happiness,
           energyChange: effects.energy,
         };
 
@@ -124,6 +125,7 @@ export function usePetOfflineStorage() {
       petId: string,
       fromStage: string,
       toStage: string,
+      level: number,
       requirements: string[]
     ) => {
       try {
@@ -132,6 +134,7 @@ export function usePetOfflineStorage() {
           petId,
           fromStage,
           toStage,
+          level,
           timestamp: new Date(),
           requirements,
           celebrationShown: false,

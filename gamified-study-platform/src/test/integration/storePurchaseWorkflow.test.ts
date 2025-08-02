@@ -874,7 +874,14 @@ describe('Store Purchase Workflow Integration Tests', () => {
 
       for (const filter of operations) {
         act(() => {
-          result.current.setFilters(filter as StoreFilters);
+          result.current.setFilters({
+            category: 'all',
+            rarity: 'all',
+            sortBy: 'name',
+            sortOrder: 'asc',
+            search: '',
+            ...filter,
+          } as StoreFilters);
         });
         result.current.getFilteredItems();
       }

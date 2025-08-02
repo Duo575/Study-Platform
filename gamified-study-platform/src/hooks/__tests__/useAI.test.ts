@@ -1,9 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useAI } from '../useAI';
+import { useAIStore } from '../../store/aiStore';
 
 // Mock the AI store
-vi.mock('../store/aiStore', () => ({
+vi.mock('../../store/aiStore', () => ({
   useAIStore: vi.fn(() => ({
     assistant: null,
     currentConversation: null,
@@ -98,9 +99,43 @@ describe('useAI', () => {
 
   it('should setup assistant with correct parameters', async () => {
     const mockCreateAssistant = vi.fn();
-    vi.mocked(require('../store/aiStore').useAIStore).mockReturnValue({
+    vi.mocked(useAIStore).mockReturnValue({
+      assistant: null,
+      currentConversation: null,
+      conversations: [],
+      insights: [],
+      studyPlans: [],
+      isLoading: false,
+      error: null,
+      config: {
+        model: 'gemini-pro',
+        temperature: 0.7,
+        maxTokens: 1000,
+        systemPrompts: {},
+        features: {
+          questionAnswering: true,
+          studyPlanning: true,
+          motivationalMessages: true,
+          performanceAnalysis: true,
+          resourceRecommendation: true,
+          conversationalChat: true,
+        },
+        rateLimits: {
+          questionsPerHour: 50,
+          messagesPerDay: 200,
+          planGenerationsPerWeek: 5,
+        },
+      },
       createAssistant: mockCreateAssistant,
-      // ... other properties
+      startConversation: vi.fn(),
+      sendMessage: vi.fn(),
+      askQuestion: vi.fn(),
+      generateStudyPlan: vi.fn(),
+      generateInsights: vi.fn(),
+      generateMotivationalMessage: vi.fn(),
+      updateConfig: vi.fn(),
+      clearError: vi.fn(),
+      reset: vi.fn(),
     });
 
     const { result } = renderHook(() => useAI());
@@ -134,9 +169,43 @@ describe('useAI', () => {
 
   it('should start chat with context', async () => {
     const mockStartConversation = vi.fn();
-    vi.mocked(require('../store/aiStore').useAIStore).mockReturnValue({
+    vi.mocked(useAIStore).mockReturnValue({
+      assistant: null,
+      currentConversation: null,
+      conversations: [],
+      insights: [],
+      studyPlans: [],
+      isLoading: false,
+      error: null,
+      config: {
+        model: 'gemini-pro',
+        temperature: 0.7,
+        maxTokens: 1000,
+        systemPrompts: {},
+        features: {
+          questionAnswering: true,
+          studyPlanning: true,
+          motivationalMessages: true,
+          performanceAnalysis: true,
+          resourceRecommendation: true,
+          conversationalChat: true,
+        },
+        rateLimits: {
+          questionsPerHour: 50,
+          messagesPerDay: 200,
+          planGenerationsPerWeek: 5,
+        },
+      },
+      createAssistant: vi.fn(),
       startConversation: mockStartConversation,
-      // ... other properties
+      sendMessage: vi.fn(),
+      askQuestion: vi.fn(),
+      generateStudyPlan: vi.fn(),
+      generateInsights: vi.fn(),
+      generateMotivationalMessage: vi.fn(),
+      updateConfig: vi.fn(),
+      clearError: vi.fn(),
+      reset: vi.fn(),
     });
 
     const { result } = renderHook(() => useAI());
@@ -156,9 +225,43 @@ describe('useAI', () => {
 
   it('should ask study question with proper context', async () => {
     const mockAskQuestion = vi.fn();
-    vi.mocked(require('../store/aiStore').useAIStore).mockReturnValue({
+    vi.mocked(useAIStore).mockReturnValue({
+      assistant: null,
+      currentConversation: null,
+      conversations: [],
+      insights: [],
+      studyPlans: [],
+      isLoading: false,
+      error: null,
+      config: {
+        model: 'gemini-pro',
+        temperature: 0.7,
+        maxTokens: 1000,
+        systemPrompts: {},
+        features: {
+          questionAnswering: true,
+          studyPlanning: true,
+          motivationalMessages: true,
+          performanceAnalysis: true,
+          resourceRecommendation: true,
+          conversationalChat: true,
+        },
+        rateLimits: {
+          questionsPerHour: 50,
+          messagesPerDay: 200,
+          planGenerationsPerWeek: 5,
+        },
+      },
+      createAssistant: vi.fn(),
+      startConversation: vi.fn(),
+      sendMessage: vi.fn(),
       askQuestion: mockAskQuestion,
-      // ... other properties
+      generateStudyPlan: vi.fn(),
+      generateInsights: vi.fn(),
+      generateMotivationalMessage: vi.fn(),
+      updateConfig: vi.fn(),
+      clearError: vi.fn(),
+      reset: vi.fn(),
     });
 
     const { result } = renderHook(() => useAI());
@@ -186,18 +289,70 @@ describe('useAI', () => {
   });
 
   it('should handle errors gracefully', () => {
+    let mockError: string | null = null;
+    const mockSetError = vi.fn((error: string) => {
+      mockError = error;
+    });
+    const mockClearError = vi.fn(() => {
+      mockError = null;
+    });
+
+    vi.mocked(useAIStore).mockReturnValue({
+      assistant: null,
+      currentConversation: null,
+      conversations: [],
+      insights: [],
+      studyPlans: [],
+      isLoading: false,
+      error: mockError,
+      config: {
+        model: 'gemini-pro',
+        temperature: 0.7,
+        maxTokens: 1000,
+        systemPrompts: {},
+        features: {
+          questionAnswering: true,
+          studyPlanning: true,
+          motivationalMessages: true,
+          performanceAnalysis: true,
+          resourceRecommendation: true,
+          conversationalChat: true,
+        },
+        rateLimits: {
+          questionsPerHour: 50,
+          messagesPerDay: 200,
+          planGenerationsPerWeek: 5,
+        },
+      },
+      createAssistant: vi.fn(),
+      startConversation: vi.fn(),
+      sendMessage: vi.fn(),
+      askQuestion: vi.fn(),
+      generateStudyPlan: vi.fn(),
+      generateInsights: vi.fn(),
+      generateMotivationalMessage: vi.fn(),
+      updateConfig: vi.fn(),
+      setCurrentConversation: vi.fn(),
+      addMessageToConversation: vi.fn(),
+      markInsightAsAcknowledged: vi.fn(),
+      markInsightAsApplied: vi.fn(),
+      setError: mockSetError,
+      clearError: mockClearError,
+      reset: vi.fn(),
+    });
+
     const { result } = renderHook(() => useAI());
 
     act(() => {
       result.current.setError('Test error');
     });
 
-    expect(result.current.error).toBe('Test error');
+    expect(mockSetError).toHaveBeenCalledWith('Test error');
 
     act(() => {
       result.current.clearError();
     });
 
-    expect(result.current.error).toBe(null);
+    expect(mockClearError).toHaveBeenCalled();
   });
 });

@@ -1,7 +1,11 @@
 // Tests for offline hooks
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
-import { useOffline, usePWAInstall, useServiceWorker } from '@/hooks/useOffline';
+import {
+  useOffline,
+  usePWAInstall,
+  useServiceWorker,
+} from '@/hooks/useOffline';
 
 // Mock the offline service
 vi.mock('@/services/offlineService', () => ({
@@ -152,7 +156,7 @@ describe('useOffline Hook', () => {
 
   it('should save with offline support when online', async () => {
     const { result } = renderHook(() => useOffline());
-    
+
     const mockSaveFunction = vi.fn().mockResolvedValue({ id: 'test' });
     const mockOfflineSaveFunction = vi.fn().mockResolvedValue(undefined);
 
@@ -172,7 +176,7 @@ describe('useOffline Hook', () => {
   it('should save offline when offline', async () => {
     (global.navigator as any).onLine = false;
     const { result } = renderHook(() => useOffline());
-    
+
     const mockSaveFunction = vi.fn().mockResolvedValue({ id: 'test' });
     const mockOfflineSaveFunction = vi.fn().mockResolvedValue(undefined);
 
@@ -192,9 +196,11 @@ describe('useOffline Hook', () => {
 
   it('should load with offline support when online', async () => {
     const { result } = renderHook(() => useOffline());
-    
+
     const mockLoadFunction = vi.fn().mockResolvedValue({ data: 'online' });
-    const mockOfflineLoadFunction = vi.fn().mockResolvedValue({ data: 'offline' });
+    const mockOfflineLoadFunction = vi
+      .fn()
+      .mockResolvedValue({ data: 'offline' });
 
     await act(async () => {
       const loadedData = await result.current.loadWithOfflineSupport(
@@ -212,9 +218,11 @@ describe('useOffline Hook', () => {
   it('should load offline when offline', async () => {
     (global.navigator as any).onLine = false;
     const { result } = renderHook(() => useOffline());
-    
+
     const mockLoadFunction = vi.fn().mockResolvedValue({ data: 'online' });
-    const mockOfflineLoadFunction = vi.fn().mockResolvedValue({ data: 'offline' });
+    const mockOfflineLoadFunction = vi
+      .fn()
+      .mockResolvedValue({ data: 'offline' });
 
     await act(async () => {
       const loadedData = await result.current.loadWithOfflineSupport(
@@ -242,7 +250,7 @@ describe('usePWAInstall Hook', () => {
   });
 
   it('should detect standalone mode as installed', () => {
-    (global.window.matchMedia as any).mockImplementation(query => ({
+    (global.window.matchMedia as any).mockImplementation((query: string) => ({
       matches: query === '(display-mode: standalone)',
       media: query,
       onchange: null,
@@ -266,7 +274,7 @@ describe('usePWAInstall Hook', () => {
         preventDefault: vi.fn(),
         type: 'beforeinstallprompt',
       };
-      
+
       const listeners = mockEventListeners['beforeinstallprompt'] || [];
       listeners.forEach(listener => listener(mockEvent));
     });
@@ -309,14 +317,22 @@ describe('useServiceWorker Hook', () => {
 
   it('should handle service worker not supported', () => {
     const originalServiceWorker = global.navigator.serviceWorker;
-    delete (global.navigator as any).serviceWorker;
+
+    // Mock navigator without serviceWorker
+    Object.defineProperty(global.navigator, 'serviceWorker', {
+      value: undefined,
+      configurable: true,
+    });
 
     const { result } = renderHook(() => useServiceWorker());
 
     expect(result.current.isSupported).toBe(false);
 
     // Restore
-    (global.navigator as any).serviceWorker = originalServiceWorker;
+    Object.defineProperty(global.navigator, 'serviceWorker', {
+      value: originalServiceWorker,
+      configurable: true,
+    });
   });
 
   it('should unregister service worker', async () => {
@@ -327,7 +343,9 @@ describe('useServiceWorker Hook', () => {
       unregister: vi.fn().mockResolvedValue(true),
     };
 
-    (global.navigator.serviceWorker.register as any).mockResolvedValue(mockRegistration);
+    (global.navigator.serviceWorker.register as any).mockResolvedValue(
+      mockRegistration
+    );
 
     const { result } = renderHook(() => useServiceWorker());
 

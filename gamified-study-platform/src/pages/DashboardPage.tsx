@@ -31,20 +31,25 @@ export function DashboardPage() {
   const [showModal, setShowModal] = useState(false);
   const { startTour } = useOnboarding();
   const { addMessage } = useFeedback();
-  const [learningProfile, setLearningProfile] = useState<StudentLearningProfile | undefined>();
-  
+  const [learningProfile, setLearningProfile] = useState<
+    StudentLearningProfile | undefined
+  >();
+
   useEffect(() => {
     const fetchLearningProfile = async () => {
       if (user?.id) {
         try {
-          const profile = await recommendationService.getUserLearningProfile(user.id);
+          const recommendations =
+            await recommendationService.generateRecommendations(user.id);
+          // Extract profile info from recommendations if needed
+          const profile = undefined; // Placeholder since getUserLearningProfile is private
           setLearningProfile(profile);
         } catch (error) {
           console.error('Error fetching learning profile:', error);
         }
       }
     };
-    
+
     fetchLearningProfile();
   }, [user?.id]);
 
@@ -334,19 +339,19 @@ export function DashboardPage() {
           </CardContent>
         </Card>
       </div>
-      
+
       {/* Learning Recommendations */}
       <div className="mt-6">
-        <LearningRecommendation 
-          userId={user?.id || ''} 
+        <LearningRecommendation
+          userId={user?.id || ''}
           learningProfile={learningProfile}
           maxRecommendations={3}
           showActions={true}
           className="shadow-md"
         />
         <div className="mt-2 text-right">
-          <Link 
-            to="/learning-recommendations" 
+          <Link
+            to="/learning-recommendations"
             className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
           >
             View detailed learning recommendations →

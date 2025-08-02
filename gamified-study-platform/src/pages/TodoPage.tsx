@@ -109,12 +109,20 @@ export const TodoPage: React.FC = () => {
 
       {/* Error Alert */}
       {error && (
-        <Alert
-          type="error"
-          title="Error"
-          message={error}
-          onClose={clearError}
-        />
+        <Alert variant="error">
+          <div className="flex justify-between items-start">
+            <div>
+              <h4 className="font-medium">Error</h4>
+              <p className="mt-1">{error}</p>
+            </div>
+            <button
+              onClick={clearError}
+              className="text-red-500 hover:text-red-700"
+            >
+              ×
+            </button>
+          </div>
+        </Alert>
       )}
 
       {/* XP Animation */}

@@ -23,19 +23,72 @@ interface TourStep {
 }
 
 interface OnboardingTourProps {
-  isActive: boolean;
-  tourType:
+  isActive?: boolean;
+  isOpen?: boolean;
+  tourType?:
+    | 'dashboard'
     | 'pet-adoption'
     | 'environment-selection'
     | 'mini-games'
     | 'store-usage'
     | 'complete-tour';
+  steps?: TourStep[];
   onComplete: () => void;
-  onSkip: () => void;
+  onSkip?: () => void;
+  onClose?: () => void;
   className?: string;
 }
 
 const TOUR_STEPS: Record<string, TourStep[]> = {
+  dashboard: [
+    {
+      id: 'dashboard-welcome',
+      title: 'Welcome to Your Dashboard! 🎯',
+      content:
+        "This is your command center for all study activities. Let's explore the key features!",
+      target: '.main-dashboard',
+      position: 'center',
+      icon: <SparklesIcon className="w-6 h-6" />,
+      animation: 'bounce',
+    },
+    {
+      id: 'study-stats',
+      title: 'Study Statistics',
+      content:
+        'Track your daily progress, study streaks, and overall performance metrics here.',
+      target: '.study-stats',
+      position: 'bottom',
+      icon: <HeartIcon className="w-6 h-6" />,
+    },
+    {
+      id: 'pet-companion',
+      title: 'Your Study Pet',
+      content:
+        'Your virtual companion grows with your study progress. Keep it happy and healthy!',
+      target: '.pet-display',
+      position: 'left',
+      animation: 'pulse',
+    },
+    {
+      id: 'quick-actions',
+      title: 'Quick Actions',
+      content:
+        'Start study sessions, take breaks, or access mini-games directly from here.',
+      target: '.quick-actions',
+      position: 'top',
+      action: 'hover',
+    },
+    {
+      id: 'achievements',
+      title: 'Achievements & Rewards',
+      content:
+        'View your earned badges, completed quests, and unlock new content as you progress.',
+      target: '.achievements-section',
+      position: 'right',
+      icon: <GiftIcon className="w-6 h-6" />,
+      animation: 'shake',
+    },
+  ],
   'pet-adoption': [
     {
       id: 'welcome-pet',
@@ -256,9 +309,12 @@ const TOUR_STEPS: Record<string, TourStep[]> = {
 
 export const OnboardingTour: React.FC<OnboardingTourProps> = ({
   isActive,
+  isOpen,
   tourType,
+  steps: propSteps,
   onComplete,
   onSkip,
+  onClose,
   className = '',
 }) => {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
@@ -268,15 +324,19 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({
   const overlayRef = useRef<HTMLDivElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
 
-  const steps = TOUR_STEPS[tourType] || [];
+  // Support both prop patterns: steps prop or tourType lookup
+  const steps = propSteps || (tourType ? TOUR_STEPS[tourType] : []) || [];
+
+  // Support both isActive and isOpen props
+  const isActiveTour = isActive ?? isOpen ?? false;
   const currentStep = steps[currentStepIndex];
   const isLastStep = currentStepIndex === steps.length - 1;
   const isFirstStep = currentStepIndex === 0;
 
   // Show/hide tour
   useEffect(() => {
-    setIsVisible(isActive);
-    if (isActive) {
+    setIsVisible(isActiveTour);
+    if (isActiveTour) {
       setCurrentStepIndex(0);
       document.body.style.overflow = 'hidden';
     } else {
@@ -287,7 +347,7 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({
     return () => {
       document.body.style.overflow = '';
     };
-  }, [isActive]);
+  }, [isActiveTour]);
 
   // Highlight target element
   useEffect(() => {
@@ -388,7 +448,12 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({
 
   const handleSkip = () => {
     setIsVisible(false);
-    onSkip();
+    // Support both onSkip and onClose handlers
+    if (onSkip) {
+      onSkip();
+    } else if (onClose) {
+      onClose();
+    }
   };
 
   const handleOverlayClick = (e: React.MouseEvent) => {
@@ -573,9 +638,17 @@ export const useOnboarding = () => {
     return !isTourCompleted(tourType);
   };
 
+  // Check if user has completed basic onboarding
+  const hasCompletedOnboarding = completedTours.length > 0;
+
+  // Current active tour (alias for activeTour for backward compatibility)
+  const currentTour = activeTour;
+
   return {
     activeTour,
+    currentTour,
     completedTours,
+    hasCompletedOnboarding,
     startTour,
     completeTour,
     skipTour,
@@ -584,3 +657,6 @@ export const useOnboarding = () => {
     shouldShowTour,
   };
 };
+
+// Export dashboard tour steps for use in components
+export const dashboardTourSteps = TOUR_STEPS['dashboard'];

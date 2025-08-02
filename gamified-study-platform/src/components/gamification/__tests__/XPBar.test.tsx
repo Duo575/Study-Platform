@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { XPBar } from '../XPBar';
 
 // Mock framer-motion to avoid animation issues in tests
@@ -16,7 +17,23 @@ describe('XPBar Component', () => {
     totalXP: 1250,
     level: 5,
     xpToNextLevel: 100,
-    showAnimation: false
+    showAnimation: false,
+    gameStats: {
+      level: 5,
+      totalXP: 1250,
+      currentXP: 150,
+      xpToNextLevel: 100,
+      streakDays: 7,
+      achievements: [],
+      lastActivity: new Date(),
+      weeklyStats: {
+        studyHours: 10,
+        questsCompleted: 5,
+        streakMaintained: true,
+        xpEarned: 500,
+        averageScore: 85,
+      },
+    },
   };
 
   describe('Rendering', () => {
@@ -48,7 +65,7 @@ describe('XPBar Component', () => {
         ...defaultProps,
         currentXP: 0,
         totalXP: 0,
-        xpToNextLevel: 100
+        xpToNextLevel: 100,
       };
 
       render(<XPBar {...zeroXPProps} />);
@@ -62,7 +79,7 @@ describe('XPBar Component', () => {
       const maxXPProps = {
         ...defaultProps,
         currentXP: 250,
-        xpToNextLevel: 0
+        xpToNextLevel: 0,
       };
 
       render(<XPBar {...maxXPProps} />);
@@ -97,7 +114,12 @@ describe('XPBar Component', () => {
 
       const progressFill = progressBar.querySelector('.bg-blue-500');
       expect(progressFill).toBeInTheDocument();
-      expect(progressFill).toHaveClass('h-3', 'rounded-full', 'transition-all', 'duration-500');
+      expect(progressFill).toHaveClass(
+        'h-3',
+        'rounded-full',
+        'transition-all',
+        'duration-500'
+      );
     });
   });
 
@@ -105,7 +127,7 @@ describe('XPBar Component', () => {
     it('should show animation when showAnimation is true', () => {
       const animatedProps = {
         ...defaultProps,
-        showAnimation: true
+        showAnimation: true,
       };
 
       render(<XPBar {...animatedProps} />);
@@ -125,7 +147,7 @@ describe('XPBar Component', () => {
     it('should apply pulse animation to level text when animated', () => {
       const animatedProps = {
         ...defaultProps,
-        showAnimation: true
+        showAnimation: true,
       };
 
       render(<XPBar {...animatedProps} />);
@@ -140,7 +162,10 @@ describe('XPBar Component', () => {
       render(<XPBar {...defaultProps} />);
 
       const progressBar = screen.getByRole('progressbar');
-      expect(progressBar).toHaveAttribute('aria-label', 'Experience points progress');
+      expect(progressBar).toHaveAttribute(
+        'aria-label',
+        'Experience points progress'
+      );
     });
 
     it('should have proper ARIA values', () => {
@@ -150,7 +175,10 @@ describe('XPBar Component', () => {
       expect(progressBar).toHaveAttribute('aria-valuenow', '60');
       expect(progressBar).toHaveAttribute('aria-valuemin', '0');
       expect(progressBar).toHaveAttribute('aria-valuemax', '100');
-      expect(progressBar).toHaveAttribute('aria-valuetext', '150 out of 250 XP');
+      expect(progressBar).toHaveAttribute(
+        'aria-valuetext',
+        '150 out of 250 XP'
+      );
     });
 
     it('should be keyboard accessible', () => {
@@ -183,7 +211,7 @@ describe('XPBar Component', () => {
         ...defaultProps,
         totalXP: 1234567,
         currentXP: 567,
-        xpToNextLevel: 433
+        xpToNextLevel: 433,
       };
 
       render(<XPBar {...largeXPProps} />);
@@ -196,7 +224,7 @@ describe('XPBar Component', () => {
       const decimalProps = {
         ...defaultProps,
         currentXP: 33,
-        xpToNextLevel: 67
+        xpToNextLevel: 67,
       };
 
       render(<XPBar {...decimalProps} />);
@@ -211,7 +239,7 @@ describe('XPBar Component', () => {
         ...defaultProps,
         currentXP: -10,
         totalXP: -100,
-        xpToNextLevel: -50
+        xpToNextLevel: -50,
       };
 
       render(<XPBar {...negativeProps} />);
@@ -225,7 +253,7 @@ describe('XPBar Component', () => {
         ...defaultProps,
         currentXP: 999999999,
         totalXP: 999999999,
-        xpToNextLevel: 1
+        xpToNextLevel: 1,
       };
 
       render(<XPBar {...largeProps} />);
@@ -237,7 +265,7 @@ describe('XPBar Component', () => {
       const zeroDivisionProps = {
         ...defaultProps,
         currentXP: 0,
-        xpToNextLevel: 0
+        xpToNextLevel: 0,
       };
 
       render(<XPBar {...zeroDivisionProps} />);
@@ -249,13 +277,14 @@ describe('XPBar Component', () => {
 
   describe('Tooltip Information', () => {
     it('should show tooltip with detailed information on hover', async () => {
-      const { user } = render(<XPBar {...defaultProps} />);
+      const user = userEvent.setup();
+      render(<XPBar {...defaultProps} />);
 
       const xpBar = screen.getByRole('progressbar').closest('[data-tooltip]');
-      
+
       if (xpBar) {
         await user.hover(xpBar);
-        
+
         // Check for tooltip content
         expect(screen.getByText(/Next level in 100 XP/)).toBeInTheDocument();
       }
@@ -265,16 +294,17 @@ describe('XPBar Component', () => {
       const maxLevelProps = {
         ...defaultProps,
         level: 50,
-        xpToNextLevel: 0
+        xpToNextLevel: 0,
       };
 
-      const { user } = render(<XPBar {...maxLevelProps} />);
+      const user = userEvent.setup();
+      render(<XPBar {...maxLevelProps} />);
 
       const xpBar = screen.getByRole('progressbar').closest('[data-tooltip]');
-      
+
       if (xpBar) {
         await user.hover(xpBar);
-        
+
         expect(screen.getByText(/Maximum level reached/)).toBeInTheDocument();
       }
     });
@@ -307,38 +337,38 @@ describe('XPBar Component', () => {
   describe('Performance', () => {
     it('should not re-render unnecessarily', () => {
       const renderSpy = vi.fn();
-      
+
       const TestComponent = (props: any) => {
         renderSpy();
         return <XPBar {...props} />;
       };
 
       const { rerender } = render(<TestComponent {...defaultProps} />);
-      
+
       expect(renderSpy).toHaveBeenCalledTimes(1);
 
       // Re-render with same props
       rerender(<TestComponent {...defaultProps} />);
-      
+
       // Should use memoization to prevent unnecessary re-renders
       expect(renderSpy).toHaveBeenCalledTimes(1);
     });
 
     it('should re-render when props change', () => {
       const renderSpy = vi.fn();
-      
+
       const TestComponent = (props: any) => {
         renderSpy();
         return <XPBar {...props} />;
       };
 
       const { rerender } = render(<TestComponent {...defaultProps} />);
-      
+
       expect(renderSpy).toHaveBeenCalledTimes(1);
 
       // Re-render with different props
       rerender(<TestComponent {...defaultProps} currentXP={200} />);
-      
+
       expect(renderSpy).toHaveBeenCalledTimes(2);
     });
   });

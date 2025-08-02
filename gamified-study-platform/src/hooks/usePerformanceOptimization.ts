@@ -13,9 +13,10 @@ export const usePerformanceMonitoring = (componentName: string) => {
     return () => {
       const unmountTime = performance.now();
       const totalLifetime = unmountTime - mountTime.current;
-      performanceOptimizer.recordMetric(
-        `component-${componentName}-lifetime`,
-        totalLifetime
+      // Use measureComponentRender as a workaround since recordMetric is private
+      performanceOptimizer.measureComponentRender(
+        `${componentName}-lifetime`,
+        () => totalLifetime
       );
     };
   }, [componentName]);
@@ -27,9 +28,9 @@ export const usePerformanceMonitoring = (componentName: string) => {
   const finishRender = useCallback(() => {
     if (renderStartTime.current > 0) {
       const renderTime = performance.now() - renderStartTime.current;
-      performanceOptimizer.recordMetric(
-        `component-${componentName}-render`,
-        renderTime
+      performanceOptimizer.measureComponentRender(
+        `${componentName}-render`,
+        () => renderTime
       );
       renderStartTime.current = 0;
     }
@@ -228,7 +229,7 @@ export const useNetworkAwareLoading = () => {
       if (priority === 'high') return true;
 
       if (isSlowNetwork) {
-        return priority === 'high' && assetSize < 50000; // 50KB limit for slow networks
+        return priority === 'medium' && assetSize < 50000; // 50KB limit for slow networks
       }
 
       if (isDataSaverEnabled) {

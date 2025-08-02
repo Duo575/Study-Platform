@@ -27,9 +27,68 @@ global.document = {
 } as any;
 
 describe('useEnvironmentStore', () => {
+  const mockEnvironments: Environment[] = [
+    {
+      id: 'classroom',
+      name: 'Classroom',
+      description: 'A quiet classroom environment',
+      imageUrl: '/classroom.jpg',
+      ambientSounds: [],
+      musicTracks: [],
+      visualSettings: {
+        particlesEnabled: true,
+        animationsEnabled: true,
+        backgroundQuality: 'medium',
+        reducedMotion: false,
+      },
+      unlockRequirements: {
+        level: 1,
+        achievements: [],
+        studyTime: 0,
+      },
+      customizations: [],
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    },
+    {
+      id: 'office',
+      name: 'Office',
+      description: 'A professional office environment',
+      imageUrl: '/office.jpg',
+      ambientSounds: [],
+      musicTracks: [],
+      visualSettings: {
+        particlesEnabled: false,
+        animationsEnabled: true,
+        backgroundQuality: 'high',
+        reducedMotion: false,
+      },
+      unlockRequirements: {
+        level: 1,
+        achievements: [],
+        studyTime: 0,
+      },
+      customizations: [],
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    },
+  ];
+
   beforeEach(() => {
     // Reset store state before each test
     useEnvironmentStore.getState().reset();
+
+    // Set up mock environments
+    useEnvironmentStore.setState({
+      availableEnvironments: mockEnvironments,
+      unlockedEnvironments: ['classroom', 'office'],
+    });
+
+    // Mock loadEnvironments to prevent network calls
+    vi.spyOn(
+      useEnvironmentStore.getState(),
+      'loadEnvironments'
+    ).mockResolvedValue();
   });
 
   afterEach(() => {

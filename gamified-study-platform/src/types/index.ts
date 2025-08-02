@@ -4,6 +4,47 @@
 export * from './guards';
 export * from './validators';
 
+// Re-export service types
+export type { Badge } from '../services/achievementService';
+
+// Offline storage types
+export interface PetFeedingRecord {
+  id: string;
+  petId: string;
+  foodId: string;
+  foodName: string;
+  timestamp: Date;
+  foodType: string;
+  happinessGain: number;
+  healthChange: number;
+  energyChange: number;
+}
+
+export interface PetEvolutionRecord {
+  id: string;
+  petId: string;
+  fromStage: string;
+  toStage: string;
+  timestamp: Date;
+  level: number;
+  requirements: any;
+  celebrationShown: boolean;
+}
+
+export interface MiniGameProgress {
+  id: string;
+  gameId: string;
+  gameType: string;
+  score: number;
+  bestScore: number;
+  level: number;
+  timestamp: Date;
+  completed: boolean;
+  totalPlays: number;
+  averageScore: number;
+  achievements: string[];
+}
+
 export interface User {
   id: string;
   email: string;
@@ -139,6 +180,7 @@ export interface TodoItem {
 
 export interface StudyPet {
   id: string;
+  userId: string; // Add missing userId property
   name: string;
   species: PetSpecies;
   level: number;
@@ -176,16 +218,10 @@ export interface PetEvolutionStage {
   name: string;
   description: string;
   imageUrl: string;
-  requiredLevel: number;
-  stats: PetStats;
+  requiredLevel?: number;
+  stats?: PetStats;
   unlockedAbilities: string[];
-}
-
-export interface EvolutionRequirement {
-  type: 'study_hours' | 'streak_days' | 'quests_completed' | 'level_reached';
-  target: number;
-  current: number;
-  description: string;
+  requirements?: { level: number }; // Add requirements property for compatibility
 }
 
 export interface PetAccessory {
@@ -205,11 +241,20 @@ export interface StudyPetExtended extends StudyPet {
   favoriteSubjects: string[];
   achievements: string[];
   evolutionStage: 'egg' | 'baby' | 'child' | 'teen' | 'adult' | 'elder';
+  updatedAt: Date;
 }
 
 // Pet mood system
 export interface PetMood {
-  current: 'excited' | 'happy' | 'content' | 'neutral' | 'sad' | 'depressed';
+  current:
+    | 'excited'
+    | 'happy'
+    | 'content'
+    | 'neutral'
+    | 'sad'
+    | 'depressed'
+    | 'sleepy'
+    | 'hungry';
   factors: MoodFactor[];
   lastUpdated: Date;
   trend: 'improving' | 'stable' | 'declining';
@@ -232,6 +277,94 @@ export interface PetMoodEntry {
   mood: PetMood['current'];
   timestamp: Date;
   triggers: string[];
+}
+
+// Pet Status Types
+export interface PetStatus {
+  health: number;
+  happiness: number;
+  hunger: number;
+  energy: number;
+  mood:
+    | 'sleeping'
+    | 'happy'
+    | 'hungry'
+    | 'playful'
+    | 'studying'
+    | 'sick'
+    | 'evolving'
+    | 'idle';
+  needsAttention?: boolean;
+  timeSinceLastFed?: number;
+  timeSinceLastPlayed?: number;
+  evolutionProgress?: number;
+}
+
+// Pet Need Types
+export interface PetNeed {
+  id: string;
+  type: 'food' | 'play' | 'care' | 'attention';
+  name: string;
+  description: string;
+  urgency: 'low' | 'medium' | 'high' | 'critical';
+  value: number; // 0-100
+  lastSatisfied: Date;
+  icon: string;
+  timeRemaining?: number; // in minutes
+}
+
+// Pet Food System
+export interface PetFood {
+  id: string;
+  name: string;
+  description: string;
+  type: 'treat' | 'meal' | 'snack' | 'medicine' | 'special';
+  rarity: 'common' | 'rare' | 'epic' | 'legendary';
+  cost: number;
+  effects: PetEffect[];
+  imageUrl: string;
+  unlockRequirements?: {
+    level?: number;
+    achievements?: string[];
+    questsCompleted?: number;
+  };
+}
+
+export interface PetEffect {
+  type: 'happiness' | 'health' | 'energy' | 'mood' | 'xp' | 'special';
+  value: number;
+  duration?: number; // in minutes, undefined for permanent effects
+  description: string;
+}
+
+// Evolution Requirements
+export interface EvolutionRequirement {
+  id: string;
+  type:
+    | 'level'
+    | 'happiness'
+    | 'study_time'
+    | 'study_hours'
+    | 'achievements'
+    | 'special'
+    | 'level_reached'
+    | 'streak_days'
+    | 'quests_completed';
+  description: string;
+  target: number | string;
+  current: number | string;
+  completed: boolean;
+}
+
+// Evolution Eligibility
+export interface EvolutionEligibility {
+  isEligible: boolean;
+  canEvolve: boolean;
+  progress: number;
+  requirements: EvolutionRequirement[];
+  nextStage?: PetEvolutionStage;
+  completedRequirements: string[];
+  missingRequirements: EvolutionRequirement[];
 }
 
 export interface Achievement {
@@ -549,6 +682,7 @@ export interface QuestFilters {
 export interface TodoFilters {
   completed?: boolean;
   priority?: 'low' | 'medium' | 'high' | 'all';
+  status?: 'pending' | 'completed' | 'overdue' | 'all';
   courseId?: string;
   search?: string;
   dueDate?: 'today' | 'week' | 'overdue' | 'all';
@@ -792,6 +926,7 @@ export interface RoutineForm {
 }
 
 export interface ScheduleSlotForm {
+  routineId?: string; // Add missing routineId property
   dayOfWeek: number;
   startTime: string;
   endTime: string;
@@ -1913,6 +2048,7 @@ export interface PurchaseEligibility {
   reason?: string;
   missingCoins?: number;
   unmetRequirements?: UnlockRequirement[];
+  missingRequirements?: UnlockRequirement[]; // Alias for compatibility
 }
 
 export interface UnlockRequirement {
@@ -1954,10 +2090,10 @@ export interface ItemEffect {
 }
 
 export interface StoreFilters {
-  category: StoreCategory | 'all';
-  rarity: 'common' | 'rare' | 'epic' | 'legendary' | 'all';
-  sortBy: 'name' | 'price' | 'rarity' | 'created_at' | 'newest';
-  sortOrder: 'asc' | 'desc';
+  category?: StoreCategory | 'all';
+  rarity?: 'common' | 'rare' | 'epic' | 'legendary' | 'all';
+  sortBy?: 'name' | 'price' | 'rarity' | 'created_at' | 'newest';
+  sortOrder?: 'asc' | 'desc';
   showOwned?: boolean;
   search?: string;
   priceRange?: {
@@ -2056,6 +2192,47 @@ export interface MusicTrack {
   mood?: string;
 }
 
+export interface AudioManager {
+  playAmbientSound(trackId: string, volume?: number): void;
+  stopAmbientSound(): void;
+  playMusic(trackId: string, volume?: number): Promise<void>;
+  stopMusic(): void;
+  pauseMusic(): void;
+  resumeMusic(): void;
+  setMasterVolume(volume: number): void;
+  setAmbientVolume(volume: number): void;
+  setMusicVolume(volume: number): void;
+  crossfade(
+    fromTrack: string,
+    toTrack: string,
+    duration?: number
+  ): Promise<void>;
+  getCurrentTrack(): MusicTrack | null;
+  getPlaylist(): MusicTrack[];
+  setPlaylist(tracks: MusicTrack[]): void;
+  addToPlaylist(track: MusicTrack): void;
+  removeFromPlaylist(trackId: string): void;
+  playSoundEffect(soundId: string, volume?: number): Promise<void>;
+  getCurrentPosition(): number;
+  setPosition(position: number): void;
+  getSettings(): AudioSettings;
+  updateSettings(newSettings: Partial<AudioSettings>): void;
+  isPlaying(): boolean;
+}
+
+export interface EnvironmentManager {
+  loadEnvironments(): Promise<Environment[]>;
+  loadEnvironment(environmentId: string): Promise<Environment>;
+  switchEnvironment(environmentId: string): Promise<void>;
+  getCurrentEnvironment(): Environment | null;
+  preloadEnvironmentAssets(environmentId: string): Promise<void>;
+  customizeEnvironment(
+    environmentId: string,
+    customizations: EnvironmentCustomization
+  ): Promise<void>;
+  validateEnvironment(environment: any): { isValid: boolean; errors: string[] };
+}
+
 // Game types
 export interface MiniGame {
   id: string;
@@ -2149,4 +2326,53 @@ export interface Todo {
   createdAt: Date;
   completedAt?: Date;
   updatedAt?: Date;
+}
+
+// Theme System Types
+export interface Theme {
+  id: string;
+  name: string;
+  description: string;
+  category: 'light' | 'dark' | 'nature' | 'abstract' | 'seasonal';
+  cssVariables: Record<string, string>;
+  previewImages: string[];
+  price: number;
+  currency: 'coins' | 'gems';
+  rarity: 'common' | 'rare' | 'epic' | 'legendary';
+  isUnlocked: boolean;
+  isPurchased: boolean;
+  unlockRequirements?: UnlockRequirement[];
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface ThemeCustomization {
+  id: string;
+  themeId: string;
+  userId: string;
+  customizations: Record<string, string>;
+  name?: string;
+  description?: string;
+  isPublic: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface ThemeState {
+  themes: Theme[];
+  currentTheme: Theme | null;
+  unlockedThemes: string[];
+  purchasedThemes: string[];
+  isLoading: boolean;
+  error: string | null;
+  isApplyingTheme: boolean;
+  isPreviewingTheme: boolean;
+  previewTheme: Theme | null;
+  themeHistory: ThemeHistoryEntry[];
+}
+
+export interface ThemeHistoryEntry {
+  themeId: string;
+  appliedAt: Date;
+  duration: number; // in minutes
 }

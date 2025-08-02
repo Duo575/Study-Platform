@@ -122,3 +122,4 @@ const SyllabusPreview: React.FC<SyllabusPreviewProps> = ({
 };
 
 export { SyllabusPreview };
+export default SyllabusPreview;

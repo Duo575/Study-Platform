@@ -109,10 +109,11 @@ export const PetFeedingSystem: React.FC<PetFeedingSystemProps> = ({
         }
 
         // Spend coins
-        await spendCoins(
-          foodToUse.cost,
-          `Fed ${pet.name} with ${foodToUse.name}`
-        );
+        const success = spendCoins(foodToUse.cost);
+        if (!success) {
+          alert('Failed to spend coins. Please try again.');
+          return;
+        }
 
         // Use the specific food item
         await useFood(userId, foodToUse.id);
@@ -143,8 +144,12 @@ export const PetFeedingSystem: React.FC<PetFeedingSystemProps> = ({
           foodName: 'Basic Care',
           timestamp: new Date(),
           effects: [
-            { type: 'health', value: 10 },
-            { type: 'happiness', value: 15 },
+            { type: 'health', value: 10, description: 'Restores health' },
+            {
+              type: 'happiness',
+              value: 15,
+              description: 'Increases happiness',
+            },
           ],
           coinsSpent: 0,
         };

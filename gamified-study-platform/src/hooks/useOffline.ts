@@ -64,85 +64,94 @@ export function useOffline() {
   }, [isOnline, updateSyncStatus]);
 
   // Save data with offline support
-  const saveWithOfflineSupport = useCallback(async (
-    data: any,
-    saveFunction: (data: any) => Promise<any>,
-    offlineSaveFunction: (data: any) => Promise<void>,
-    syncEndpoint?: string
-  ) => {
-    try {
-      if (isOnline) {
-        // Try to save online first
-        return await saveFunction(data);
-      } else {
-        // Save offline
-        await offlineSaveFunction(data);
-        
-        // Queue for sync if endpoint provided
-        if (syncEndpoint) {
-          await offlineService.queueOfflineAction('save', data, syncEndpoint);
-        }
-        
-        updateSyncStatus();
-        return data;
-      }
-    } catch (error) {
-      // If online save fails, fall back to offline
-      if (isOnline) {
-        console.warn('Online save failed, falling back to offline:', error);
-        await offlineSaveFunction(data);
-        
-        if (syncEndpoint) {
-          await offlineService.queueOfflineAction('save', data, syncEndpoint);
-        }
-        
-        updateSyncStatus();
-        return data;
-      }
-      throw error;
-    }
-  }, [isOnline, updateSyncStatus]);
-
-  // Load data with offline support
-  const loadWithOfflineSupport = useCallback(async <T>(
-    loadFunction: () => Promise<T>,
-    offlineLoadFunction: () => Promise<T>,
-    cacheKey?: string
-  ): Promise<T> => {
-    try {
-      if (isOnline) {
-        // Try to load online first
-        const data = await loadFunction();
-        
-        // Cache the data for offline use
-        if (cacheKey) {
-          await offlineService.cacheData(cacheKey, data);
-        }
-        
-        return data;
-      } else {
-        // Load from offline storage
-        return await offlineLoadFunction();
-      }
-    } catch (error) {
-      // If online load fails, try offline
-      if (isOnline && cacheKey) {
-        console.warn('Online load failed, trying cached data:', error);
-        const cachedData = await offlineService.getCachedData(cacheKey);
-        if (cachedData) {
-          return cachedData;
-        }
-      }
-      
-      // Try offline load as last resort
+  const saveWithOfflineSupport = useCallback(
+    async (
+      data: any,
+      saveFunction: (data: any) => Promise<any>,
+      offlineSaveFunction: (data: any) => Promise<void>,
+      syncEndpoint?: string
+    ) => {
       try {
-        return await offlineLoadFunction();
-      } catch (offlineError) {
-        console.error('Both online and offline load failed:', { error, offlineError });
+        if (isOnline) {
+          // Try to save online first
+          return await saveFunction(data);
+        } else {
+          // Save offline
+          await offlineSaveFunction(data);
+
+          // Queue for sync if endpoint provided
+          if (syncEndpoint) {
+            await offlineService.queueOfflineAction('save', data, syncEndpoint);
+          }
+
+          updateSyncStatus();
+          return data;
+        }
+      } catch (error) {
+        // If online save fails, fall back to offline
+        if (isOnline) {
+          console.warn('Online save failed, falling back to offline:', error);
+          await offlineSaveFunction(data);
+
+          if (syncEndpoint) {
+            await offlineService.queueOfflineAction('save', data, syncEndpoint);
+          }
+
+          updateSyncStatus();
+          return data;
+        }
         throw error;
       }
-    }
-  }, [isOnline]);
+    },
+    [isOnline, updateSyncStatus]
+  );
+
+  // Load data with offline support
+  const loadWithOfflineSupport = useCallback(
+    async <T>(
+      loadFunction: () => Promise<T>,
+      offlineLoadFunction: () => Promise<T>,
+      cacheKey?: string
+    ): Promise<T> => {
+      try {
+        if (isOnline) {
+          // Try to load online first
+          const data = await loadFunction();
+
+          // Cache the data for offline use
+          if (cacheKey) {
+            await offlineService.cacheData(cacheKey, data);
+          }
+
+          return data;
+        } else {
+          // Load from offline storage
+          return await offlineLoadFunction();
+        }
+      } catch (error) {
+        // If online load fails, try offline
+        if (isOnline && cacheKey) {
+          console.warn('Online load failed, trying cached data:', error);
+          const cachedData = await offlineService.getCachedData(cacheKey);
+          if (cachedData) {
+            return cachedData;
+          }
+        }
+
+        // Try offline load as last resort
+        try {
+          return await offlineLoadFunction();
+        } catch (offlineError) {
+          console.error('Both online and offline load failed:', {
+            error,
+            offlineError,
+          });
+          throw error;
+        }
+      }
+    },
+    [isOnline]
+  );
 
   useEffect(() => {
     // Set up event listeners
@@ -167,7 +176,13 @@ export function useOffline() {
       window.removeEventListener('offline', updateOnlineStatus);
       window.removeEventListener('offlineSyncComplete', handleSyncComplete);
     };
-  }, [updateOnlineStatus, handleSyncComplete, updateSyncStatus, triggerSync, isOnline]);
+  }, [
+    updateOnlineStatus,
+    handleSyncComplete,
+    updateSyncStatus,
+    triggerSync,
+    isOnline,
+  ]);
 
   return {
     isOnline,
@@ -189,9 +204,16 @@ export function usePWAInstall() {
   useEffect(() => {
     // Check if already installed
     const checkInstalled = () => {
-      const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
-      const isInWebAppiOS = (window.navigator as any).standalone === true;
-      setIsInstalled(isStandalone || isInWebAppiOS);
+      try {
+        const isStandalone =
+          window.matchMedia &&
+          window.matchMedia('(display-mode: standalone)').matches;
+        const isInWebAppiOS = (window.navigator as any).standalone === true;
+        setIsInstalled(isStandalone || isInWebAppiOS);
+      } catch (error) {
+        // Fallback for environments where matchMedia is not available
+        setIsInstalled(false);
+      }
     };
 
     checkInstalled();
@@ -214,7 +236,10 @@ export function usePWAInstall() {
     window.addEventListener('appinstalled', handleAppInstalled);
 
     return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener(
+        'beforeinstallprompt',
+        handleBeforeInstallPrompt
+      );
       window.removeEventListener('appinstalled', handleAppInstalled);
     };
   }, []);
@@ -225,14 +250,14 @@ export function usePWAInstall() {
     try {
       deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
-      
+
       if (outcome === 'accepted') {
         setIsInstalled(true);
         setIsInstallable(false);
         setDeferredPrompt(null);
         return true;
       }
-      
+
       return false;
     } catch (error) {
       console.error('PWA installation failed:', error);
@@ -252,7 +277,8 @@ export function useServiceWorker() {
   const [isSupported, setIsSupported] = useState(false);
   const [isRegistered, setIsRegistered] = useState(false);
   const [updateAvailable, setUpdateAvailable] = useState(false);
-  const [registration, setRegistration] = useState<ServiceWorkerRegistration | null>(null);
+  const [registration, setRegistration] =
+    useState<ServiceWorkerRegistration | null>(null);
 
   useEffect(() => {
     if ('serviceWorker' in navigator) {
@@ -272,7 +298,10 @@ export function useServiceWorker() {
         const newWorker = reg.installing;
         if (newWorker) {
           newWorker.addEventListener('statechange', () => {
-            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+            if (
+              newWorker.state === 'installed' &&
+              navigator.serviceWorker.controller
+            ) {
               setUpdateAvailable(true);
             }
           });

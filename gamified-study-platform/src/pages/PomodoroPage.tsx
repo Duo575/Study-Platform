@@ -23,18 +23,18 @@ export const PomodoroPage: React.FC = () => {
   const [selectedTodoId, setSelectedTodoId] = useState<string>('');
   const [selectedQuestId, setSelectedQuestId] = useState<string>('');
 
-  const { courses, loadCourses } = useCourseStore();
-  const { todos, loadTodos } = useTodoStore();
-  const { activeQuests, loadQuests } = useQuestStore();
+  const { courses, fetchCourses } = useCourseStore();
+  const { todos, fetchTodos } = useTodoStore();
+  const { activeQuests, fetchQuests } = useQuestStore();
 
   // Load data on mount
   useEffect(() => {
     if (user?.id) {
-      loadCourses(user.id);
-      loadTodos(user.id);
-      loadQuests(user.id);
+      fetchCourses();
+      fetchTodos();
+      fetchQuests();
     }
-  }, [user?.id, loadCourses, loadTodos, loadQuests]);
+  }, [user?.id, fetchCourses, fetchTodos, fetchQuests]);
 
   const tabs = [
     { id: 'timer', label: 'Timer', icon: '⏱️' },

@@ -58,7 +58,7 @@ export const useStudyBreaks = (userId: string) => {
 
       setBreakState({
         isBreakTime: true,
-        breakType: timer.sessionType,
+        breakType: timer.sessionType === 'work' ? null : timer.sessionType,
         breakDuration: duration,
         showBreakManager: breakSettings.autoStartBreaks,
         canAccessGames: breakSettings.enableGamesDuringBreaks,

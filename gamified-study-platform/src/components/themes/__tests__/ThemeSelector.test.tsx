@@ -1,22 +1,21 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { vi } from 'vitest';
 import { ThemeSelector } from '../ThemeSelector';
 import { useThemeStore } from '../../../store/themeStore';
 
 // Mock the theme store
-jest.mock('../../../store/themeStore');
-const mockUseThemeStore = useThemeStore as jest.MockedFunction<
-  typeof useThemeStore
->;
+vi.mock('../../../store/themeStore');
+const mockUseThemeStore = vi.mocked(useThemeStore);
 
 // Mock the theme service
-jest.mock('../../../services/themeService', () => ({
+vi.mock('../../../services/themeService', () => ({
   themeService: {
-    loadSavedTheme: jest.fn(),
-    applyTheme: jest.fn(),
-    previewTheme: jest.fn(),
-    stopPreview: jest.fn(),
-    getThemeCustomizations: jest.fn(() => null),
+    loadSavedTheme: vi.fn(),
+    applyTheme: vi.fn(),
+    previewTheme: vi.fn(),
+    stopPreview: vi.fn(),
+    getThemeCustomizations: vi.fn(() => null),
   },
 }));
 
@@ -77,12 +76,12 @@ const mockStoreState = {
   isUnlockingTheme: false,
   isPreviewingTheme: false,
   previewTheme: null,
-  applyTheme: jest.fn(),
-  purchaseTheme: jest.fn(),
-  unlockTheme: jest.fn(),
-  previewTheme: jest.fn(),
-  stopPreview: jest.fn(),
-  loadThemes: jest.fn(),
+  applyTheme: vi.fn(),
+  purchaseTheme: vi.fn(),
+  unlockTheme: vi.fn(),
+  previewThemeAction: vi.fn(),
+  stopPreview: vi.fn(),
+  loadThemes: vi.fn(),
 };
 
 describe('ThemeSelector', () => {
@@ -91,11 +90,11 @@ describe('ThemeSelector', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('renders theme selector when open', () => {
-    render(<ThemeSelector isOpen={true} onClose={jest.fn()} />);
+    render(<ThemeSelector isOpen={true} onClose={vi.fn()} />);
 
     expect(screen.getByText('Theme Selection')).toBeInTheDocument();
     expect(
@@ -104,13 +103,13 @@ describe('ThemeSelector', () => {
   });
 
   it('does not render when closed', () => {
-    render(<ThemeSelector isOpen={false} onClose={jest.fn()} />);
+    render(<ThemeSelector isOpen={false} onClose={vi.fn()} />);
 
     expect(screen.queryByText('Theme Selection')).not.toBeInTheDocument();
   });
 
   it('displays available themes', async () => {
-    render(<ThemeSelector isOpen={true} onClose={jest.fn()} />);
+    render(<ThemeSelector isOpen={true} onClose={vi.fn()} />);
 
     await waitFor(() => {
       expect(screen.getByText('Classic Light')).toBeInTheDocument();
@@ -119,7 +118,7 @@ describe('ThemeSelector', () => {
   });
 
   it('shows current theme status', async () => {
-    render(<ThemeSelector isOpen={true} onClose={jest.fn()} />);
+    render(<ThemeSelector isOpen={true} onClose={vi.fn()} />);
 
     await waitFor(() => {
       expect(screen.getByText(/Current Theme:/)).toBeInTheDocument();
@@ -128,7 +127,7 @@ describe('ThemeSelector', () => {
   });
 
   it('filters themes by search query', async () => {
-    render(<ThemeSelector isOpen={true} onClose={jest.fn()} />);
+    render(<ThemeSelector isOpen={true} onClose={vi.fn()} />);
 
     const searchInput = screen.getByPlaceholderText('Search themes...');
     fireEvent.change(searchInput, { target: { value: 'Forest' } });
@@ -140,7 +139,7 @@ describe('ThemeSelector', () => {
   });
 
   it('filters themes by category', async () => {
-    render(<ThemeSelector isOpen={true} onClose={jest.fn()} />);
+    render(<ThemeSelector isOpen={true} onClose={vi.fn()} />);
 
     const categorySelect = screen.getByDisplayValue('All Categories');
     fireEvent.change(categorySelect, { target: { value: 'nature' } });
@@ -152,7 +151,7 @@ describe('ThemeSelector', () => {
   });
 
   it('applies theme when clicking on unlocked theme', async () => {
-    render(<ThemeSelector isOpen={true} onClose={jest.fn()} />);
+    render(<ThemeSelector isOpen={true} onClose={vi.fn()} />);
 
     const themeCard = screen.getByText('Classic Light').closest('.theme-card');
     if (themeCard) {
@@ -165,7 +164,7 @@ describe('ThemeSelector', () => {
   });
 
   it('shows theme details for locked themes', async () => {
-    render(<ThemeSelector isOpen={true} onClose={jest.fn()} />);
+    render(<ThemeSelector isOpen={true} onClose={vi.fn()} />);
 
     const lockedThemeCard = screen
       .getByText('Forest Serenity')
@@ -180,7 +179,7 @@ describe('ThemeSelector', () => {
   });
 
   it('calls onClose when close button is clicked', () => {
-    const onClose = jest.fn();
+    const onClose = vi.fn();
     render(<ThemeSelector isOpen={true} onClose={onClose} />);
 
     const closeButton = screen.getByText('×');
@@ -190,13 +189,13 @@ describe('ThemeSelector', () => {
   });
 
   it('loads themes when opened', () => {
-    render(<ThemeSelector isOpen={true} onClose={jest.fn()} />);
+    render(<ThemeSelector isOpen={true} onClose={vi.fn()} />);
 
     expect(mockStoreState.loadThemes).toHaveBeenCalled();
   });
 
   it('displays theme rarity badges', async () => {
-    render(<ThemeSelector isOpen={true} onClose={jest.fn()} />);
+    render(<ThemeSelector isOpen={true} onClose={vi.fn()} />);
 
     await waitFor(() => {
       expect(screen.getAllByText('COMMON')).toHaveLength(2);
@@ -204,7 +203,7 @@ describe('ThemeSelector', () => {
   });
 
   it('shows preview button for unlocked themes', async () => {
-    render(<ThemeSelector isOpen={true} onClose={jest.fn()} />);
+    render(<ThemeSelector isOpen={true} onClose={vi.fn()} />);
 
     // The current theme shouldn't have a preview button, but other unlocked themes should
     await waitFor(() => {

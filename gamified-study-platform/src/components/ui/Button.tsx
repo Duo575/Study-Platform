@@ -10,14 +10,18 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
     | 'success'
     | 'outline'
     | 'ghost'
-    | 'info';
-  size?: 'xs' | 'sm' | 'md' | 'lg';
+    | 'info'
+    | 'destructive'
+    | 'link';
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'icon';
   fullWidth?: boolean;
   isLoading?: boolean;
   loading?: boolean; // Alias for isLoading
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
   loadingText?: string;
+  hideTextOnLoading?: boolean;
+  asChild?: boolean;
 }
 
 export const Button: React.FC<ButtonProps> = ({
@@ -30,6 +34,8 @@ export const Button: React.FC<ButtonProps> = ({
   leftIcon,
   rightIcon,
   loadingText,
+  hideTextOnLoading = false,
+  asChild = false,
   className = '',
   disabled,
   'aria-label': ariaLabel,
@@ -45,6 +51,8 @@ export const Button: React.FC<ButtonProps> = ({
       'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 focus:ring-primary-500 disabled:bg-gray-100 disabled:text-gray-400',
     danger:
       'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500 disabled:bg-red-300',
+    destructive:
+      'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500 disabled:bg-red-300',
     warning:
       'bg-yellow-600 text-white hover:bg-yellow-700 focus:ring-yellow-500 disabled:bg-yellow-300',
     success:
@@ -54,6 +62,7 @@ export const Button: React.FC<ButtonProps> = ({
       'bg-transparent text-primary-600 border border-primary-600 hover:bg-primary-50 focus:ring-primary-500 disabled:text-primary-300 disabled:border-primary-300',
     ghost:
       'bg-transparent text-gray-700 hover:bg-gray-100 focus:ring-primary-500 disabled:text-gray-400',
+    link: 'bg-transparent text-primary-600 underline hover:text-primary-700 focus:ring-primary-500 disabled:text-primary-300 shadow-none',
   };
 
   const sizeStyles = {
@@ -61,6 +70,7 @@ export const Button: React.FC<ButtonProps> = ({
     sm: 'px-3 py-2 text-sm',
     md: 'px-4 py-2 text-sm',
     lg: 'px-6 py-3 text-base',
+    icon: 'p-2',
   };
 
   const widthStyles = fullWidth ? 'w-full' : '';
@@ -76,21 +86,27 @@ export const Button: React.FC<ButtonProps> = ({
     return undefined;
   };
 
+  const buttonProps = {
+    className: clsx(
+      baseStyles,
+      variantStyles[variant],
+      sizeStyles[size],
+      widthStyles,
+      disabledStyles,
+      className
+    ),
+    disabled: disabled || actualLoading,
+    'aria-label': getAriaLabel(),
+    'aria-busy': actualLoading,
+    ...props,
+  };
+
+  if (asChild && React.isValidElement(children)) {
+    return React.cloneElement(children, buttonProps);
+  }
+
   return (
-    <button
-      className={clsx(
-        baseStyles,
-        variantStyles[variant],
-        sizeStyles[size],
-        widthStyles,
-        disabledStyles,
-        className
-      )}
-      disabled={disabled || actualLoading}
-      aria-label={getAriaLabel()}
-      aria-busy={actualLoading}
-      {...props}
-    >
+    <button {...buttonProps}>
       {actualLoading && (
         <>
           <svg
@@ -122,7 +138,9 @@ export const Button: React.FC<ButtonProps> = ({
           {leftIcon}
         </span>
       )}
-      <span>{actualLoading && loadingText ? loadingText : children}</span>
+      {(!actualLoading || !hideTextOnLoading) && (
+        <span>{actualLoading && loadingText ? loadingText : children}</span>
+      )}
       {!actualLoading && rightIcon && (
         <span className="ml-2" aria-hidden="true">
           {rightIcon}

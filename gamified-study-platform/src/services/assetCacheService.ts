@@ -186,10 +186,12 @@ export class AssetCacheService {
       };
 
       navigator.serviceWorker.addEventListener('message', messageHandler);
-      this.serviceWorker.postMessage({
-        type: 'CACHE_AUDIO',
-        data: { urls },
-      });
+      if (this.serviceWorker) {
+        this.serviceWorker.postMessage({
+          type: 'CACHE_AUDIO',
+          data: { urls },
+        });
+      }
 
       // Timeout after 30 seconds
       setTimeout(() => {
@@ -220,10 +222,12 @@ export class AssetCacheService {
       };
 
       navigator.serviceWorker.addEventListener('message', messageHandler);
-      this.serviceWorker.postMessage({
-        type: 'CACHE_ENVIRONMENT',
-        data: { urls },
-      });
+      if (this.serviceWorker) {
+        this.serviceWorker.postMessage({
+          type: 'CACHE_ENVIRONMENT',
+          data: { urls },
+        });
+      }
 
       // Timeout after 30 seconds
       setTimeout(() => {
@@ -269,10 +273,12 @@ export class AssetCacheService {
       };
 
       navigator.serviceWorker.addEventListener('message', messageHandler);
-      this.serviceWorker.postMessage({
-        type: 'PRELOAD_ASSETS',
-        data: { urls },
-      });
+      if (this.serviceWorker) {
+        this.serviceWorker.postMessage({
+          type: 'PRELOAD_ASSETS',
+          data: { urls },
+        });
+      }
 
       // Timeout after 60 seconds
       setTimeout(() => {
@@ -352,10 +358,12 @@ export class AssetCacheService {
       };
 
       navigator.serviceWorker.addEventListener('message', messageHandler);
-      this.serviceWorker.postMessage({
-        type: 'CLEAR_CACHE',
-        data: { cacheName },
-      });
+      if (this.serviceWorker) {
+        this.serviceWorker.postMessage({
+          type: 'CLEAR_CACHE',
+          data: { cacheName },
+        });
+      }
 
       // Timeout after 10 seconds
       setTimeout(() => {
@@ -439,14 +447,16 @@ export class AssetCacheService {
       const stream = new ReadableStream({
         start(controller) {
           function pump(): Promise<void> {
-            return reader.read().then(({ done, value }) => {
+            return reader!.read().then(({ done, value }) => {
               if (done) {
                 controller.close();
                 return;
               }
 
               loaded += value.length;
-              onProgress(loaded, total);
+              if (onProgress) {
+                onProgress(loaded, total);
+              }
               controller.enqueue(value);
               return pump();
             });

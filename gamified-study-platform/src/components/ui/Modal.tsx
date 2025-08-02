@@ -145,12 +145,13 @@ export const Modal: React.FC<ModalProps> = ({
           />
           <motion.div
             ref={node => {
-              if (modalRef.current !== node) {
-                modalRef.current = node;
-              }
-              if (focusTrapRef.current !== node) {
-                focusTrapRef.current = node;
-              }
+              // Use callback ref to set both refs
+              (
+                modalRef as React.MutableRefObject<HTMLDivElement | null>
+              ).current = node;
+              (
+                focusTrapRef as React.MutableRefObject<HTMLDivElement | null>
+              ).current = node;
             }}
             {...animationProps}
             className={clsx(

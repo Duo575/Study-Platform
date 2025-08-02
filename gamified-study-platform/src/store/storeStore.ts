@@ -13,7 +13,7 @@ import {
   CoinTransaction,
   StoreError,
 } from '../types';
-import StoreManager from '../services/StoreManager';
+import StoreManager from '../services/storeManager';
 
 interface StoreActions {
   // Store Items Management
@@ -94,6 +94,7 @@ const initialState: StoreState = {
   purchaseHistory: [],
   isLoading: false,
   error: null,
+  coins: 0, // Add missing coins property
   filters: {
     category: 'all',
     rarity: 'all',
