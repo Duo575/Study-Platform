@@ -1,38 +1,41 @@
-import React, { useEffect } from 'react'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
-import { useTodoSelectors } from '../../../store/todoStore'
-import { Modal } from '../../ui/Modal'
-import { Input } from '../../ui/Input'
-import { Textarea } from '../../ui/Textarea'
-import { Select } from '../../ui/Select'
-import { Button } from '../../ui/Button'
-import { TodoItem, TodoForm } from '../../../types'
+import React, { useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { useTodoSelectors } from '../../../store/todoStore';
+import { Modal } from '../../ui/Modal';
+import { Input } from '../../ui/Input';
+import { Textarea } from '../../ui/Textarea';
+import { Select } from '../../ui/Select';
+import { Button } from '../../ui/Button';
+import { TodoItem, TodoForm } from '../../../types';
 
 const todoSchema = z.object({
   title: z.string().min(1, 'Title is required').max(200, 'Title is too long'),
   description: z.string().max(500, 'Description is too long').optional(),
   priority: z.enum(['low', 'medium', 'high']),
-  estimatedMinutes: z.number().min(1, 'Estimated time must be at least 1 minute').max(480, 'Estimated time cannot exceed 8 hours'),
+  estimatedMinutes: z
+    .number()
+    .min(1, 'Estimated time must be at least 1 minute')
+    .max(480, 'Estimated time cannot exceed 8 hours'),
   courseId: z.string().optional(),
   dueDate: z.date().optional(),
-})
+});
 
-type TodoFormData = z.infer<typeof todoSchema>
+type TodoFormData = z.infer<typeof todoSchema>;
 
 interface EditTodoModalProps {
-  todo: TodoItem
-  isOpen: boolean
-  onClose: () => void
+  todo: TodoItem;
+  isOpen: boolean;
+  onClose: () => void;
 }
 
 export const EditTodoModal: React.FC<EditTodoModalProps> = ({
   todo,
   isOpen,
-  onClose
+  onClose,
 }) => {
-  const { updateTodo, isLoading } = useTodoSelectors()
+  const { updateTodo, isLoading } = useTodoSelectors();
 
   const {
     register,
@@ -40,10 +43,10 @@ export const EditTodoModal: React.FC<EditTodoModalProps> = ({
     formState: { errors },
     reset,
     setValue,
-    watch
+    watch,
   } = useForm<TodoFormData>({
-    resolver: zodResolver(todoSchema)
-  })
+    resolver: zodResolver(todoSchema),
+  });
 
   // Reset form with todo data when modal opens
   useEffect(() => {
@@ -54,10 +57,10 @@ export const EditTodoModal: React.FC<EditTodoModalProps> = ({
         priority: todo.priority,
         estimatedMinutes: todo.estimatedMinutes,
         courseId: todo.courseId || '',
-        dueDate: todo.dueDate
-      })
+        dueDate: todo.dueDate,
+      });
     }
-  }, [isOpen, todo, reset])
+  }, [isOpen, todo, reset]);
 
   const onSubmit = async (data: TodoFormData) => {
     try {
@@ -67,29 +70,24 @@ export const EditTodoModal: React.FC<EditTodoModalProps> = ({
         priority: data.priority,
         estimatedMinutes: data.estimatedMinutes,
         courseId: data.courseId,
-        dueDate: data.dueDate
-      }
+        dueDate: data.dueDate,
+      };
 
-      await updateTodo(todo.id, updates)
-      onClose()
+      await updateTodo(todo.id, updates);
+      onClose();
     } catch (error) {
       // Error is handled by the store
-      console.error('Failed to update todo:', error)
+      console.error('Failed to update todo:', error);
     }
-  }
+  };
 
   const handleClose = () => {
-    reset()
-    onClose()
-  }
+    reset();
+    onClose();
+  };
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={handleClose}
-      title="Edit Todo"
-      size="md"
-    >
+    <Modal isOpen={isOpen} onClose={handleClose} title="Edit Todo" size="md">
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         {/* Title */}
         <div>
@@ -125,11 +123,16 @@ export const EditTodoModal: React.FC<EditTodoModalProps> = ({
             </label>
             <Select
               value={watch('priority')}
-              onChange={(value) => setValue('priority', value as 'low' | 'medium' | 'high')}
+              onChange={e =>
+                setValue(
+                  'priority',
+                  e.target.value as 'low' | 'medium' | 'high'
+                )
+              }
               options={[
                 { value: 'low', label: 'Low Priority' },
                 { value: 'medium', label: 'Medium Priority' },
-                { value: 'high', label: 'High Priority' }
+                { value: 'high', label: 'High Priority' },
               ]}
               error={errors.priority?.message}
             />
@@ -157,8 +160,8 @@ export const EditTodoModal: React.FC<EditTodoModalProps> = ({
           </label>
           <Input
             type="datetime-local"
-            {...register('dueDate', { 
-              setValueAs: (value) => value ? new Date(value) : undefined 
+            {...register('dueDate', {
+              setValueAs: value => (value ? new Date(value) : undefined),
             })}
             error={errors.dueDate?.message}
           />
@@ -171,12 +174,12 @@ export const EditTodoModal: React.FC<EditTodoModalProps> = ({
           </label>
           <Select
             value={watch('courseId') || ''}
-            onChange={(value) => setValue('courseId', value || undefined)}
+            onChange={e => setValue('courseId', e.target.value || undefined)}
             options={[
               { value: '', label: 'No course selected' },
               // TODO: Load actual courses from store
               { value: 'course-1', label: 'Sample Course 1' },
-              { value: 'course-2', label: 'Sample Course 2' }
+              { value: 'course-2', label: 'Sample Course 2' },
             ]}
             error={errors.courseId?.message}
           />
@@ -185,14 +188,14 @@ export const EditTodoModal: React.FC<EditTodoModalProps> = ({
         {/* Completion Status */}
         <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
           <div className="flex items-center justify-between text-sm">
-            <span className="text-gray-700 dark:text-gray-300">
-              Status:
-            </span>
-            <span className={`font-semibold ${
-              todo.completed 
-                ? 'text-green-600 dark:text-green-400' 
-                : 'text-yellow-600 dark:text-yellow-400'
-            }`}>
+            <span className="text-gray-700 dark:text-gray-300">Status:</span>
+            <span
+              className={`font-semibold ${
+                todo.completed
+                  ? 'text-green-600 dark:text-green-400'
+                  : 'text-yellow-600 dark:text-yellow-400'
+              }`}
+            >
               {todo.completed ? 'Completed' : 'Pending'}
             </span>
           </div>
@@ -213,15 +216,11 @@ export const EditTodoModal: React.FC<EditTodoModalProps> = ({
           >
             Cancel
           </Button>
-          <Button
-            type="submit"
-            disabled={isLoading}
-            loading={isLoading}
-          >
+          <Button type="submit" disabled={isLoading} loading={isLoading}>
             Update Todo
           </Button>
         </div>
       </form>
     </Modal>
-  )
-}
+  );
+};

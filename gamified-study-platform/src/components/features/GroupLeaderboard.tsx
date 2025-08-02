@@ -1,37 +1,75 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  Trophy, 
-  Medal, 
-  Award, 
-  TrendingUp, 
-  TrendingDown, 
+import {
+  Trophy,
+  Medal,
+  Award,
+  TrendingUp,
+  TrendingDown,
   Minus,
   Crown,
   Star,
   Clock,
   Target,
-  Zap
+  Zap,
 } from 'lucide-react';
 import { useSocialStore } from '../../store/socialStore';
-import type { StudyGroup, LeaderboardType, LeaderboardPeriod, LeaderboardEntry } from '../../types';
+import type {
+  StudyGroup,
+  LeaderboardType,
+  LeaderboardPeriod,
+} from '../../types';
 
 interface GroupLeaderboardProps {
   group: StudyGroup;
   className?: string;
 }
 
-const GroupLeaderboard: React.FC<GroupLeaderboardProps> = ({ group, className = '' }) => {
+const GroupLeaderboard: React.FC<GroupLeaderboardProps> = ({
+  group,
+  className = '',
+}) => {
   const { leaderboards, fetchLeaderboard, isLoading } = useSocialStore();
   const [selectedType, setSelectedType] = useState<LeaderboardType>('xp');
-  const [selectedPeriod, setSelectedPeriod] = useState<LeaderboardPeriod>('weekly');
+  const [selectedPeriod, setSelectedPeriod] =
+    useState<LeaderboardPeriod>('weekly');
 
-  const leaderboardTypes: { value: LeaderboardType; label: string; icon: React.ReactNode; color: string }[] = [
-    { value: 'xp', label: 'XP', icon: <Star className="w-4 h-4" />, color: 'text-purple-600' },
-    { value: 'study_time', label: 'Study Time', icon: <Clock className="w-4 h-4" />, color: 'text-blue-600' },
-    { value: 'quests_completed', label: 'Quests', icon: <Target className="w-4 h-4" />, color: 'text-green-600' },
-    { value: 'streak_days', label: 'Streak', icon: <Zap className="w-4 h-4" />, color: 'text-orange-600' },
-    { value: 'contribution', label: 'Contribution', icon: <Trophy className="w-4 h-4" />, color: 'text-indigo-600' },
+  const leaderboardTypes: {
+    value: LeaderboardType;
+    label: string;
+    icon: React.ReactNode;
+    color: string;
+  }[] = [
+    {
+      value: 'xp',
+      label: 'XP',
+      icon: <Star className="w-4 h-4" />,
+      color: 'text-purple-600',
+    },
+    {
+      value: 'study_time',
+      label: 'Study Time',
+      icon: <Clock className="w-4 h-4" />,
+      color: 'text-blue-600',
+    },
+    {
+      value: 'quests_completed',
+      label: 'Quests',
+      icon: <Target className="w-4 h-4" />,
+      color: 'text-green-600',
+    },
+    {
+      value: 'streak_days',
+      label: 'Streak',
+      icon: <Zap className="w-4 h-4" />,
+      color: 'text-orange-600',
+    },
+    {
+      value: 'contribution',
+      label: 'Contribution',
+      icon: <Trophy className="w-4 h-4" />,
+      color: 'text-indigo-600',
+    },
   ];
 
   const periods: { value: LeaderboardPeriod; label: string }[] = [
@@ -46,7 +84,10 @@ const GroupLeaderboard: React.FC<GroupLeaderboardProps> = ({ group, className = 
   }, [group.id, selectedType, selectedPeriod, fetchLeaderboard]);
 
   const currentLeaderboard = leaderboards.find(
-    l => l.groupId === group.id && l.type === selectedType && l.period === selectedPeriod
+    l =>
+      l.groupId === group.id &&
+      l.type === selectedType &&
+      l.period === selectedPeriod
   );
 
   const getRankIcon = (rank: number) => {
@@ -58,7 +99,11 @@ const GroupLeaderboard: React.FC<GroupLeaderboardProps> = ({ group, className = 
       case 3:
         return <Award className="w-5 h-5 text-amber-600" />;
       default:
-        return <span className="w-5 h-5 flex items-center justify-center text-sm font-bold text-gray-500">#{rank}</span>;
+        return (
+          <span className="w-5 h-5 flex items-center justify-center text-sm font-bold text-gray-500">
+            #{rank}
+          </span>
+        );
     }
   };
 
@@ -98,7 +143,9 @@ const GroupLeaderboard: React.FC<GroupLeaderboardProps> = ({ group, className = 
     }
   };
 
-  const selectedTypeConfig = leaderboardTypes.find(t => t.value === selectedType);
+  const selectedTypeConfig = leaderboardTypes.find(
+    t => t.value === selectedType
+  );
 
   return (
     <div className={`bg-white rounded-lg shadow-sm ${className}`}>
@@ -117,7 +164,7 @@ const GroupLeaderboard: React.FC<GroupLeaderboardProps> = ({ group, className = 
 
         {/* Type Selection */}
         <div className="flex flex-wrap gap-2 mb-4">
-          {leaderboardTypes.map((type) => (
+          {leaderboardTypes.map(type => (
             <button
               key={type.value}
               onClick={() => setSelectedType(type.value)}
@@ -127,7 +174,11 @@ const GroupLeaderboard: React.FC<GroupLeaderboardProps> = ({ group, className = 
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
             >
-              <span className={selectedType === type.value ? type.color : 'text-gray-400'}>
+              <span
+                className={
+                  selectedType === type.value ? type.color : 'text-gray-400'
+                }
+              >
                 {type.icon}
               </span>
               {type.label}
@@ -137,7 +188,7 @@ const GroupLeaderboard: React.FC<GroupLeaderboardProps> = ({ group, className = 
 
         {/* Period Selection */}
         <div className="flex gap-1 bg-gray-100 rounded-lg p-1">
-          {periods.map((period) => (
+          {periods.map(period => (
             <button
               key={period.value}
               onClick={() => setSelectedPeriod(period.value)}
@@ -162,7 +213,9 @@ const GroupLeaderboard: React.FC<GroupLeaderboardProps> = ({ group, className = 
         ) : !currentLeaderboard || currentLeaderboard.entries.length === 0 ? (
           <div className="text-center py-8">
             <Trophy className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-            <h4 className="text-lg font-medium text-gray-900 mb-1">No data yet</h4>
+            <h4 className="text-lg font-medium text-gray-900 mb-1">
+              No data yet
+            </h4>
             <p className="text-gray-600 text-sm">
               Start studying to see rankings appear here!
             </p>
@@ -176,13 +229,15 @@ const GroupLeaderboard: React.FC<GroupLeaderboardProps> = ({ group, className = 
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
                 className={`flex items-center gap-4 p-4 rounded-lg transition-colors ${
-                  entry.isCurrentUser 
-                    ? 'bg-indigo-50 border-2 border-indigo-200' 
+                  entry.isCurrentUser
+                    ? 'bg-indigo-50 border-2 border-indigo-200'
                     : 'bg-gray-50 hover:bg-gray-100'
                 }`}
               >
                 {/* Rank */}
-                <div className={`flex items-center justify-center w-10 h-10 rounded-full ${getRankBadgeColor(entry.rank)}`}>
+                <div
+                  className={`flex items-center justify-center w-10 h-10 rounded-full ${getRankBadgeColor(entry.rank)}`}
+                >
                   {entry.rank <= 3 ? (
                     getRankIcon(entry.rank)
                   ) : (
@@ -194,8 +249,8 @@ const GroupLeaderboard: React.FC<GroupLeaderboardProps> = ({ group, className = 
                 <div className="flex items-center gap-3 flex-1">
                   <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
                     {entry.avatarUrl ? (
-                      <img 
-                        src={entry.avatarUrl} 
+                      <img
+                        src={entry.avatarUrl}
                         alt={entry.username}
                         className="w-full h-full rounded-full object-cover"
                       />
@@ -207,7 +262,9 @@ const GroupLeaderboard: React.FC<GroupLeaderboardProps> = ({ group, className = 
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
-                      <span className={`font-medium ${entry.isCurrentUser ? 'text-indigo-900' : 'text-gray-900'}`}>
+                      <span
+                        className={`font-medium ${entry.isCurrentUser ? 'text-indigo-900' : 'text-gray-900'}`}
+                      >
                         {entry.username}
                       </span>
                       {entry.isCurrentUser && (
@@ -226,13 +283,19 @@ const GroupLeaderboard: React.FC<GroupLeaderboardProps> = ({ group, className = 
 
                 {/* Value and Change */}
                 <div className="text-right">
-                  <div className={`font-semibold ${selectedTypeConfig?.color || 'text-gray-900'}`}>
+                  <div
+                    className={`font-semibold ${selectedTypeConfig?.color || 'text-gray-900'}`}
+                  >
                     {formatValue(entry.value, selectedType)}
                   </div>
                   {entry.change !== 0 && (
                     <div className="flex items-center gap-1 text-sm">
                       {getChangeIcon(entry.change)}
-                      <span className={entry.change > 0 ? 'text-green-600' : 'text-red-600'}>
+                      <span
+                        className={
+                          entry.change > 0 ? 'text-green-600' : 'text-red-600'
+                        }
+                      >
                         {Math.abs(entry.change)}
                       </span>
                     </div>
@@ -256,7 +319,7 @@ const GroupLeaderboard: React.FC<GroupLeaderboardProps> = ({ group, className = 
               <div>
                 <div className="text-lg font-semibold text-gray-900">
                   {formatValue(
-                    Math.max(...currentLeaderboard.entries.map(e => e.value)), 
+                    Math.max(...currentLeaderboard.entries.map(e => e.value)),
                     selectedType
                   )}
                 </div>
@@ -266,9 +329,11 @@ const GroupLeaderboard: React.FC<GroupLeaderboardProps> = ({ group, className = 
                 <div className="text-lg font-semibold text-gray-900">
                   {formatValue(
                     Math.round(
-                      currentLeaderboard.entries.reduce((sum, e) => sum + e.value, 0) / 
-                      currentLeaderboard.entries.length
-                    ), 
+                      currentLeaderboard.entries.reduce(
+                        (sum, e) => sum + e.value,
+                        0
+                      ) / currentLeaderboard.entries.length
+                    ),
                     selectedType
                   )}
                 </div>

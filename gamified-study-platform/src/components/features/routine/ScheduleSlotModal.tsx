@@ -1,5 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { X, Clock, BookOpen, Coffee, Dumbbell, Utensils, Settings, AlertTriangle } from 'lucide-react';
+import {
+  X,
+  Clock,
+  BookOpen,
+  Coffee,
+  Dumbbell,
+  Utensils,
+  Settings,
+  AlertTriangle,
+} from 'lucide-react';
 import { useRoutineStore } from '../../../store/routineStore';
 import { useCourseStore } from '../../../store/courseStore';
 import { Modal } from '../../ui/Modal';
@@ -9,7 +18,12 @@ import { Select } from '../../ui/Select';
 import { Textarea } from '../../ui/Textarea';
 import { Checkbox } from '../../ui/Checkbox';
 import { Badge } from '../../ui/Badge';
-import type { Routine, ScheduleSlot, ActivityType, ScheduleConflict } from '../../../types';
+import type {
+  Routine,
+  ScheduleSlot,
+  ActivityType,
+  ScheduleConflict,
+} from '../../../types';
 
 interface ScheduleSlotModalProps {
   routine: Routine;
@@ -20,12 +34,28 @@ interface ScheduleSlotModalProps {
   onSave: () => void;
 }
 
-const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const DAYS = [
+  'Sunday',
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+  'Saturday',
+];
 
-const ACTIVITY_TYPES: { value: ActivityType; label: string; icon: React.ReactNode }[] = [
+const ACTIVITY_TYPES: {
+  value: ActivityType;
+  label: string;
+  icon: React.ReactNode;
+}[] = [
   { value: 'study', label: 'Study', icon: <BookOpen className="w-4 h-4" /> },
   { value: 'break', label: 'Break', icon: <Coffee className="w-4 h-4" /> },
-  { value: 'exercise', label: 'Exercise', icon: <Dumbbell className="w-4 h-4" /> },
+  {
+    value: 'exercise',
+    label: 'Exercise',
+    icon: <Dumbbell className="w-4 h-4" />,
+  },
   { value: 'meal', label: 'Meal', icon: <Utensils className="w-4 h-4" /> },
   { value: 'custom', label: 'Custom', icon: <Settings className="w-4 h-4" /> },
 ];
@@ -46,14 +76,15 @@ export const ScheduleSlotModal: React.FC<ScheduleSlotModalProps> = ({
   onClose,
   onSave,
 }) => {
-  const { createScheduleSlot, updateScheduleSlot, deleteScheduleSlot } = useRoutineStore();
+  const { createScheduleSlot, updateScheduleSlot, deleteScheduleSlot } =
+    useRoutineStore();
   const { courses } = useCourseStore();
 
   const [formData, setFormData] = useState({
     dayOfWeek: slot?.dayOfWeek ?? defaultDay ?? 1,
     startTime: slot?.startTime ?? defaultTime ?? '09:00',
     endTime: slot?.endTime ?? '10:00',
-    activityType: slot?.activityType ?? 'study' as ActivityType,
+    activityType: slot?.activityType ?? ('study' as ActivityType),
     activityName: slot?.activityName ?? '',
     courseId: slot?.courseId ?? '',
     priority: slot?.priority ?? 3,
@@ -73,7 +104,9 @@ export const ScheduleSlotModal: React.FC<ScheduleSlotModalProps> = ({
       if (!formData.startTime || !formData.endTime) return;
 
       try {
-        const { RoutineService } = await import('../../../services/routineService');
+        const { RoutineService } = await import(
+          '../../../services/routineService'
+        );
         const detectedConflicts = await RoutineService.detectConflicts(
           formData.dayOfWeek,
           formData.startTime,
@@ -88,7 +121,13 @@ export const ScheduleSlotModal: React.FC<ScheduleSlotModalProps> = ({
     };
 
     checkConflicts();
-  }, [formData.dayOfWeek, formData.startTime, formData.endTime, routine.id, slot?.id]);
+  }, [
+    formData.dayOfWeek,
+    formData.startTime,
+    formData.endTime,
+    routine.id,
+    slot?.id,
+  ]);
 
   const handleInputChange = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -110,7 +149,9 @@ export const ScheduleSlotModal: React.FC<ScheduleSlotModalProps> = ({
     }
 
     if (conflicts.length > 0 && !formData.isFlexible) {
-      setError('Please resolve schedule conflicts or mark this slot as flexible');
+      setError(
+        'Please resolve schedule conflicts or mark this slot as flexible'
+      );
       return false;
     }
 
@@ -137,27 +178,37 @@ export const ScheduleSlotModal: React.FC<ScheduleSlotModalProps> = ({
 
       onSave();
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'Failed to save schedule slot');
+      setError(
+        error instanceof Error ? error.message : 'Failed to save schedule slot'
+      );
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleDelete = async () => {
-    if (!slot || !confirm('Are you sure you want to delete this time slot?')) return;
+    if (!slot || !confirm('Are you sure you want to delete this time slot?'))
+      return;
 
     setIsLoading(true);
     try {
       await deleteScheduleSlot(slot.id);
       onSave();
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'Failed to delete schedule slot');
+      setError(
+        error instanceof Error
+          ? error.message
+          : 'Failed to delete schedule slot'
+      );
     } finally {
       setIsLoading(false);
     }
   };
 
-  const generateEndTime = (startTime: string, duration: number = 60): string => {
+  const generateEndTime = (
+    startTime: string,
+    duration: number = 60
+  ): string => {
     const start = new Date(`1970-01-01T${startTime}`);
     start.setMinutes(start.getMinutes() + duration);
     return `${start.getHours().toString().padStart(2, '0')}:${start.getMinutes().toString().padStart(2, '0')}`;
@@ -167,16 +218,23 @@ export const ScheduleSlotModal: React.FC<ScheduleSlotModalProps> = ({
     const currentStart = new Date(`1970-01-01T${formData.startTime}`);
     const currentEnd = new Date(`1970-01-01T${formData.endTime}`);
     const duration = currentEnd.getTime() - currentStart.getTime();
-    
+
     const newStart = new Date(`1970-01-01T${startTime}`);
     const newEnd = new Date(newStart.getTime() + duration);
-    
+
     handleInputChange('startTime', startTime);
-    handleInputChange('endTime', `${newEnd.getHours().toString().padStart(2, '0')}:${newEnd.getMinutes().toString().padStart(2, '0')}`);
+    handleInputChange(
+      'endTime',
+      `${newEnd.getHours().toString().padStart(2, '0')}:${newEnd.getMinutes().toString().padStart(2, '0')}`
+    );
   };
 
   return (
-    <Modal isOpen onClose={onClose} title={isEditing ? 'Edit Time Slot' : 'Add Time Slot'}>
+    <Modal
+      isOpen
+      onClose={onClose}
+      title={isEditing ? 'Edit Time Slot' : 'Add Time Slot'}
+    >
       <div className="space-y-6">
         {error && (
           <div className="bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700 rounded-lg p-4">
@@ -191,12 +249,18 @@ export const ScheduleSlotModal: React.FC<ScheduleSlotModalProps> = ({
           <div className="bg-yellow-50 dark:bg-yellow-900 border border-yellow-200 dark:border-yellow-700 rounded-lg p-4">
             <div className="flex items-center gap-2 text-yellow-800 dark:text-yellow-200 mb-2">
               <AlertTriangle className="w-4 h-4" />
-              <span className="text-sm font-medium">Schedule Conflicts Detected</span>
+              <span className="text-sm font-medium">
+                Schedule Conflicts Detected
+              </span>
             </div>
             <div className="space-y-1">
               {conflicts.map((conflict, index) => (
-                <div key={index} className="text-sm text-yellow-700 dark:text-yellow-300">
-                  • {conflict.activityName} ({conflict.start_time} - {conflict.end_time})
+                <div
+                  key={index}
+                  className="text-sm text-yellow-700 dark:text-yellow-300"
+                >
+                  • {conflict.activityName} ({conflict.startTime} -{' '}
+                  {conflict.endTime})
                 </div>
               ))}
             </div>
@@ -210,7 +274,9 @@ export const ScheduleSlotModal: React.FC<ScheduleSlotModalProps> = ({
             </label>
             <Select
               value={formData.dayOfWeek.toString()}
-              onChange={(value) => handleInputChange('dayOfWeek', parseInt(value))}
+              onChange={e =>
+                handleInputChange('dayOfWeek', parseInt(e.target.value))
+              }
             >
               {DAYS.map((day, index) => (
                 <option key={index} value={index}>
@@ -226,9 +292,14 @@ export const ScheduleSlotModal: React.FC<ScheduleSlotModalProps> = ({
             </label>
             <Select
               value={formData.activityType}
-              onChange={(value) => handleInputChange('activityType', value as ActivityType)}
+              onChange={e =>
+                handleInputChange(
+                  'activityType',
+                  e.target.value as ActivityType
+                )
+              }
             >
-              {ACTIVITY_TYPES.map((type) => (
+              {ACTIVITY_TYPES.map(type => (
                 <option key={type.value} value={type.value}>
                   {type.label}
                 </option>
@@ -243,7 +314,7 @@ export const ScheduleSlotModal: React.FC<ScheduleSlotModalProps> = ({
           </label>
           <Input
             value={formData.activityName}
-            onChange={(e) => handleInputChange('activityName', e.target.value)}
+            onChange={e => handleInputChange('activityName', e.target.value)}
             placeholder="e.g., Mathematics Study Session"
           />
         </div>
@@ -256,7 +327,7 @@ export const ScheduleSlotModal: React.FC<ScheduleSlotModalProps> = ({
             <Input
               type="time"
               value={formData.startTime}
-              onChange={(e) => handleStartTimeChange(e.target.value)}
+              onChange={e => handleStartTimeChange(e.target.value)}
             />
           </div>
 
@@ -267,7 +338,7 @@ export const ScheduleSlotModal: React.FC<ScheduleSlotModalProps> = ({
             <Input
               type="time"
               value={formData.endTime}
-              onChange={(e) => handleInputChange('endTime', e.target.value)}
+              onChange={e => handleInputChange('endTime', e.target.value)}
             />
           </div>
         </div>
@@ -279,10 +350,10 @@ export const ScheduleSlotModal: React.FC<ScheduleSlotModalProps> = ({
             </label>
             <Select
               value={formData.courseId}
-              onChange={(value) => handleInputChange('courseId', value)}
+              onChange={e => handleInputChange('courseId', e.target.value)}
             >
               <option value="">Select a course...</option>
-              {courses.map((course) => (
+              {courses.map(course => (
                 <option key={course.id} value={course.id}>
                   {course.name}
                 </option>
@@ -298,9 +369,11 @@ export const ScheduleSlotModal: React.FC<ScheduleSlotModalProps> = ({
             </label>
             <Select
               value={formData.priority.toString()}
-              onChange={(value) => handleInputChange('priority', parseInt(value))}
+              onChange={e =>
+                handleInputChange('priority', parseInt(e.target.value))
+              }
             >
-              {PRIORITY_OPTIONS.map((option) => (
+              {PRIORITY_OPTIONS.map(option => (
                 <option key={option.value} value={option.value}>
                   {option.label}
                 </option>
@@ -311,7 +384,7 @@ export const ScheduleSlotModal: React.FC<ScheduleSlotModalProps> = ({
           <div className="flex items-center pt-8">
             <Checkbox
               checked={formData.isFlexible}
-              onChange={(checked) => handleInputChange('isFlexible', checked)}
+              onChange={checked => handleInputChange('isFlexible', checked)}
               label="Flexible timing"
             />
           </div>
@@ -323,7 +396,7 @@ export const ScheduleSlotModal: React.FC<ScheduleSlotModalProps> = ({
           </label>
           <Textarea
             value={formData.notes}
-            onChange={(e) => handleInputChange('notes', e.target.value)}
+            onChange={e => handleInputChange('notes', e.target.value)}
             placeholder="Add any additional notes or instructions..."
             rows={3}
           />
@@ -335,7 +408,7 @@ export const ScheduleSlotModal: React.FC<ScheduleSlotModalProps> = ({
             Quick Duration
           </label>
           <div className="flex gap-2">
-            {[30, 60, 90, 120].map((minutes) => (
+            {[30, 60, 90, 120].map(minutes => (
               <Button
                 key={minutes}
                 variant="outline"

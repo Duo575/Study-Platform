@@ -42,7 +42,7 @@ const SyllabusPreview: React.FC<SyllabusPreviewProps> = ({
       </div>
 
       <ul className="space-y-4">
-        {items.map((item, index) => (
+        {items.map((item, _index) => (
           <li key={item.id} className="border-b pb-3">
             <div className="flex justify-between">
               <div className="font-medium">{item.title}</div>

@@ -1,5 +1,16 @@
 import React, { useState } from 'react';
-import { Plus, Search, Filter, MoreVertical, Play, Pause, Edit, Trash2, Copy, Share } from 'lucide-react';
+import {
+  Plus,
+  Search,
+  Filter,
+  MoreVertical,
+  Play,
+  Pause,
+  Edit,
+  Trash2,
+  Copy,
+  Share,
+} from 'lucide-react';
 import { useRoutineStore } from '../../../store/routineStore';
 import { Card } from '../../ui/Card';
 import { Button } from '../../ui/Button';
@@ -14,7 +25,9 @@ interface RoutineListProps {
   onCreateRoutine: () => void;
 }
 
-export const RoutineList: React.FC<RoutineListProps> = ({ onCreateRoutine }) => {
+export const RoutineList: React.FC<RoutineListProps> = ({
+  onCreateRoutine,
+}) => {
   const {
     routines,
     filters,
@@ -28,10 +41,16 @@ export const RoutineList: React.FC<RoutineListProps> = ({ onCreateRoutine }) => 
   const [selectedRoutines, setSelectedRoutines] = useState<string[]>([]);
 
   const filteredRoutines = routines.filter(routine => {
-    if (filters.search && !routine.name.toLowerCase().includes(filters.search.toLowerCase())) {
+    if (
+      filters.search &&
+      !routine.name.toLowerCase().includes(filters.search.toLowerCase())
+    ) {
       return false;
     }
-    if (filters.isActive !== undefined && routine.isActive !== filters.isActive) {
+    if (
+      filters.isActive !== undefined &&
+      routine.isActive !== filters.isActive
+    ) {
       return false;
     }
     return true;
@@ -39,9 +58,9 @@ export const RoutineList: React.FC<RoutineListProps> = ({ onCreateRoutine }) => 
 
   const sortedRoutines = [...filteredRoutines].sort((a, b) => {
     const { sortBy = 'created_at', sortOrder = 'desc' } = filters;
-    
+
     let aValue: any, bValue: any;
-    
+
     switch (sortBy) {
       case 'name':
         aValue = a.name.toLowerCase();
@@ -55,7 +74,7 @@ export const RoutineList: React.FC<RoutineListProps> = ({ onCreateRoutine }) => 
         aValue = new Date(a.createdAt).getTime();
         bValue = new Date(b.createdAt).getTime();
     }
-    
+
     if (sortOrder === 'asc') {
       return aValue > bValue ? 1 : -1;
     } else {
@@ -92,7 +111,7 @@ export const RoutineList: React.FC<RoutineListProps> = ({ onCreateRoutine }) => 
   };
 
   const toggleRoutineSelection = (routineId: string) => {
-    setSelectedRoutines(prev => 
+    setSelectedRoutines(prev =>
       prev.includes(routineId)
         ? prev.filter(id => id !== routineId)
         : [...prev, routineId]
@@ -125,7 +144,7 @@ export const RoutineList: React.FC<RoutineListProps> = ({ onCreateRoutine }) => 
             <Input
               placeholder="Search routines..."
               value={filters.search || ''}
-              onChange={(e) => setFilters({ search: e.target.value })}
+              onChange={e => setFilters({ search: e.target.value })}
               className="pl-10"
             />
           </div>
@@ -133,10 +152,19 @@ export const RoutineList: React.FC<RoutineListProps> = ({ onCreateRoutine }) => 
 
         <div className="flex items-center gap-3">
           <Select
-            value={filters.isActive === undefined ? 'all' : filters.isActive.toString()}
-            onChange={(value) => setFilters({ 
-              isActive: value === 'all' ? undefined : value === 'true' 
-            })}
+            value={
+              filters.isActive === undefined
+                ? 'all'
+                : filters.isActive.toString()
+            }
+            onChange={e =>
+              setFilters({
+                isActive:
+                  e.target.value === 'all'
+                    ? undefined
+                    : e.target.value === 'true',
+              })
+            }
           >
             <option value="all">All Routines</option>
             <option value="true">Active Only</option>
@@ -145,9 +173,12 @@ export const RoutineList: React.FC<RoutineListProps> = ({ onCreateRoutine }) => 
 
           <Select
             value={`${filters.sortBy || 'created_at'}-${filters.sortOrder || 'desc'}`}
-            onChange={(value) => {
-              const [sortBy, sortOrder] = value.split('-');
-              setFilters({ sortBy: sortBy as any, sortOrder: sortOrder as any });
+            onChange={e => {
+              const [sortBy, sortOrder] = e.target.value.split('-');
+              setFilters({
+                sortBy: sortBy as any,
+                sortOrder: sortOrder as any,
+              });
             }}
           >
             <option value="name-asc">Name (A-Z)</option>
@@ -168,7 +199,8 @@ export const RoutineList: React.FC<RoutineListProps> = ({ onCreateRoutine }) => 
         <Card className="p-4">
           <div className="flex items-center justify-between">
             <span className="text-sm text-gray-600 dark:text-gray-400">
-              {selectedRoutines.length} routine{selectedRoutines.length !== 1 ? 's' : ''} selected
+              {selectedRoutines.length} routine
+              {selectedRoutines.length !== 1 ? 's' : ''} selected
             </span>
             <div className="flex items-center gap-2">
               <Button
@@ -210,8 +242,7 @@ export const RoutineList: React.FC<RoutineListProps> = ({ onCreateRoutine }) => 
               <p className="mb-4">
                 {filters.search || filters.isActive !== undefined
                   ? 'Try adjusting your search or filters'
-                  : 'Create your first routine to get started'
-                }
+                  : 'Create your first routine to get started'}
               </p>
               {!filters.search && filters.isActive === undefined && (
                 <Button onClick={onCreateRoutine}>
@@ -239,7 +270,7 @@ export const RoutineList: React.FC<RoutineListProps> = ({ onCreateRoutine }) => 
             </Card>
 
             {/* Routine Cards */}
-            {sortedRoutines.map((routine) => (
+            {sortedRoutines.map(routine => (
               <Card key={routine.id} className="p-6">
                 <div className="flex items-start gap-4">
                   <input
@@ -284,7 +315,9 @@ export const RoutineList: React.FC<RoutineListProps> = ({ onCreateRoutine }) => 
                         >
                           <div className="py-1">
                             <button
-                              onClick={() => handleRoutineAction('toggle', routine)}
+                              onClick={() =>
+                                handleRoutineAction('toggle', routine)
+                              }
                               className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
                             >
                               {routine.isActive ? (
@@ -300,21 +333,27 @@ export const RoutineList: React.FC<RoutineListProps> = ({ onCreateRoutine }) => 
                               )}
                             </button>
                             <button
-                              onClick={() => handleRoutineAction('edit', routine)}
+                              onClick={() =>
+                                handleRoutineAction('edit', routine)
+                              }
                               className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
                             >
                               <Edit className="w-4 h-4" />
                               Edit
                             </button>
                             <button
-                              onClick={() => handleRoutineAction('duplicate', routine)}
+                              onClick={() =>
+                                handleRoutineAction('duplicate', routine)
+                              }
                               className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
                             >
                               <Copy className="w-4 h-4" />
                               Duplicate
                             </button>
                             <button
-                              onClick={() => handleRoutineAction('share', routine)}
+                              onClick={() =>
+                                handleRoutineAction('share', routine)
+                              }
                               className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
                             >
                               <Share className="w-4 h-4" />
@@ -322,7 +361,9 @@ export const RoutineList: React.FC<RoutineListProps> = ({ onCreateRoutine }) => 
                             </button>
                             <div className="border-t border-gray-100 dark:border-gray-700 my-1" />
                             <button
-                              onClick={() => handleRoutineAction('delete', routine)}
+                              onClick={() =>
+                                handleRoutineAction('delete', routine)
+                              }
                               className="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900"
                             >
                               <Trash2 className="w-4 h-4" />
@@ -336,9 +377,15 @@ export const RoutineList: React.FC<RoutineListProps> = ({ onCreateRoutine }) => 
                     <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
                       <span>{routine.scheduleSlots.length} time slots</span>
                       <span>•</span>
-                      <span>Created {new Date(routine.createdAt).toLocaleDateString()}</span>
+                      <span>
+                        Created{' '}
+                        {new Date(routine.createdAt).toLocaleDateString()}
+                      </span>
                       <span>•</span>
-                      <span>Updated {new Date(routine.updatedAt).toLocaleDateString()}</span>
+                      <span>
+                        Updated{' '}
+                        {new Date(routine.updatedAt).toLocaleDateString()}
+                      </span>
                     </div>
 
                     {routine.scheduleSlots.length > 0 && (
@@ -347,11 +394,24 @@ export const RoutineList: React.FC<RoutineListProps> = ({ onCreateRoutine }) => 
                           Weekly Schedule Preview:
                         </div>
                         <div className="flex flex-wrap gap-1">
-                          {routine.scheduleSlots.slice(0, 5).map((slot, index) => (
-                            <Badge key={index} variant="outline" size="sm">
-                              {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][slot.dayOfWeek]} {slot.startTime}
-                            </Badge>
-                          ))}
+                          {routine.scheduleSlots
+                            .slice(0, 5)
+                            .map((slot, index) => (
+                              <Badge key={index} variant="outline" size="sm">
+                                {
+                                  [
+                                    'Sun',
+                                    'Mon',
+                                    'Tue',
+                                    'Wed',
+                                    'Thu',
+                                    'Fri',
+                                    'Sat',
+                                  ][slot.dayOfWeek]
+                                }{' '}
+                                {slot.startTime}
+                              </Badge>
+                            ))}
                           {routine.scheduleSlots.length > 5 && (
                             <Badge variant="outline" size="sm">
                               +{routine.scheduleSlots.length - 5} more

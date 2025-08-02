@@ -117,7 +117,10 @@ export function verifyTypeGuards(): void {
   console.log('Quest type validation:', isQuestType('daily'));
   console.log('Quest difficulty validation:', isQuestDifficulty('medium'));
   console.log('Quest status validation:', isQuestStatus('active'));
-  console.log('Achievement category validation:', isAchievementCategory('study_time'));
+  console.log(
+    'Achievement category validation:',
+    isAchievementCategory('study_time')
+  );
   console.log('Priority level validation:', isPriorityLevel('high'));
 
   // Test complex type guards
@@ -190,7 +193,7 @@ export function verifyGamificationUtils(): void {
   // Test formatting
   console.log('Format XP:', formatXP(12500));
   console.log('Format level:', formatLevel(15));
-  console.log('Progress percentage:', getProgressPercentage(75, 100));
+  console.log('Progress percentage:', getProgressPercentage(75));
 
   // Test streak calculation
   const studySessions = [
@@ -265,12 +268,24 @@ export function verifyConstants(): void {
   console.log('First pet species:', PET_SPECIES[0].name);
 
   // Test evolution stages
-  console.log('Baby stage requirements:', PET_EVOLUTION_STAGES.BABY.requirements);
-  console.log('Adult stage requirements:', PET_EVOLUTION_STAGES.ADULT.requirements);
+  console.log(
+    'Baby stage requirements:',
+    PET_EVOLUTION_STAGES.BABY.requirements
+  );
+  console.log(
+    'Adult stage requirements:',
+    PET_EVOLUTION_STAGES.ADULT.requirements
+  );
 
   // Test achievement definitions
-  console.log('First steps achievement:', ACHIEVEMENT_DEFINITIONS.FIRST_STEPS.title);
-  console.log('Master scholar achievement:', ACHIEVEMENT_DEFINITIONS.MASTER_SCHOLAR.xpReward);
+  console.log(
+    'First steps achievement:',
+    ACHIEVEMENT_DEFINITIONS.FIRST_STEPS.title
+  );
+  console.log(
+    'Master scholar achievement:',
+    ACHIEVEMENT_DEFINITIONS.MASTER_SCHOLAR.xpReward
+  );
 
   // Test other constants
   console.log('Available course colors:', COURSE_COLORS.length);
@@ -281,23 +296,23 @@ export function verifyConstants(): void {
 // Main verification function
 export function runAllVerifications(): void {
   console.log('=== Running Type System Verification ===');
-  
+
   try {
     console.log('\n1. Verifying Type Guards...');
     verifyTypeGuards();
-    
+
     console.log('\n2. Verifying Validators...');
     verifyValidators();
-    
+
     console.log('\n3. Verifying Gamification Utils...');
     verifyGamificationUtils();
-    
+
     console.log('\n4. Verifying Utility Types...');
     verifyUtilityTypes();
-    
+
     console.log('\n5. Verifying Constants...');
     verifyConstants();
-    
+
     console.log('\n=== All Verifications Completed Successfully ===');
   } catch (error) {
     console.error('Verification failed:', error);

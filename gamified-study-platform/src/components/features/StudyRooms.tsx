@@ -1,28 +1,28 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Video, 
-  Users, 
-  Plus, 
-  Play, 
-  Pause, 
-  Clock, 
+import { motion } from 'framer-motion';
+import {
+  Video,
+  Users,
+  Plus,
+  Play,
+  // Pause,
+  Clock,
   Settings,
   Mic,
-  MicOff,
+  // MicOff,
   Camera,
-  CameraOff,
+  // CameraOff,
   Volume2,
-  VolumeX,
+  // VolumeX,
   UserPlus,
   LogOut,
   Coffee,
   BookOpen,
   Eye,
-  EyeOff
+  EyeOff,
 } from 'lucide-react';
 import { useSocialStore } from '../../store/socialStore';
-import type { StudyGroup, StudyRoom, StudyRoomParticipant, ParticipantStatus } from '../../types';
+import type { StudyGroup, StudyRoom, ParticipantStatus } from '../../types';
 import { formatDistanceToNow } from 'date-fns';
 
 interface StudyRoomsProps {
@@ -31,16 +31,16 @@ interface StudyRoomsProps {
 }
 
 const StudyRooms: React.FC<StudyRoomsProps> = ({ group, className = '' }) => {
-  const { 
-    studyRooms, 
-    activeStudyRoom, 
-    fetchStudyRooms, 
-    joinStudyRoom, 
+  const {
+    studyRooms,
+    activeStudyRoom,
+    fetchStudyRooms,
+    joinStudyRoom,
     leaveStudyRoom,
     setActiveStudyRoom,
-    isLoading 
+    isLoading,
   } = useSocialStore();
-  
+
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedRoom, setSelectedRoom] = useState<StudyRoom | null>(null);
 
@@ -127,7 +127,9 @@ const StudyRooms: React.FC<StudyRoomsProps> = ({ group, className = '' }) => {
         ) : studyRooms.length === 0 ? (
           <div className="text-center py-8">
             <Video className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-            <h4 className="text-lg font-medium text-gray-900 mb-1">No study rooms yet</h4>
+            <h4 className="text-lg font-medium text-gray-900 mb-1">
+              No study rooms yet
+            </h4>
             <p className="text-gray-600 text-sm mb-4">
               Create the first study room to start collaborative sessions!
             </p>
@@ -140,7 +142,7 @@ const StudyRooms: React.FC<StudyRoomsProps> = ({ group, className = '' }) => {
           </div>
         ) : (
           <div className="space-y-4">
-            {studyRooms.map((room) => (
+            {studyRooms.map(room => (
               <motion.div
                 key={room.id}
                 initial={{ opacity: 0, y: 20 }}
@@ -155,7 +157,9 @@ const StudyRooms: React.FC<StudyRoomsProps> = ({ group, className = '' }) => {
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
-                      <h4 className="font-semibold text-gray-900">{room.name}</h4>
+                      <h4 className="font-semibold text-gray-900">
+                        {room.name}
+                      </h4>
                       {room.isActive && (
                         <span className="flex items-center gap-1 px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
                           <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
@@ -164,17 +168,22 @@ const StudyRooms: React.FC<StudyRoomsProps> = ({ group, className = '' }) => {
                       )}
                     </div>
                     {room.description && (
-                      <p className="text-sm text-gray-600 mb-2">{room.description}</p>
+                      <p className="text-sm text-gray-600 mb-2">
+                        {room.description}
+                      </p>
                     )}
                     <div className="flex items-center gap-4 text-sm text-gray-500">
                       <span className="flex items-center gap-1">
                         <Users className="w-4 h-4" />
-                        {room.participants.length}/{room.settings.maxParticipants}
+                        {room.participants.length}/
+                        {room.settings.maxParticipants}
                       </span>
                       {room.currentSession && (
                         <span className="flex items-center gap-1">
                           <Clock className="w-4 h-4" />
-                          {formatDistanceToNow(room.currentSession.startTime, { addSuffix: true })}
+                          {formatDistanceToNow(room.currentSession.startTime, {
+                            addSuffix: true,
+                          })}
                         </span>
                       )}
                     </div>
@@ -203,9 +212,11 @@ const StudyRooms: React.FC<StudyRoomsProps> = ({ group, className = '' }) => {
                 {/* Participants */}
                 {room.participants.length > 0 && (
                   <div className="mb-3">
-                    <h5 className="text-sm font-medium text-gray-700 mb-2">Participants:</h5>
+                    <h5 className="text-sm font-medium text-gray-700 mb-2">
+                      Participants:
+                    </h5>
                     <div className="flex flex-wrap gap-2">
-                      {room.participants.map((participant) => (
+                      {room.participants.map(participant => (
                         <div
                           key={participant.userId}
                           className="flex items-center gap-2 px-2 py-1 bg-gray-100 rounded-lg"
@@ -213,8 +224,8 @@ const StudyRooms: React.FC<StudyRoomsProps> = ({ group, className = '' }) => {
                           <div className="relative">
                             <div className="w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center">
                               {participant.avatarUrl ? (
-                                <img 
-                                  src={participant.avatarUrl} 
+                                <img
+                                  src={participant.avatarUrl}
                                   alt={participant.username}
                                   className="w-full h-full rounded-full object-cover"
                                 />
@@ -224,13 +235,19 @@ const StudyRooms: React.FC<StudyRoomsProps> = ({ group, className = '' }) => {
                                 </span>
                               )}
                             </div>
-                            <div className={`absolute -bottom-1 -right-1 w-3 h-3 rounded-full flex items-center justify-center ${getStatusColor(participant.status)}`}>
+                            <div
+                              className={`absolute -bottom-1 -right-1 w-3 h-3 rounded-full flex items-center justify-center ${getStatusColor(participant.status)}`}
+                            >
                               {getStatusIcon(participant.status)}
                             </div>
                           </div>
-                          <span className="text-sm text-gray-900">{participant.username}</span>
+                          <span className="text-sm text-gray-900">
+                            {participant.username}
+                          </span>
                           {participant.isHost && (
-                            <span className="text-xs text-purple-600 font-medium">Host</span>
+                            <span className="text-xs text-purple-600 font-medium">
+                              Host
+                            </span>
                           )}
                         </div>
                       ))}
@@ -325,7 +342,10 @@ const StudyRooms: React.FC<StudyRoomsProps> = ({ group, className = '' }) => {
               </div>
               <div>
                 <div className="text-lg font-semibold text-gray-900">
-                  {Math.round(activeStudyRoom.currentSession.stats.averageFocusScore)}%
+                  {Math.round(
+                    activeStudyRoom.currentSession.stats.averageFocusScore
+                  )}
+                  %
                 </div>
                 <div className="text-sm text-gray-600">Focus Score</div>
               </div>
@@ -337,14 +357,17 @@ const StudyRooms: React.FC<StudyRoomsProps> = ({ group, className = '' }) => {
       {/* Create Room Modal */}
       {showCreateModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div 
+          <div
             className="fixed inset-0 bg-black bg-opacity-50"
             onClick={() => setShowCreateModal(false)}
           />
           <div className="relative bg-white rounded-xl shadow-xl max-w-md w-full p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Create Study Room</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              Create Study Room
+            </h3>
             <p className="text-gray-600 text-sm mb-4">
-              Study room creation form coming soon! This will allow you to create virtual study spaces with customizable settings.
+              Study room creation form coming soon! This will allow you to
+              create virtual study spaces with customizable settings.
             </p>
             <div className="space-y-3 mb-4">
               <div className="flex items-center gap-2 text-sm text-gray-600">

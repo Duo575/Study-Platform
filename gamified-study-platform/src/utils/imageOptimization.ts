@@ -128,7 +128,7 @@ export const compressImage = (
   maxHeight: number = 1080,
   quality: number = 0.8
 ): Promise<Blob> => {
-  return new Promise(resolve => {
+  return new Promise((resolve, reject) => {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d')!;
     const img = new Image();
@@ -176,7 +176,7 @@ export const convertToWebP = (
   file: File,
   quality: number = 0.8
 ): Promise<Blob> => {
-  return new Promise(resolve => {
+  return new Promise((resolve, reject) => {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d')!;
     const img = new Image();

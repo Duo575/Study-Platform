@@ -4,14 +4,14 @@ import { Badge } from '../ui/Badge';
 import { Button } from '../ui/Button';
 import { ProgressBar } from '../ui/ProgressBar';
 import { usePerformanceRecommendations } from '../../hooks/usePerformanceAnalysis';
-import { 
-  formatPerformanceScore, 
-  getPerformanceStatusColor, 
+import {
+  formatPerformanceScore,
+  getPerformanceStatusColor,
   getGradeColor,
   formatStudyTime,
   formatStudyFrequency,
   generatePerformanceInsights,
-  calculateImprovementPotential
+  calculateImprovementPotential,
 } from '../../utils/performanceAnalysis';
 import type { SubjectPerformance } from '../../types';
 
@@ -25,20 +25,22 @@ interface PerformanceReportCardProps {
  * Detailed Performance Report Card Component
  * Shows comprehensive performance analysis for a single subject
  */
-export function PerformanceReportCard({ 
-  performance, 
+export function PerformanceReportCard({
+  performance,
   onViewDetails,
-  className = '' 
+  className = '',
 }: PerformanceReportCardProps) {
   const [showDetails, setShowDetails] = useState(false);
-  const [activeTab, setActiveTab] = useState<'overview' | 'recommendations' | 'insights'>('overview');
-  
+  const [activeTab, setActiveTab] = useState<
+    'overview' | 'recommendations' | 'insights'
+  >('overview');
+
   const {
     activeRecommendations,
     dismissRecommendation,
     highPriorityRecommendations,
     mediumPriorityRecommendations,
-    lowPriorityRecommendations
+    lowPriorityRecommendations,
   } = usePerformanceRecommendations(performance);
 
   const scoreFormatted = formatPerformanceScore(performance.performanceScore);
@@ -61,26 +63,28 @@ export function PerformanceReportCard({
                 </Badge>
               )}
             </div>
-            
+
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2">
                 <span className={`text-2xl font-bold ${scoreFormatted.color}`}>
                   {scoreFormatted.value}
                 </span>
-                <Badge 
+                <Badge
                   className={getPerformanceStatusColor(performance.status)}
                   size="sm"
                 >
                   {performance.status.replace('_', ' ').toUpperCase()}
                 </Badge>
               </div>
-              
-              <div className={`text-3xl font-bold ${getGradeColor(performance.overallGrade)}`}>
+
+              <div
+                className={`text-3xl font-bold ${getGradeColor(performance.overallGrade)}`}
+              >
                 {performance.overallGrade}
               </div>
             </div>
           </div>
-          
+
           <div className="flex space-x-2">
             <Button
               variant="outline"
@@ -90,11 +94,7 @@ export function PerformanceReportCard({
               {showDetails ? 'Hide Details' : 'Show Details'}
             </Button>
             {onViewDetails && (
-              <Button
-                variant="primary"
-                size="sm"
-                onClick={onViewDetails}
-              >
+              <Button variant="primary" size="sm" onClick={onViewDetails}>
                 Full Report
               </Button>
             )}
@@ -111,21 +111,21 @@ export function PerformanceReportCard({
             </div>
             <div className="text-sm text-gray-600">Total Study Time</div>
           </div>
-          
+
           <div className="text-center">
             <div className="text-lg font-semibold text-gray-900">
               {performance.completedQuests}/{performance.totalQuests}
             </div>
             <div className="text-sm text-gray-600">Quests Completed</div>
           </div>
-          
+
           <div className="text-center">
             <div className="text-lg font-semibold text-gray-900">
               {performance.completedTopics}/{performance.totalTopics}
             </div>
             <div className="text-sm text-gray-600">Topics Completed</div>
           </div>
-          
+
           <div className="text-center">
             <div className="text-lg font-semibold text-gray-900">
               {formatStudyFrequency(performance.studyFrequency)}
@@ -142,8 +142,11 @@ export function PerformanceReportCard({
           <div className="flex border-b border-gray-200">
             {[
               { key: 'overview', label: 'Overview' },
-              { key: 'recommendations', label: `Recommendations (${activeRecommendations.length})` },
-              { key: 'insights', label: 'Insights' }
+              {
+                key: 'recommendations',
+                label: `Recommendations (${activeRecommendations.length})`,
+              },
+              { key: 'insights', label: 'Insights' },
             ].map(tab => (
               <button
                 key={tab.key}
@@ -162,9 +165,12 @@ export function PerformanceReportCard({
           {/* Tab Content */}
           <div className="p-6">
             {activeTab === 'overview' && (
-              <OverviewTab performance={performance} improvementPotential={improvementPotential} />
+              <OverviewTab
+                performance={performance}
+                improvementPotential={improvementPotential}
+              />
             )}
-            
+
             {activeTab === 'recommendations' && (
               <RecommendationsTab
                 highPriority={highPriorityRecommendations}
@@ -173,10 +179,10 @@ export function PerformanceReportCard({
                 onDismiss={dismissRecommendation}
               />
             )}
-            
+
             {activeTab === 'insights' && (
-              <InsightsTab 
-                insights={insights} 
+              <InsightsTab
+                insights={insights}
                 performance={performance}
                 improvementPotential={improvementPotential}
               />
@@ -195,7 +201,8 @@ export function PerformanceReportCard({
                 Intervention Required
               </h4>
               <p className="text-sm text-red-700">
-                {performance.interventions[0].title} - {performance.interventions[0].timeframe}
+                {performance.interventions[0].title} -{' '}
+                {performance.interventions[0].timeframe}
               </p>
             </div>
           </div>
@@ -225,10 +232,10 @@ export function PerformanceReportCard({
 /**
  * Overview Tab Component
  */
-function OverviewTab({ 
-  performance, 
-  improvementPotential 
-}: { 
+function OverviewTab({
+  performance,
+  improvementPotential,
+}: {
   performance: SubjectPerformance;
   improvementPotential: ReturnType<typeof calculateImprovementPotential>;
 }) {
@@ -236,22 +243,36 @@ function OverviewTab({
     <div className="space-y-6">
       {/* Performance Breakdown */}
       <div>
-        <h4 className="font-medium text-gray-900 mb-4">Performance Breakdown</h4>
+        <h4 className="font-medium text-gray-900 mb-4">
+          Performance Breakdown
+        </h4>
         <div className="space-y-3">
           {[
             { label: 'Study Time', score: performance.studyTimeScore },
-            { label: 'Quest Completion', score: performance.questCompletionScore },
+            {
+              label: 'Quest Completion',
+              score: performance.questCompletionScore,
+            },
             { label: 'Consistency', score: performance.consistencyScore },
-            { label: 'Deadline Adherence', score: performance.deadlineAdherenceScore }
+            {
+              label: 'Deadline Adherence',
+              score: performance.deadlineAdherenceScore,
+            },
           ].map(item => (
             <div key={item.label} className="flex items-center space-x-4">
               <div className="w-32 text-sm text-gray-600">{item.label}</div>
               <div className="flex-1">
-                <ProgressBar 
-                  value={item.score} 
+                <ProgressBar
+                  value={item.score}
                   max={100}
                   className="h-2"
-                  color={item.score >= 70 ? 'green' : item.score >= 50 ? 'yellow' : 'red'}
+                  color={
+                    item.score >= 70
+                      ? 'green'
+                      : item.score >= 50
+                        ? 'yellow'
+                        : 'red'
+                  }
                 />
               </div>
               <div className="w-12 text-sm font-medium text-gray-900">
@@ -264,18 +285,24 @@ function OverviewTab({
 
       {/* Improvement Potential */}
       <div>
-        <h4 className="font-medium text-gray-900 mb-4">Improvement Potential</h4>
+        <h4 className="font-medium text-gray-900 mb-4">
+          Improvement Potential
+        </h4>
         <div className="bg-blue-50 rounded-lg p-4">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-sm text-blue-700">Potential Score Increase</span>
+            <span className="text-sm text-blue-700">
+              Potential Score Increase
+            </span>
             <span className="text-lg font-bold text-blue-800">
               +{improvementPotential.potential} points
             </span>
           </div>
-          
+
           {improvementPotential.quickWins.length > 0 && (
             <div className="mb-3">
-              <h5 className="text-sm font-medium text-blue-800 mb-2">Quick Wins:</h5>
+              <h5 className="text-sm font-medium text-blue-800 mb-2">
+                Quick Wins:
+              </h5>
               <ul className="text-sm text-blue-700 space-y-1">
                 {improvementPotential.quickWins.map((win, index) => (
                   <li key={index}>• {win}</li>
@@ -283,10 +310,12 @@ function OverviewTab({
               </ul>
             </div>
           )}
-          
+
           {improvementPotential.longTermGoals.length > 0 && (
             <div>
-              <h5 className="text-sm font-medium text-blue-800 mb-2">Long-term Goals:</h5>
+              <h5 className="text-sm font-medium text-blue-800 mb-2">
+                Long-term Goals:
+              </h5>
               <ul className="text-sm text-blue-700 space-y-1">
                 {improvementPotential.longTermGoals.map((goal, index) => (
                   <li key={index}>• {goal}</li>
@@ -307,16 +336,20 @@ function RecommendationsTab({
   highPriority,
   mediumPriority,
   lowPriority,
-  onDismiss
+  onDismiss,
 }: {
   highPriority: any[];
   mediumPriority: any[];
   lowPriority: any[];
   onDismiss: (id: string) => void;
 }) {
-  const renderRecommendations = (recommendations: any[], title: string, color: string) => {
+  const renderRecommendations = (
+    recommendations: any[],
+    title: string,
+    color: string
+  ) => {
     if (recommendations.length === 0) return null;
-    
+
     return (
       <div className="mb-6">
         <h4 className={`font-medium mb-3 ${color}`}>{title}</h4>
@@ -355,15 +388,21 @@ function RecommendationsTab({
   return (
     <div>
       {renderRecommendations(highPriority, 'High Priority', 'text-red-700')}
-      {renderRecommendations(mediumPriority, 'Medium Priority', 'text-yellow-700')}
-      {renderRecommendations(lowPriority, 'Low Priority', 'text-green-700')}
-      
-      {highPriority.length === 0 && mediumPriority.length === 0 && lowPriority.length === 0 && (
-        <div className="text-center py-8 text-gray-500">
-          <div className="text-4xl mb-2">🎉</div>
-          <p>No recommendations at this time. Great job!</p>
-        </div>
+      {renderRecommendations(
+        mediumPriority,
+        'Medium Priority',
+        'text-yellow-700'
       )}
+      {renderRecommendations(lowPriority, 'Low Priority', 'text-green-700')}
+
+      {highPriority.length === 0 &&
+        mediumPriority.length === 0 &&
+        lowPriority.length === 0 && (
+          <div className="text-center py-8 text-gray-500">
+            <div className="text-4xl mb-2">🎉</div>
+            <p>No recommendations at this time. Great job!</p>
+          </div>
+        )}
     </div>
   );
 }
@@ -371,11 +410,11 @@ function RecommendationsTab({
 /**
  * Insights Tab Component
  */
-function InsightsTab({ 
-  insights, 
+function InsightsTab({
+  insights,
   performance,
-  improvementPotential 
-}: { 
+  improvementPotential: _improvementPotential,
+}: {
   insights: string[];
   performance: SubjectPerformance;
   improvementPotential: ReturnType<typeof calculateImprovementPotential>;
@@ -388,20 +427,27 @@ function InsightsTab({
         {insights.length > 0 ? (
           <div className="space-y-3">
             {insights.map((insight, index) => (
-              <div key={index} className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
+              <div
+                key={index}
+                className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg"
+              >
                 <div className="text-blue-500 mt-0.5">💡</div>
                 <p className="text-sm text-gray-700">{insight}</p>
               </div>
             ))}
           </div>
         ) : (
-          <p className="text-gray-500 text-sm">No specific insights available at this time.</p>
+          <p className="text-gray-500 text-sm">
+            No specific insights available at this time.
+          </p>
         )}
       </div>
 
       {/* Study Pattern Analysis */}
       <div>
-        <h4 className="font-medium text-gray-900 mb-4">Study Pattern Analysis</h4>
+        <h4 className="font-medium text-gray-900 mb-4">
+          Study Pattern Analysis
+        </h4>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="bg-gray-50 rounded-lg p-4">
             <h5 className="font-medium text-gray-800 mb-2">Session Length</h5>
@@ -410,7 +456,7 @@ function InsightsTab({
             </p>
             <p className="text-sm text-gray-600">Average per session</p>
           </div>
-          
+
           <div className="bg-gray-50 rounded-lg p-4">
             <h5 className="font-medium text-gray-800 mb-2">Study Frequency</h5>
             <p className="text-2xl font-bold text-gray-900">
@@ -428,7 +474,11 @@ function InsightsTab({
           <div className="bg-gray-50 rounded-lg p-4">
             <p className="text-sm text-gray-600">Last studied</p>
             <p className="text-lg font-medium text-gray-900">
-              {Math.floor((Date.now() - performance.lastStudied.getTime()) / (24 * 60 * 60 * 1000))} days ago
+              {Math.floor(
+                (Date.now() - performance.lastStudied.getTime()) /
+                  (24 * 60 * 60 * 1000)
+              )}{' '}
+              days ago
             </p>
           </div>
         </div>

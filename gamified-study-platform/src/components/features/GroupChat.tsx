@@ -1,15 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Send, 
-  Smile, 
-  Paperclip, 
-  MoreVertical, 
+import {
+  Send,
+  Smile,
+  Paperclip,
+  MoreVertical,
   Users,
   Crown,
   Shield,
   User,
-  Clock
+  Clock,
 } from 'lucide-react';
 import { useSocialStore } from '../../store/socialStore';
 import type { GroupMessage, StudyGroup } from '../../types';
@@ -21,7 +21,8 @@ interface GroupChatProps {
 }
 
 const GroupChat: React.FC<GroupChatProps> = ({ group, className = '' }) => {
-  const { messages, sendMessage, fetchGroupMessages, isLoading } = useSocialStore();
+  const { messages, sendMessage, fetchGroupMessages, isLoading } =
+    useSocialStore();
   const [newMessage, setNewMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -52,7 +53,7 @@ const GroupChat: React.FC<GroupChatProps> = ({ group, className = '' }) => {
     }
   };
 
-  const handleKeyPress = (e: React.KeyEvent) => {
+  const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage(e);
@@ -86,17 +87,22 @@ const GroupChat: React.FC<GroupChatProps> = ({ group, className = '' }) => {
     }
   };
 
-  const groupedMessages = messages.reduce((groups: GroupMessage[][], message, index) => {
-    if (index === 0 || messages[index - 1].userId !== message.userId) {
-      groups.push([message]);
-    } else {
-      groups[groups.length - 1].push(message);
-    }
-    return groups;
-  }, []);
+  const groupedMessages = messages.reduce(
+    (groups: GroupMessage[][], message, index) => {
+      if (index === 0 || messages[index - 1].userId !== message.userId) {
+        groups.push([message]);
+      } else {
+        groups[groups.length - 1].push(message);
+      }
+      return groups;
+    },
+    []
+  );
 
   return (
-    <div className={`flex flex-col h-full bg-white rounded-lg shadow-sm ${className}`}>
+    <div
+      className={`flex flex-col h-full bg-white rounded-lg shadow-sm ${className}`}
+    >
       {/* Chat Header */}
       <div className="flex items-center justify-between p-4 border-b border-gray-200">
         <div className="flex items-center gap-3">
@@ -106,7 +112,8 @@ const GroupChat: React.FC<GroupChatProps> = ({ group, className = '' }) => {
           <div>
             <h3 className="font-medium text-gray-900">{group.name}</h3>
             <p className="text-sm text-gray-500">
-              {group.stats.activeMembers} of {group.stats.totalMembers} members online
+              {group.stats.activeMembers} of {group.stats.totalMembers} members
+              online
             </p>
           </div>
         </div>
@@ -124,7 +131,9 @@ const GroupChat: React.FC<GroupChatProps> = ({ group, className = '' }) => {
         ) : messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-32 text-center">
             <Users className="w-12 h-12 text-gray-300 mb-3" />
-            <h4 className="text-lg font-medium text-gray-900 mb-1">No messages yet</h4>
+            <h4 className="text-lg font-medium text-gray-900 mb-1">
+              No messages yet
+            </h4>
             <p className="text-gray-600 text-sm">
               Be the first to start the conversation!
             </p>
@@ -146,43 +155,51 @@ const GroupChat: React.FC<GroupChatProps> = ({ group, className = '' }) => {
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className={`font-medium text-sm ${getRoleColor(getMemberRole(messageGroup[0].userId))}`}>
+                    <span
+                      className={`font-medium text-sm ${getRoleColor(getMemberRole(messageGroup[0].userId))}`}
+                    >
                       {messageGroup[0].username}
                     </span>
                     {getRoleIcon(getMemberRole(messageGroup[0].userId))}
                     <span className="text-xs text-gray-500 flex items-center gap-1">
                       <Clock className="w-3 h-3" />
-                      {formatDistanceToNow(messageGroup[0].timestamp, { addSuffix: true })}
+                      {formatDistanceToNow(messageGroup[0].timestamp, {
+                        addSuffix: true,
+                      })}
                     </span>
                   </div>
                 </div>
 
                 {/* Messages in Group */}
-                {messageGroup.map((message) => (
+                {messageGroup.map(message => (
                   <motion.div
                     key={message.id}
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
                     className="ml-10"
                   >
-                    <div className={`inline-block max-w-xs lg:max-w-md px-3 py-2 rounded-lg ${
-                      message.type === 'system' 
-                        ? 'bg-gray-100 text-gray-600 text-sm italic'
-                        : 'bg-gray-100 text-gray-900'
-                    }`}>
+                    <div
+                      className={`inline-block max-w-xs lg:max-w-md px-3 py-2 rounded-lg ${
+                        message.type === 'system'
+                          ? 'bg-gray-100 text-gray-600 text-sm italic'
+                          : 'bg-gray-100 text-gray-900'
+                      }`}
+                    >
                       {message.content}
                     </div>
-                    
+
                     {/* Message Reactions */}
                     {message.reactions.length > 0 && (
                       <div className="flex gap-1 mt-1">
-                        {message.reactions.map((reaction) => (
+                        {message.reactions.map(reaction => (
                           <button
                             key={reaction.emoji}
                             className="flex items-center gap-1 px-2 py-1 bg-gray-50 hover:bg-gray-100 rounded-full text-xs transition-colors"
                           >
                             <span>{reaction.emoji}</span>
-                            <span className="text-gray-600">{reaction.count}</span>
+                            <span className="text-gray-600">
+                              {reaction.count}
+                            </span>
                           </button>
                         ))}
                       </div>
@@ -205,7 +222,7 @@ const GroupChat: React.FC<GroupChatProps> = ({ group, className = '' }) => {
                 ref={inputRef}
                 type="text"
                 value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
+                onChange={e => setNewMessage(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder="Type a message..."
                 className="w-full px-4 py-2 pr-20 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none"
@@ -235,11 +252,9 @@ const GroupChat: React.FC<GroupChatProps> = ({ group, className = '' }) => {
             <Send className="w-4 h-4" />
           </button>
         </form>
-        
+
         {isTyping && (
-          <div className="mt-2 text-xs text-gray-500">
-            Someone is typing...
-          </div>
+          <div className="mt-2 text-xs text-gray-500">Someone is typing...</div>
         )}
       </div>
     </div>

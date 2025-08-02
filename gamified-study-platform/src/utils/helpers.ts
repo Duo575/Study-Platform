@@ -1,6 +1,10 @@
 // Utility helper functions
 
-import { LEVEL_XP_REQUIREMENTS, XP_REWARDS, DIFFICULTY_MULTIPLIERS } from './constants';
+import {
+  LEVEL_XP_REQUIREMENTS,
+  XP_REWARDS,
+  DIFFICULTY_MULTIPLIERS,
+} from './constants';
 import type { QuestDifficulty } from '../types';
 
 /**
@@ -14,7 +18,7 @@ export function calculateXP(
   const baseXP = XP_REWARDS[taskType];
   const difficultyMultiplier = DIFFICULTY_MULTIPLIERS[difficulty];
   const timeMultiplier = Math.max(0.5, timeSpentMinutes / 30); // Minimum 0.5x multiplier
-  
+
   return Math.floor(baseXP * difficultyMultiplier * timeMultiplier);
 }
 
@@ -41,12 +45,13 @@ export function calculateLevelProgress(totalXP: number): {
 } {
   const level = calculateLevel(totalXP);
   const currentLevelXP = LEVEL_XP_REQUIREMENTS[level] || 0;
-  const nextLevelXP = LEVEL_XP_REQUIREMENTS[level + 1] || LEVEL_XP_REQUIREMENTS[level] + 1000;
-  
+  const nextLevelXP =
+    LEVEL_XP_REQUIREMENTS[level + 1] || LEVEL_XP_REQUIREMENTS[level] + 1000;
+
   const currentXP = totalXP - currentLevelXP;
   const xpToNextLevel = nextLevelXP - totalXP;
   const progressPercentage = (currentXP / (nextLevelXP - currentLevelXP)) * 100;
-  
+
   return {
     level,
     currentXP,
@@ -62,14 +67,14 @@ export function formatDuration(minutes: number): string {
   if (minutes < 60) {
     return `${minutes}m`;
   }
-  
+
   const hours = Math.floor(minutes / 60);
   const remainingMinutes = minutes % 60;
-  
+
   if (remainingMinutes === 0) {
     return `${hours}h`;
   }
-  
+
   return `${hours}h ${remainingMinutes}m`;
 }
 
@@ -79,26 +84,26 @@ export function formatDuration(minutes: number): string {
 export function formatRelativeDate(date: Date): string {
   const now = new Date();
   const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-  
+
   if (diffInSeconds < 60) {
     return 'just now';
   }
-  
+
   const diffInMinutes = Math.floor(diffInSeconds / 60);
   if (diffInMinutes < 60) {
     return `${diffInMinutes}m ago`;
   }
-  
+
   const diffInHours = Math.floor(diffInMinutes / 60);
   if (diffInHours < 24) {
     return `${diffInHours}h ago`;
   }
-  
+
   const diffInDays = Math.floor(diffInHours / 24);
   if (diffInDays < 7) {
     return `${diffInDays}d ago`;
   }
-  
+
   return date.toLocaleDateString();
 }
 
@@ -107,8 +112,16 @@ export function formatRelativeDate(date: Date): string {
  */
 export function getRandomCourseColor(): string {
   const colors = [
-    '#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6',
-    '#F97316', '#06B6D4', '#84CC16', '#EC4899', '#6B7280'
+    '#3B82F6',
+    '#10B981',
+    '#F59E0B',
+    '#EF4444',
+    '#8B5CF6',
+    '#F97316',
+    '#06B6D4',
+    '#84CC16',
+    '#EC4899',
+    '#6B7280',
   ];
   return colors[Math.floor(Math.random() * colors.length)];
 }
@@ -138,11 +151,15 @@ export function clamp(value: number, min: number, max: number): number {
 /**
  * Calculate pet happiness decay based on time since last interaction
  */
-export function calculatePetDecay(lastInteraction: Date, currentHappiness: number): number {
+export function calculatePetDecay(
+  lastInteraction: Date,
+  currentHappiness: number
+): number {
   const now = new Date();
-  const hoursSinceInteraction = (now.getTime() - lastInteraction.getTime()) / (1000 * 60 * 60);
+  const hoursSinceInteraction =
+    (now.getTime() - lastInteraction.getTime()) / (1000 * 60 * 60);
   const decayAmount = Math.floor(hoursSinceInteraction * 2); // 2 points per hour
-  
+
   return clamp(currentHappiness - decayAmount, 0, 100);
 }
 
@@ -151,7 +168,8 @@ export function calculatePetDecay(lastInteraction: Date, currentHappiness: numbe
  */
 export function isStreakMaintained(lastActivity: Date): boolean {
   const now = new Date();
-  const hoursSinceActivity = (now.getTime() - lastActivity.getTime()) / (1000 * 60 * 60);
+  const hoursSinceActivity =
+    (now.getTime() - lastActivity.getTime()) / (1000 * 60 * 60);
   return hoursSinceActivity <= 24;
 }
 
@@ -160,20 +178,24 @@ export function isStreakMaintained(lastActivity: Date): boolean {
  */
 export function calculateStreakDays(studySessions: Date[]): number {
   if (studySessions.length === 0) return 0;
-  
+
   // Sort sessions by date (most recent first)
-  const sortedSessions = studySessions.sort((a, b) => b.getTime() - a.getTime());
-  
+  const sortedSessions = studySessions.sort(
+    (a, b) => b.getTime() - a.getTime()
+  );
+
   let streakDays = 0;
-  let currentDate = new Date();
+  const currentDate = new Date();
   currentDate.setHours(0, 0, 0, 0);
-  
+
   for (const session of sortedSessions) {
     const sessionDate = new Date(session);
     sessionDate.setHours(0, 0, 0, 0);
-    
-    const daysDiff = Math.floor((currentDate.getTime() - sessionDate.getTime()) / (1000 * 60 * 60 * 24));
-    
+
+    const daysDiff = Math.floor(
+      (currentDate.getTime() - sessionDate.getTime()) / (1000 * 60 * 60 * 24)
+    );
+
     if (daysDiff === streakDays) {
       streakDays++;
       currentDate.setDate(currentDate.getDate() - 1);
@@ -181,7 +203,7 @@ export function calculateStreakDays(studySessions: Date[]): number {
       break;
     }
   }
-  
+
   return streakDays;
 }
 
@@ -216,12 +238,12 @@ export function getPriorityColor(priority: 'low' | 'medium' | 'high'): string {
 /**
  * Debounce function
  */
-export function debounce<T extends (...args: any[]) => any>(
+export function debounce<T extends (...args: unknown[]) => unknown>(
   func: T,
   wait: number
 ): (...args: Parameters<T>) => void {
   let timeout: NodeJS.Timeout;
-  
+
   return (...args: Parameters<T>) => {
     clearTimeout(timeout);
     timeout = setTimeout(() => func(...args), wait);
@@ -240,7 +262,7 @@ export const storage = {
       return defaultValue;
     }
   },
-  
+
   set: <T>(key: string, value: T): void => {
     try {
       localStorage.setItem(key, JSON.stringify(value));
@@ -248,7 +270,7 @@ export const storage = {
       console.error('Failed to save to localStorage:', error);
     }
   },
-  
+
   remove: (key: string): void => {
     try {
       localStorage.removeItem(key);

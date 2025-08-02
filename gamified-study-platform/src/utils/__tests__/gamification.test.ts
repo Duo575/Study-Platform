@@ -9,7 +9,7 @@ import {
   calculateTodoXP,
   calculateStreakBonus,
   updateGameStats,
-  isStreakActive
+  isStreakActive,
 } from '../gamification';
 
 describe('Gamification Utils', () => {
@@ -155,13 +155,13 @@ describe('Gamification Utils', () => {
         studyHours: 10,
         questsCompleted: 3,
         streakMaintained: true,
-        xpEarned: 150
-      }
+        xpEarned: 150,
+      },
     };
 
     it('should update stats without level up', () => {
       const result = updateGameStats(mockGameStats, 50);
-      
+
       expect(result.leveledUp).toBe(false);
       expect(result.newLevel).toBe(null);
       expect(result.stats.totalXP).toBe(200);
@@ -172,7 +172,7 @@ describe('Gamification Utils', () => {
 
     it('should detect level up when XP threshold is crossed', () => {
       const result = updateGameStats(mockGameStats, 300);
-      
+
       expect(result.leveledUp).toBe(true);
       expect(result.newLevel).toBe(3);
       expect(result.stats.totalXP).toBe(450);
@@ -183,7 +183,7 @@ describe('Gamification Utils', () => {
 
     it('should handle multiple level ups', () => {
       const result = updateGameStats(mockGameStats, 1000);
-      
+
       expect(result.leveledUp).toBe(true);
       expect(result.newLevel).toBeGreaterThan(3);
       expect(result.stats.totalXP).toBe(1150);
@@ -206,7 +206,7 @@ describe('Gamification Utils', () => {
     it('should handle string dates', () => {
       const now = new Date();
       const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-      
+
       expect(isStreakActive(now.toISOString())).toBe(true);
       expect(isStreakActive(yesterday.toISOString())).toBe(true);
     });
@@ -215,10 +215,10 @@ describe('Gamification Utils', () => {
       const now = new Date();
       const justBeforeMidnight = new Date(now);
       justBeforeMidnight.setHours(23, 59, 59, 999);
-      
+
       const justAfterMidnight = new Date(now);
       justAfterMidnight.setHours(0, 0, 0, 1);
-      
+
       expect(isStreakActive(justBeforeMidnight)).toBe(true);
       expect(isStreakActive(justAfterMidnight)).toBe(true);
     });
@@ -243,7 +243,7 @@ describe('Gamification Utils', () => {
     });
 
     it('should handle invalid difficulty levels gracefully', () => {
-      // @ts-ignore - Testing invalid input
+      // @ts-expect-error - Testing invalid input
       expect(calculateStudySessionXP(30, 'invalid')).toBe(30); // Should default to medium
     });
   });

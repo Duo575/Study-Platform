@@ -1,57 +1,70 @@
-import React, { useState } from 'react'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { Link } from 'react-router-dom'
-import { useAuth } from '../../contexts/AuthContext'
-import { registerSchema, type RegisterFormData } from '../../lib/validations'
-import { Input } from '../ui/Input'
-import { Button } from '../ui/Button'
+import React, { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Link } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
+import { registerSchema, type RegisterFormData } from '../../lib/validations';
+import { Input } from '../ui/Input';
+import { Button } from '../ui/Button';
 
 interface RegisterFormProps {
-  onSuccess?: () => void
+  onSuccess?: () => void;
 }
 
 export function RegisterForm({ onSuccess }: RegisterFormProps) {
-  const { signUp } = useAuth()
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState(false)
+  const { signUp } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
 
   const {
     register,
     handleSubmit,
-    formState: { errors }
+    formState: { errors },
   } = useForm<RegisterFormData>({
-    resolver: zodResolver(registerSchema)
-  })
+    resolver: zodResolver(registerSchema),
+  });
 
   const onSubmit = async (data: RegisterFormData) => {
-    setLoading(true)
-    setError(null)
+    setLoading(true);
+    setError(null);
 
     try {
-      await signUp(data)
-      setSuccess(true)
-      onSuccess?.()
+      await signUp(data);
+      setSuccess(true);
+      onSuccess?.();
     } catch (err: any) {
-      setError(err.message || 'An error occurred during registration')
+      setError(err.message || 'An error occurred during registration');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   if (success) {
     return (
       <div className="w-full max-w-md mx-auto">
         <div className="bg-white py-8 px-6 shadow-lg rounded-lg text-center">
           <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            <svg
+              className="w-8 h-8 text-green-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M5 13l4 4L19 7"
+              />
             </svg>
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Check Your Email</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            Check Your Email
+          </h2>
           <p className="text-gray-600 mb-6">
-            We've sent you a confirmation email. Please click the link in the email to verify your account.
+            We've sent you a confirmation email. Please click the link in the
+            email to verify your account.
           </p>
           <Link
             to="/login"
@@ -61,7 +74,7 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
           </Link>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -69,7 +82,9 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
       <div className="bg-white py-8 px-6 shadow-lg rounded-lg">
         <div className="text-center mb-6">
           <h2 className="text-2xl font-bold text-gray-900">Create Account</h2>
-          <p className="text-gray-600 mt-2">Start your gamified study journey</p>
+          <p className="text-gray-600 mt-2">
+            Start your gamified study journey
+          </p>
         </div>
 
         {error && (
@@ -113,11 +128,38 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
             {...register('confirmPassword')}
           />
 
-          <Button
-            type="submit"
-            loading={loading}
-            className="w-full"
-          >
+          <div className="flex items-start">
+            <input
+              type="checkbox"
+              id="acceptTerms"
+              className="mt-1 h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+              {...register('acceptTerms')}
+            />
+            <label
+              htmlFor="acceptTerms"
+              className="ml-2 block text-sm text-gray-900"
+            >
+              I agree to the{' '}
+              <a
+                href="/terms"
+                className="text-primary-600 hover:text-primary-500"
+              >
+                Terms of Service
+              </a>{' '}
+              and{' '}
+              <a
+                href="/privacy"
+                className="text-primary-600 hover:text-primary-500"
+              >
+                Privacy Policy
+              </a>
+            </label>
+          </div>
+          {errors.acceptTerms && (
+            <p className="text-sm text-red-600">{errors.acceptTerms.message}</p>
+          )}
+
+          <Button type="submit" loading={loading} className="w-full">
             Create Account
           </Button>
         </form>
@@ -135,5 +177,5 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
         </div>
       </div>
     </div>
-  )
+  );
 }

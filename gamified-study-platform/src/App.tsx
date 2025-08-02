@@ -63,6 +63,9 @@ const StudyGroupsPage = React.lazy(() => import('./pages/StudyGroupsPage'));
 const RecommendationsPage = React.lazy(
   () => import('./pages/RecommendationsPage')
 );
+const LearningRecommendationDemo = React.lazy(
+  () => import('./pages/LearningRecommendationDemo')
+);
 const DataExportPage = React.lazy(() => import('./pages/DataExportPage'));
 const QuestsPage = React.lazy(() => import('./pages/QuestsPage'));
 
@@ -265,6 +268,18 @@ function App() {
                               <Suspense fallback={<LoadingSpinner />}>
                                 <RecommendationsPage />
                               </Suspense>
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="/learning-recommendations"
+                          element={
+                            <ProtectedRoute>
+                              <AppLayout>
+                                <Suspense fallback={<LoadingSpinner />}>
+                                  <LearningRecommendationDemo />
+                                </Suspense>
+                              </AppLayout>
                             </ProtectedRoute>
                           }
                         />

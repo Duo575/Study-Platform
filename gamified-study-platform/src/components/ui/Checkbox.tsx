@@ -2,11 +2,13 @@ import React from 'react';
 
 interface CheckboxProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
+  description?: string;
   error?: string;
 }
 
 export const Checkbox: React.FC<CheckboxProps> = ({
   label,
+  description,
   error,
   className = '',
   ...props
@@ -30,6 +32,9 @@ export const Checkbox: React.FC<CheckboxProps> = ({
           >
             {label}
           </label>
+          {description && (
+            <p className="text-gray-500 text-xs mt-1">{description}</p>
+          )}
           {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
         </div>
       )}

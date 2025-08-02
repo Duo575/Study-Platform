@@ -1,12 +1,12 @@
-import type { 
-  StudyGroup, 
-  GroupMember, 
-  GroupChallenge, 
-  StudyRoom, 
+import type {
+  StudyGroup,
+  GroupMember,
+  GroupChallenge,
+  StudyRoom,
   GroupMessage,
   LeaderboardType,
   ChallengeType,
-  ParticipantStatus 
+  ParticipantStatus,
 } from '../types';
 
 /**
@@ -24,11 +24,14 @@ export const generateInviteCode = (): string => {
 /**
  * Calculate group activity level based on member activity
  */
-export const calculateGroupActivityLevel = (group: StudyGroup): 'high' | 'medium' | 'low' => {
-  const activityRate = group.stats.totalMembers > 0 
-    ? group.stats.activeMembers / group.stats.totalMembers 
-    : 0;
-  
+export const calculateGroupActivityLevel = (
+  group: StudyGroup
+): 'high' | 'medium' | 'low' => {
+  const activityRate =
+    group.stats.totalMembers > 0
+      ? group.stats.activeMembers / group.stats.totalMembers
+      : 0;
+
   if (activityRate >= 0.7) return 'high';
   if (activityRate >= 0.4) return 'medium';
   return 'low';
@@ -37,22 +40,32 @@ export const calculateGroupActivityLevel = (group: StudyGroup): 'high' | 'medium
 /**
  * Get activity level color for UI display
  */
-export const getActivityLevelColor = (level: 'high' | 'medium' | 'low'): string => {
+export const getActivityLevelColor = (
+  level: 'high' | 'medium' | 'low'
+): string => {
   switch (level) {
-    case 'high': return 'text-green-600 bg-green-100';
-    case 'medium': return 'text-yellow-600 bg-yellow-100';
-    case 'low': return 'text-red-600 bg-red-100';
+    case 'high':
+      return 'text-green-600 bg-green-100';
+    case 'medium':
+      return 'text-yellow-600 bg-yellow-100';
+    case 'low':
+      return 'text-red-600 bg-red-100';
   }
 };
 
 /**
  * Get activity level text for UI display
  */
-export const getActivityLevelText = (level: 'high' | 'medium' | 'low'): string => {
+export const getActivityLevelText = (
+  level: 'high' | 'medium' | 'low'
+): string => {
   switch (level) {
-    case 'high': return 'Very Active';
-    case 'medium': return 'Moderately Active';
-    case 'low': return 'Low Activity';
+    case 'high':
+      return 'Very Active';
+    case 'medium':
+      return 'Moderately Active';
+    case 'low':
+      return 'Low Activity';
   }
 };
 
@@ -61,43 +74,47 @@ export const getActivityLevelText = (level: 'high' | 'medium' | 'low'): string =
  */
 export const calculateContributionScore = (member: GroupMember): number => {
   const { stats } = member;
-  
+
   // Weight different factors
   const xpWeight = 0.3;
   const studyTimeWeight = 0.25;
   const questsWeight = 0.2;
   const streakWeight = 0.15;
   const weeklyWeight = 0.1;
-  
+
   // Normalize values (assuming reasonable maximums)
   const normalizedXP = Math.min(stats.totalXP / 10000, 1);
   const normalizedStudyTime = Math.min(stats.studyHours / 100, 1);
   const normalizedQuests = Math.min(stats.questsCompleted / 50, 1);
   const normalizedStreak = Math.min(stats.streakDays / 30, 1);
   const normalizedWeekly = Math.min(stats.weeklyProgress.xpEarned / 1000, 1);
-  
-  const score = (
-    normalizedXP * xpWeight +
-    normalizedStudyTime * studyTimeWeight +
-    normalizedQuests * questsWeight +
-    normalizedStreak * streakWeight +
-    normalizedWeekly * weeklyWeight
-  ) * 100;
-  
+
+  const score =
+    (normalizedXP * xpWeight +
+      normalizedStudyTime * studyTimeWeight +
+      normalizedQuests * questsWeight +
+      normalizedStreak * streakWeight +
+      normalizedWeekly * weeklyWeight) *
+    100;
+
   return Math.round(score);
 };
 
 /**
  * Format leaderboard values for display
  */
-export const formatLeaderboardValue = (value: number, type: LeaderboardType): string => {
+export const formatLeaderboardValue = (
+  value: number,
+  type: LeaderboardType
+): string => {
   switch (type) {
     case 'xp':
       return value.toLocaleString();
-    case 'study_time':
+    case 'study_time': {
       const hours = Math.floor(value / 60);
       const minutes = value % 60;
       return `${hours}h ${minutes}m`;
+    }
     case 'quests_completed':
       return value.toString();
     case 'streak_days':
@@ -130,14 +147,21 @@ export const getChallengeTypeInfo = (type: ChallengeType) => {
 /**
  * Calculate challenge progress percentage
  */
-export const calculateChallengeProgress = (challenge: GroupChallenge): number => {
+export const calculateChallengeProgress = (
+  challenge: GroupChallenge
+): number => {
   if (challenge.goal.isCollective) {
-    const totalProgress = challenge.participants.reduce((sum, p) => sum + p.progress, 0);
+    const totalProgress = challenge.participants.reduce(
+      (sum, p) => sum + p.progress,
+      0
+    );
     return Math.min((totalProgress / challenge.goal.target) * 100, 100);
   } else {
-    const completedParticipants = challenge.participants.filter(p => p.completed).length;
-    return challenge.participants.length > 0 
-      ? (completedParticipants / challenge.participants.length) * 100 
+    const completedParticipants = challenge.participants.filter(
+      p => p.completed
+    ).length;
+    return challenge.participants.length > 0
+      ? (completedParticipants / challenge.participants.length) * 100
       : 0;
   }
 };
@@ -163,14 +187,17 @@ export const getParticipantStatusInfo = (status: ParticipantStatus) => {
  */
 export const isUserActive = (lastActivity?: Date): boolean => {
   if (!lastActivity) return false;
-  const daysSinceActive = (Date.now() - lastActivity.getTime()) / (1000 * 60 * 60 * 24);
+  const daysSinceActive =
+    (Date.now() - lastActivity.getTime()) / (1000 * 60 * 60 * 24);
   return daysSinceActive <= 7; // Active if seen within last 7 days
 };
 
 /**
  * Group messages by sender for better chat display
  */
-export const groupMessagesBySender = (messages: GroupMessage[]): GroupMessage[][] => {
+export const groupMessagesBySender = (
+  messages: GroupMessage[]
+): GroupMessage[][] => {
   return messages.reduce((groups: GroupMessage[][], message, index) => {
     if (index === 0 || messages[index - 1].userId !== message.userId) {
       groups.push([message]);
@@ -235,14 +262,19 @@ export const calculateGroupXP = (members: GroupMember[]): number => {
  */
 export const calculateAverageGroupLevel = (members: GroupMember[]): number => {
   if (members.length === 0) return 0;
-  const totalLevels = members.reduce((total, member) => total + member.stats.level, 0);
+  const totalLevels = members.reduce(
+    (total, member) => total + member.stats.level,
+    0
+  );
   return totalLevels / members.length;
 };
 
 /**
  * Get group size category
  */
-export const getGroupSizeCategory = (memberCount: number): 'small' | 'medium' | 'large' => {
+export const getGroupSizeCategory = (
+  memberCount: number
+): 'small' | 'medium' | 'large' => {
   if (memberCount <= 5) return 'small';
   if (memberCount <= 15) return 'medium';
   return 'large';
@@ -251,7 +283,9 @@ export const getGroupSizeCategory = (memberCount: number): 'small' | 'medium' | 
 /**
  * Check if user can perform admin actions in group
  */
-export const canPerformAdminActions = (userRole: GroupMember['role']): boolean => {
+export const canPerformAdminActions = (
+  userRole: GroupMember['role']
+): boolean => {
   return ['owner', 'admin'].includes(userRole);
 };
 
@@ -269,15 +303,17 @@ export const sortMembersByRole = (members: GroupMember[]): GroupMember[] => {
 export const getTimeUntilChallengeEnd = (endDate: Date): string => {
   const now = new Date();
   const timeDiff = endDate.getTime() - now.getTime();
-  
+
   if (timeDiff <= 0) return 'Ended';
-  
+
   const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
-  const hours = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-  
+  const hours = Math.floor(
+    (timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+  );
+
   if (days > 0) return `${days}d ${hours}h`;
   if (hours > 0) return `${hours}h`;
-  
+
   const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
   return `${minutes}m`;
 };
@@ -299,7 +335,7 @@ export const getRecommendedGroupSettings = (isPrivate: boolean) => {
       challengeStarted: true,
       challengeCompleted: true,
       milestoneReached: true,
-      studySessionStarted: false
-    }
+      studySessionStarted: false,
+    },
   };
 };

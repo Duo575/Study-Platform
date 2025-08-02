@@ -185,7 +185,7 @@ class ErrorTracker {
   }
 
   // Flush error queue to remote service
-  private async flushErrorQueue() {
+  public async flushErrorQueue() {
     if (this.errorQueue.length === 0) return;
 
     const errors = [...this.errorQueue];

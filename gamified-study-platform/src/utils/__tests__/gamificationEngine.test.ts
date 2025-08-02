@@ -14,23 +14,39 @@ import {
   validateDailyActivity,
   formatXP,
   formatLevel,
-  getProgressPercentage
+  getProgressPercentage,
 } from '../gamificationEngine';
-import { XP_REWARDS, DIFFICULTY_MULTIPLIERS, TIME_MULTIPLIERS, LEVEL_XP_REQUIREMENTS } from '../constants';
+import {
+  XP_REWARDS,
+  DIFFICULTY_MULTIPLIERS,
+  TIME_MULTIPLIERS,
+  LEVEL_XP_REQUIREMENTS,
+} from '../constants';
 import type { GameStats } from '../../types';
 
 describe('Gamification Engine', () => {
   describe('Study Session XP Calculation', () => {
     it('should calculate XP with base and time components', () => {
       const result = calculateStudySessionXP(30, 'medium', false, 100);
-      const expected = Math.floor((XP_REWARDS.STUDY_SESSION_BASE + 30 * XP_REWARDS.STUDY_SESSION_PER_MINUTE) * DIFFICULTY_MULTIPLIERS.medium * TIME_MULTIPLIERS.MEDIUM_SESSION);
+      const expected = Math.floor(
+        (XP_REWARDS.STUDY_SESSION_BASE +
+          30 * XP_REWARDS.STUDY_SESSION_PER_MINUTE) *
+          DIFFICULTY_MULTIPLIERS.medium *
+          TIME_MULTIPLIERS.MEDIUM_SESSION
+      );
       expect(result).toBe(expected);
     });
 
     it('should apply time multipliers based on session length', () => {
-      expect(calculateStudySessionXP(10, 'medium')).toBeLessThan(calculateStudySessionXP(20, 'medium'));
-      expect(calculateStudySessionXP(50, 'medium')).toBeGreaterThan(calculateStudySessionXP(40, 'medium'));
-      expect(calculateStudySessionXP(100, 'medium')).toBeGreaterThan(calculateStudySessionXP(80, 'medium'));
+      expect(calculateStudySessionXP(10, 'medium')).toBeLessThan(
+        calculateStudySessionXP(20, 'medium')
+      );
+      expect(calculateStudySessionXP(50, 'medium')).toBeGreaterThan(
+        calculateStudySessionXP(40, 'medium')
+      );
+      expect(calculateStudySessionXP(100, 'medium')).toBeGreaterThan(
+        calculateStudySessionXP(80, 'medium')
+      );
     });
 
     it('should apply difficulty multipliers correctly', () => {
@@ -66,10 +82,18 @@ describe('Gamification Engine', () => {
 
   describe('Quest XP Calculation', () => {
     it('should calculate XP based on quest type', () => {
-      expect(calculateQuestXP('daily')).toBe(Math.floor(XP_REWARDS.DAILY_QUEST * DIFFICULTY_MULTIPLIERS.medium));
-      expect(calculateQuestXP('weekly')).toBe(Math.floor(XP_REWARDS.WEEKLY_QUEST * DIFFICULTY_MULTIPLIERS.medium));
-      expect(calculateQuestXP('milestone')).toBe(Math.floor(XP_REWARDS.MILESTONE_QUEST * DIFFICULTY_MULTIPLIERS.medium));
-      expect(calculateQuestXP('bonus')).toBe(Math.floor(XP_REWARDS.BONUS_QUEST * DIFFICULTY_MULTIPLIERS.medium));
+      expect(calculateQuestXP('daily')).toBe(
+        Math.floor(XP_REWARDS.DAILY_QUEST * DIFFICULTY_MULTIPLIERS.medium)
+      );
+      expect(calculateQuestXP('weekly')).toBe(
+        Math.floor(XP_REWARDS.WEEKLY_QUEST * DIFFICULTY_MULTIPLIERS.medium)
+      );
+      expect(calculateQuestXP('milestone')).toBe(
+        Math.floor(XP_REWARDS.MILESTONE_QUEST * DIFFICULTY_MULTIPLIERS.medium)
+      );
+      expect(calculateQuestXP('bonus')).toBe(
+        Math.floor(XP_REWARDS.BONUS_QUEST * DIFFICULTY_MULTIPLIERS.medium)
+      );
     });
 
     it('should apply difficulty multipliers', () => {
@@ -89,9 +113,13 @@ describe('Gamification Engine', () => {
     });
 
     it('should handle unknown quest types gracefully', () => {
-      // @ts-ignore - Testing unknown quest type
+      // @ts-expect-error - Testing unknown quest type
       const result = calculateQuestXP('unknown', 'medium');
-      expect(result).toBe(Math.floor(XP_REWARDS.QUEST_COMPLETION_BASE * DIFFICULTY_MULTIPLIERS.medium));
+      expect(result).toBe(
+        Math.floor(
+          XP_REWARDS.QUEST_COMPLETION_BASE * DIFFICULTY_MULTIPLIERS.medium
+        )
+      );
     });
   });
 
@@ -101,8 +129,12 @@ describe('Gamification Engine', () => {
       const onTimeXP = calculateTodoXP(60, false, true);
       const lateXP = calculateTodoXP(60, false, false);
 
-      expect(earlyXP).toBe(XP_REWARDS.TODO_COMPLETION_EARLY + Math.floor(60 / 30) * 2);
-      expect(onTimeXP).toBe(XP_REWARDS.TODO_COMPLETION_ON_TIME + Math.floor(60 / 30) * 2);
+      expect(earlyXP).toBe(
+        XP_REWARDS.TODO_COMPLETION_EARLY + Math.floor(60 / 30) * 2
+      );
+      expect(onTimeXP).toBe(
+        XP_REWARDS.TODO_COMPLETION_ON_TIME + Math.floor(60 / 30) * 2
+      );
       expect(lateXP).toBe(XP_REWARDS.TODO_COMPLETION + Math.floor(60 / 30) * 2);
     });
 
@@ -111,7 +143,9 @@ describe('Gamification Engine', () => {
       const longTask = calculateTodoXP(60, false, true);
 
       expect(longTask).toBeGreaterThan(shortTask);
-      expect(longTask - shortTask).toBe(Math.floor(60 / 30) * 2 - Math.floor(15 / 30) * 2);
+      expect(longTask - shortTask).toBe(
+        Math.floor(60 / 30) * 2 - Math.floor(15 / 30) * 2
+      );
     });
   });
 
@@ -133,7 +167,8 @@ describe('Gamification Engine', () => {
     });
 
     it('should handle XP beyond predefined levels', () => {
-      const highXP = LEVEL_XP_REQUIREMENTS[LEVEL_XP_REQUIREMENTS.length - 1] + 10000;
+      const highXP =
+        LEVEL_XP_REQUIREMENTS[LEVEL_XP_REQUIREMENTS.length - 1] + 10000;
       const level = calculateLevelFromXP(highXP);
       expect(level).toBeGreaterThan(LEVEL_XP_REQUIREMENTS.length - 1);
     });
@@ -147,7 +182,9 @@ describe('Gamification Engine', () => {
     it('should calculate XP for levels beyond predefined requirements', () => {
       const highLevel = LEVEL_XP_REQUIREMENTS.length + 5;
       const xp = calculateXPForLevel(highLevel);
-      expect(xp).toBeGreaterThan(LEVEL_XP_REQUIREMENTS[LEVEL_XP_REQUIREMENTS.length - 1]);
+      expect(xp).toBeGreaterThan(
+        LEVEL_XP_REQUIREMENTS[LEVEL_XP_REQUIREMENTS.length - 1]
+      );
     });
 
     it('should calculate current level XP correctly', () => {
@@ -155,7 +192,7 @@ describe('Gamification Engine', () => {
       const currentLevel = calculateLevelFromXP(totalXP);
       const currentLevelMinXP = calculateXPForLevel(currentLevel);
       const currentXP = calculateCurrentLevelXP(totalXP);
-      
+
       expect(currentXP).toBe(totalXP - currentLevelMinXP);
     });
 
@@ -165,7 +202,7 @@ describe('Gamification Engine', () => {
       const nextLevelXP = calculateXPForLevel(currentLevel + 1);
       const currentLevelXP = calculateXPForLevel(currentLevel);
       const xpToNext = calculateXPToNextLevel(totalXP);
-      
+
       expect(xpToNext).toBe(nextLevelXP - currentLevelXP);
     });
   });
@@ -186,14 +223,15 @@ describe('Gamification Engine', () => {
           studyHours: 10,
           questsCompleted: 3,
           streakMaintained: true,
-          xpEarned: 100
-        }
+          xpEarned: 100,
+          averageScore: 80,
+        },
       };
     });
 
     it('should update stats without level up', () => {
       const result = updateGameStats(mockGameStats, 50);
-      
+
       expect(result.leveledUp).toBe(false);
       expect(result.newLevel).toBeUndefined();
       expect(result.stats.totalXP).toBe(350);
@@ -202,7 +240,7 @@ describe('Gamification Engine', () => {
 
     it('should detect level up', () => {
       const result = updateGameStats(mockGameStats, 200);
-      
+
       expect(result.leveledUp).toBe(true);
       expect(result.newLevel).toBeGreaterThan(mockGameStats.level);
       expect(result.stats.totalXP).toBe(500);
@@ -219,7 +257,9 @@ describe('Gamification Engine', () => {
     it('should update last activity timestamp', () => {
       const result = updateGameStats(mockGameStats, 50);
       expect(result.stats.lastActivity).toBeInstanceOf(Date);
-      expect(result.stats.lastActivity.getTime()).toBeGreaterThan(mockGameStats.lastActivity.getTime());
+      expect(result.stats.lastActivity.getTime()).toBeGreaterThan(
+        mockGameStats.lastActivity.getTime()
+      );
     });
   });
 
@@ -228,10 +268,10 @@ describe('Gamification Engine', () => {
       const today = new Date();
       const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
       const twoDaysAgo = new Date(today.getTime() - 2 * 24 * 60 * 60 * 1000);
-      
+
       const sessions = [today, yesterday, twoDaysAgo];
       const streak = calculateStudyStreak(sessions);
-      
+
       expect(streak).toBe(3);
     });
 
@@ -239,10 +279,10 @@ describe('Gamification Engine', () => {
       const today = new Date();
       const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
       const fourDaysAgo = new Date(today.getTime() - 4 * 24 * 60 * 60 * 1000);
-      
+
       const sessions = [today, yesterday, fourDaysAgo];
       const streak = calculateStudyStreak(sessions);
-      
+
       expect(streak).toBe(2); // Only today and yesterday count
     });
 
@@ -252,10 +292,10 @@ describe('Gamification Engine', () => {
       todayMorning.setHours(9, 0, 0, 0);
       const todayEvening = new Date(today);
       todayEvening.setHours(20, 0, 0, 0);
-      
+
       const sessions = [todayMorning, todayEvening];
       const streak = calculateStudyStreak(sessions);
-      
+
       expect(streak).toBe(1); // Same day counts as 1
     });
 
@@ -361,7 +401,7 @@ describe('Gamification Engine', () => {
 
     it('should handle empty or invalid input arrays', () => {
       expect(calculateStudyStreak([])).toBe(0);
-      // @ts-ignore - Testing invalid input
+      // @ts-expect-error - Testing invalid input
       expect(calculateStudyStreak(null)).toBe(0);
     });
   });

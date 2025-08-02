@@ -4,12 +4,12 @@
 export type QuestType = 'daily' | 'weekly' | 'milestone' | 'bonus';
 export type QuestDifficulty = 'easy' | 'medium' | 'hard';
 export type QuestStatus = 'available' | 'active' | 'completed' | 'expired';
-export type AchievementCategory = 
-  | 'study_time' 
-  | 'consistency' 
-  | 'quest_completion' 
-  | 'pet_care' 
-  | 'social' 
+export type AchievementCategory =
+  | 'study_time'
+  | 'consistency'
+  | 'quest_completion'
+  | 'pet_care'
+  | 'social'
   | 'special_event';
 
 // Basic interfaces for type guards (to avoid circular imports)
@@ -116,7 +116,10 @@ export function isDate(value: unknown): value is Date {
   return value instanceof Date && !isNaN(value.getTime());
 }
 
-export function isArray<T>(value: unknown, itemGuard: (item: unknown) => item is T): value is T[] {
+export function isArray<T>(
+  value: unknown,
+  itemGuard: (item: unknown) => item is T
+): value is T[] {
   return Array.isArray(value) && value.every(itemGuard);
 }
 
@@ -129,7 +132,9 @@ export function hasProperty<K extends string>(
 
 // Quest type guards
 export function isQuestType(value: unknown): value is QuestType {
-  return isString(value) && ['daily', 'weekly', 'milestone', 'bonus'].includes(value);
+  return (
+    isString(value) && ['daily', 'weekly', 'milestone', 'bonus'].includes(value)
+  );
 }
 
 export function isQuestDifficulty(value: unknown): value is QuestDifficulty {
@@ -137,23 +142,33 @@ export function isQuestDifficulty(value: unknown): value is QuestDifficulty {
 }
 
 export function isQuestStatus(value: unknown): value is QuestStatus {
-  return isString(value) && ['available', 'active', 'completed', 'expired'].includes(value);
+  return (
+    isString(value) &&
+    ['available', 'active', 'completed', 'expired'].includes(value)
+  );
 }
 
 // Achievement category guard
-export function isAchievementCategory(value: unknown): value is AchievementCategory {
-  return isString(value) && [
-    'study_time',
-    'consistency',
-    'quest_completion',
-    'pet_care',
-    'social',
-    'special_event'
-  ].includes(value);
+export function isAchievementCategory(
+  value: unknown
+): value is AchievementCategory {
+  return (
+    isString(value) &&
+    [
+      'study_time',
+      'consistency',
+      'quest_completion',
+      'pet_care',
+      'social',
+      'special_event',
+    ].includes(value)
+  );
 }
 
 // Priority level guard
-export function isPriorityLevel(value: unknown): value is 'low' | 'medium' | 'high' {
+export function isPriorityLevel(
+  value: unknown
+): value is 'low' | 'medium' | 'high' {
   return isString(value) && ['low', 'medium', 'high'].includes(value);
 }
 
@@ -340,7 +355,9 @@ export function isQuestArray(value: unknown): value is BasicQuest[] {
   return isArray(value, isQuest);
 }
 
-export function isAchievementArray(value: unknown): value is BasicAchievement[] {
+export function isAchievementArray(
+  value: unknown
+): value is BasicAchievement[] {
   return isArray(value, isAchievement);
 }
 
@@ -348,6 +365,106 @@ export function isTodoItemArray(value: unknown): value is BasicTodoItem[] {
   return isArray(value, isTodoItem);
 }
 
-export function isStudySessionArray(value: unknown): value is BasicStudySession[] {
+export function isStudySessionArray(
+  value: unknown
+): value is BasicStudySession[] {
   return isArray(value, isStudySession);
+}
+
+// Additional validation functions
+export function isValidAchievement(value: unknown): value is BasicAchievement {
+  return isAchievement(value);
+}
+
+export function isValidTodo(value: unknown): value is BasicTodoItem {
+  return isTodoItem(value);
+}
+
+export function isValidUser(value: unknown): value is BasicUser {
+  return isUser(value);
+}
+
+export function isValidDate(value: unknown): value is Date {
+  return isDate(value);
+}
+
+export function isValidUUID(value: unknown): value is string {
+  return (
+    isString(value) &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+      value
+    )
+  );
+}
+
+export function isValidXPAmount(value: unknown): value is number {
+  return isNumber(value) && value >= 0;
+}
+
+export function isValidLevel(value: unknown): value is number {
+  return isNumber(value) && value >= 1 && Number.isInteger(value);
+}
+
+export function isValidDifficulty(value: unknown): value is QuestDifficulty {
+  return isQuestDifficulty(value);
+}
+
+export function isValidQuestType(value: unknown): value is QuestType {
+  return isQuestType(value);
+}
+
+export function isValidPriority(
+  value: unknown
+): value is 'low' | 'medium' | 'high' {
+  return isPriorityLevel(value);
+}
+
+export function isValidEvolutionStage(value: unknown): value is string {
+  return (
+    isString(value) &&
+    ['egg', 'baby', 'child', 'teen', 'adult', 'elder'].includes(value)
+  );
+}
+
+// Additional validation functions for tests
+export function isValidPet(value: unknown): value is BasicStudyPet {
+  return (
+    isStudyPet(value) &&
+    value.level >= 1 &&
+    value.happiness >= 0 &&
+    value.happiness <= 100 &&
+    value.health >= 0 &&
+    value.health <= 100
+  );
+}
+
+export function isValidEmail(value: unknown): value is string {
+  return isString(value) && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
+export function isValidPassword(value: unknown): value is string {
+  return (
+    isString(value) &&
+    value.length >= 8 &&
+    /(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(value)
+  );
+}
+
+// Additional validation functions for tests
+export function isValidStudySession(
+  value: unknown
+): value is BasicStudySession {
+  return isStudySession(value);
+}
+
+export function isValidQuest(value: unknown): value is BasicQuest {
+  return isQuest(value);
+}
+
+export function isValidCourse(value: unknown): value is BasicCourse {
+  return isCourse(value);
+}
+
+export function isValidGameStats(value: unknown): value is BasicGameStats {
+  return isGameStats(value);
 }

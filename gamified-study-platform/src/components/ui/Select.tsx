@@ -10,11 +10,20 @@ interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
   options?: SelectOption[];
   error?: string;
   fullWidth?: boolean;
+  placeholder?: string;
 }
 
 export const Select = forwardRef<HTMLSelectElement, SelectProps>(
   (
-    { options, error, fullWidth = true, className, children, ...props },
+    {
+      options,
+      error,
+      fullWidth = true,
+      placeholder,
+      className,
+      children,
+      ...props
+    },
     ref
   ) => {
     return (
@@ -29,6 +38,11 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
           )}
           {...props}
         >
+          {placeholder && (
+            <option value="" disabled>
+              {placeholder}
+            </option>
+          )}
           {options
             ? options.map(option => (
                 <option key={option.value} value={option.value}>

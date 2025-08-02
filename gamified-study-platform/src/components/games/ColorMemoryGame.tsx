@@ -33,7 +33,11 @@ export class ColorMemoryGame extends BaseMiniGameComponent<
     super(props);
 
     this.state = {
-      ...this.state,
+      isActive: false,
+      isPaused: false,
+      timeElapsed: 0,
+      score: 0,
+      isCompleted: false,
       sequence: [],
       playerSequence: [],
       currentStep: 0,

@@ -303,11 +303,13 @@ export const MiniGameManager: React.FC<MiniGameManagerProps> = ({
                   New Achievements!
                 </h4>
                 <div className="space-y-1">
-                  {result.newAchievements.map((achievement, index) => (
-                    <div key={index} className="text-sm text-yellow-700">
-                      🏆 {achievement}
-                    </div>
-                  ))}
+                  {result.newAchievements.map(
+                    (achievement: any, index: number) => (
+                      <div key={index} className="text-sm text-yellow-700">
+                        🏆 {achievement.name || achievement}
+                      </div>
+                    )
+                  )}
                 </div>
               </div>
             )}

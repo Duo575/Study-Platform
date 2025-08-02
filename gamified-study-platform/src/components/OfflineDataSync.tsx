@@ -9,100 +9,151 @@ interface OfflineDataSyncProps {
   showDetails?: boolean;
 }
 
-export function OfflineDataSync({ className = '', showDetails = true }: OfflineDataSyncProps) {
+export function OfflineDataSync({
+  className = '',
+  showDetails: _showDetails = true,
+}: OfflineDataSyncProps) {
   const { isOnline, syncStatus, isSyncing, triggerSync } = useOffline();
-  const [syncHistory, setSyncHistory] = useState<Array<{
-    timestamp: number;
-    type: string;
-    status: 'success' | 'error';
-    message: string;
-  }>>([]);
+  const [syncHistory, setSyncHistory] = useState<
+    Array<{
+      timestamp: number;
+      type: string;
+      status: 'success' | 'error';
+      message: string;
+    }>
+  >([]);
   const [showHistory, setShowHistory] = useState(false);
 
   useEffect(() => {
     // Listen for sync events
     const handleSyncComplete = () => {
-      setSyncHistory(prev => [...prev, {
-        timestamp: Date.now(),
-        type: 'auto',
-        status: 'success',
-        message: 'Automatic sync completed successfully'
-      }].slice(-10)); // Keep only last 10 entries
+      setSyncHistory(prev =>
+        [
+          ...prev,
+          {
+            timestamp: Date.now(),
+            type: 'auto',
+            status: 'success',
+            message: 'Automatic sync completed successfully',
+          },
+        ].slice(-10)
+      ); // Keep only last 10 entries
     };
 
     const handleSyncError = (event: CustomEvent) => {
-      setSyncHistory(prev => [...prev, {
-        timestamp: Date.now(),
-        type: 'auto',
-        status: 'error',
-        message: event.detail?.message || 'Sync failed'
-      }].slice(-10));
+      setSyncHistory(prev =>
+        [
+          ...prev,
+          {
+            timestamp: Date.now(),
+            type: 'auto',
+            status: 'error',
+            message: event.detail?.message || 'Sync failed',
+          },
+        ].slice(-10)
+      );
     };
 
     window.addEventListener('offlineSyncComplete', handleSyncComplete);
-    window.addEventListener('offlineSyncError', handleSyncError as EventListener);
+    window.addEventListener(
+      'offlineSyncError',
+      handleSyncError as EventListener
+    );
 
     return () => {
       window.removeEventListener('offlineSyncComplete', handleSyncComplete);
-      window.removeEventListener('offlineSyncError', handleSyncError as EventListener);
+      window.removeEventListener(
+        'offlineSyncError',
+        handleSyncError as EventListener
+      );
     };
   }, []);
 
   const handleManualSync = async () => {
     try {
       await triggerSync();
-      setSyncHistory(prev => [...prev, {
-        timestamp: Date.now(),
-        type: 'manual',
-        status: 'success',
-        message: 'Manual sync completed successfully'
-      }].slice(-10));
+      setSyncHistory(prev =>
+        [
+          ...prev,
+          {
+            timestamp: Date.now(),
+            type: 'manual',
+            status: 'success',
+            message: 'Manual sync completed successfully',
+          },
+        ].slice(-10)
+      );
     } catch (error) {
-      setSyncHistory(prev => [...prev, {
-        timestamp: Date.now(),
-        type: 'manual',
-        status: 'error',
-        message: error instanceof Error ? error.message : 'Manual sync failed'
-      }].slice(-10));
+      setSyncHistory(prev =>
+        [
+          ...prev,
+          {
+            timestamp: Date.now(),
+            type: 'manual',
+            status: 'error',
+            message:
+              error instanceof Error ? error.message : 'Manual sync failed',
+          },
+        ].slice(-10)
+      );
     }
   };
 
   const clearOfflineData = async () => {
-    if (confirm('Are you sure you want to clear all offline data? This cannot be undone.')) {
+    if (
+      confirm(
+        'Are you sure you want to clear all offline data? This cannot be undone.'
+      )
+    ) {
       try {
         await offlineService.clearOfflineData();
-        setSyncHistory(prev => [...prev, {
-          timestamp: Date.now(),
-          type: 'manual',
-          status: 'success',
-          message: 'Offline data cleared successfully'
-        }].slice(-10));
-      } catch (error) {
-        setSyncHistory(prev => [...prev, {
-          timestamp: Date.now(),
-          type: 'manual',
-          status: 'error',
-          message: 'Failed to clear offline data'
-        }].slice(-10));
+        setSyncHistory(prev =>
+          [
+            ...prev,
+            {
+              timestamp: Date.now(),
+              type: 'manual',
+              status: 'success',
+              message: 'Offline data cleared successfully',
+            },
+          ].slice(-10)
+        );
+      } catch (_error) {
+        setSyncHistory(prev =>
+          [
+            ...prev,
+            {
+              timestamp: Date.now(),
+              type: 'manual',
+              status: 'error',
+              message: 'Failed to clear offline data',
+            },
+          ].slice(-10)
+        );
       }
     }
   };
 
-  const totalPendingItems = syncStatus.pendingActions + 
-                           syncStatus.unsyncedSessions + 
-                           syncStatus.unsyncedNotes;
+  const totalPendingItems =
+    syncStatus.pendingActions +
+    syncStatus.unsyncedSessions +
+    syncStatus.unsyncedNotes;
 
   return (
-    <div className={`bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 ${className}`}>
+    <div
+      className={`bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 ${className}`}
+    >
       <div className="p-4">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
             Offline Data Sync
           </h3>
           <div className="flex items-center gap-2">
-            <div className={`w-2 h-2 rounded-full ${
-              isOnline ? 'bg-green-500' : 'bg-red-500'
-            }`} />
+            <div
+              className={`w-2 h-2 rounded-full ${
+                isOnline ? 'bg-green-500' : 'bg-red-500'
+              }`}
+            />
             <span className="text-sm text-gray-600 dark:text-gray-300">
               {isOnline ? 'Online' : 'Offline'}
             </span>
@@ -119,7 +170,7 @@ export function OfflineDataSync({ className = '', showDetails = true }: OfflineD
               {syncStatus.pendingActions}
             </span>
           </div>
-          
+
           <div className="flex items-center justify-between">
             <span className="text-sm text-gray-600 dark:text-gray-300">
               Unsynced Sessions
@@ -128,7 +179,7 @@ export function OfflineDataSync({ className = '', showDetails = true }: OfflineD
               {syncStatus.unsyncedSessions}
             </span>
           </div>
-          
+
           <div className="flex items-center justify-between">
             <span className="text-sm text-gray-600 dark:text-gray-300">
               Unsynced Notes
@@ -141,11 +192,20 @@ export function OfflineDataSync({ className = '', showDetails = true }: OfflineD
           {totalPendingItems > 0 && (
             <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md p-3">
               <div className="flex items-center gap-2">
-                <svg className="w-4 h-4 text-yellow-600 dark:text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                <svg
+                  className="w-4 h-4 text-yellow-600 dark:text-yellow-400"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                    clipRule="evenodd"
+                  />
                 </svg>
                 <span className="text-sm text-yellow-800 dark:text-yellow-200">
-                  {totalPendingItems} item{totalPendingItems !== 1 ? 's' : ''} waiting to sync
+                  {totalPendingItems} item{totalPendingItems !== 1 ? 's' : ''}{' '}
+                  waiting to sync
                 </span>
               </div>
             </div>
@@ -161,21 +221,33 @@ export function OfflineDataSync({ className = '', showDetails = true }: OfflineD
           >
             {isSyncing ? (
               <>
-                <motion.svg 
+                <motion.svg
                   className="w-4 h-4"
                   animate={{ rotate: 360 }}
-                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                  fill="currentColor" 
+                  transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                  fill="currentColor"
                   viewBox="0 0 20 20"
                 >
-                  <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+                  <path
+                    fillRule="evenodd"
+                    d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z"
+                    clipRule="evenodd"
+                  />
                 </motion.svg>
                 Syncing...
               </>
             ) : (
               <>
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+                <svg
+                  className="w-4 h-4"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z"
+                    clipRule="evenodd"
+                  />
                 </svg>
                 Sync Now
               </>
@@ -209,31 +281,39 @@ export function OfflineDataSync({ className = '', showDetails = true }: OfflineD
               <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-3">
                 Recent Sync Activity
               </h4>
-              
+
               {syncHistory.length === 0 ? (
                 <p className="text-sm text-gray-500 dark:text-gray-400">
                   No sync activity yet
                 </p>
               ) : (
                 <div className="space-y-2 max-h-48 overflow-y-auto">
-                  {syncHistory.slice().reverse().map((entry, index) => (
-                    <div
-                      key={index}
-                      className="flex items-start gap-3 p-2 bg-gray-50 dark:bg-gray-700/50 rounded-md"
-                    >
-                      <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${
-                        entry.status === 'success' ? 'bg-green-500' : 'bg-red-500'
-                      }`} />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs text-gray-900 dark:text-white">
-                          {entry.message}
-                        </p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
-                          {new Date(entry.timestamp).toLocaleString()} • {entry.type}
-                        </p>
+                  {syncHistory
+                    .slice()
+                    .reverse()
+                    .map((entry, index) => (
+                      <div
+                        key={index}
+                        className="flex items-start gap-3 p-2 bg-gray-50 dark:bg-gray-700/50 rounded-md"
+                      >
+                        <div
+                          className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${
+                            entry.status === 'success'
+                              ? 'bg-green-500'
+                              : 'bg-red-500'
+                          }`}
+                        />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs text-gray-900 dark:text-white">
+                            {entry.message}
+                          </p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                            {new Date(entry.timestamp).toLocaleString()} •{' '}
+                            {entry.type}
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
                 </div>
               )}
             </motion.div>
@@ -256,27 +336,40 @@ export function OfflineDataSync({ className = '', showDetails = true }: OfflineD
 // Compact sync status for dashboard
 export function SyncStatusCompact({ className = '' }: { className?: string }) {
   const { isOnline, syncStatus, isSyncing, triggerSync } = useOffline();
-  
-  const totalPendingItems = syncStatus.pendingActions + 
-                           syncStatus.unsyncedSessions + 
-                           syncStatus.unsyncedNotes;
+
+  const totalPendingItems =
+    syncStatus.pendingActions +
+    syncStatus.unsyncedSessions +
+    syncStatus.unsyncedNotes;
 
   if (totalPendingItems === 0 && !isSyncing) {
     return null;
   }
 
   return (
-    <div className={`bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3 ${className}`}>
+    <div
+      className={`bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3 ${className}`}
+    >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <svg className="w-4 h-4 text-yellow-600 dark:text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-            <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+          <svg
+            className="w-4 h-4 text-yellow-600 dark:text-yellow-400"
+            fill="currentColor"
+            viewBox="0 0 20 20"
+          >
+            <path
+              fillRule="evenodd"
+              d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+              clipRule="evenodd"
+            />
           </svg>
           <span className="text-sm text-yellow-800 dark:text-yellow-200">
-            {isSyncing ? 'Syncing data...' : `${totalPendingItems} items to sync`}
+            {isSyncing
+              ? 'Syncing data...'
+              : `${totalPendingItems} items to sync`}
           </span>
         </div>
-        
+
         {isOnline && !isSyncing && (
           <button
             onClick={triggerSync}

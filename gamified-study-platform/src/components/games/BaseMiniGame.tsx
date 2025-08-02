@@ -24,12 +24,12 @@ export interface MiniGameState {
   isCompleted: boolean;
 }
 
-export abstract class BaseMiniGameComponent<T = {}> extends React.Component<
-  BaseMiniGameProps & T,
-  MiniGameState
-> {
-  protected intervalRef: React.RefObject<NodeJS.Timeout | null>;
-  protected startTimeRef: React.RefObject<number>;
+export abstract class BaseMiniGameComponent<
+  T = {},
+  S extends Record<string, any> = {},
+> extends React.Component<BaseMiniGameProps & T, MiniGameState & S> {
+  protected intervalRef: NodeJS.Timeout | null = null;
+  protected startTime: number = 0;
 
   constructor(props: BaseMiniGameProps & T) {
     super(props);
@@ -40,10 +40,7 @@ export abstract class BaseMiniGameComponent<T = {}> extends React.Component<
       timeElapsed: 0,
       score: 0,
       isCompleted: false,
-    };
-
-    this.intervalRef = React.createRef();
-    this.startTimeRef = React.createRef();
+    } as MiniGameState & S;
   }
 
   componentDidMount() {
@@ -65,14 +62,21 @@ export abstract class BaseMiniGameComponent<T = {}> extends React.Component<
 
   // Common game lifecycle methods
   protected startGame = () => {
-    this.setState({ isActive: true, isPaused: false });
-    this.startTimeRef.current = Date.now();
+    this.setState(prevState => ({
+      ...prevState,
+      isActive: true,
+      isPaused: false,
+    }));
+    this.startTime = Date.now();
     this.startTimer();
     this.onGameStart();
   };
 
   protected pauseGame = () => {
-    this.setState({ isPaused: !this.state.isPaused });
+    this.setState(prevState => ({
+      ...prevState,
+      isPaused: !prevState.isPaused,
+    }));
     if (this.state.isPaused) {
       this.onGameResume();
       this.props.onResume?.();
@@ -83,36 +87,39 @@ export abstract class BaseMiniGameComponent<T = {}> extends React.Component<
   };
 
   protected stopGame = () => {
-    this.setState({
+    this.setState(prevState => ({
+      ...prevState,
       isActive: false,
       isPaused: false,
       timeElapsed: 0,
       score: 0,
       isCompleted: false,
-    });
+    }));
     this.cleanup();
     this.onGameStop();
   };
 
   protected completeGame = () => {
     const finalScore = this.calculateScore();
-    this.setState({
+    this.setState(prevState => ({
+      ...prevState,
       isCompleted: true,
       isActive: false,
       score: finalScore,
-    });
+    }));
     this.cleanup();
     this.props.onComplete(finalScore);
   };
 
   protected startTimer = () => {
-    if (this.intervalRef.current) {
-      clearInterval(this.intervalRef.current);
+    if (this.intervalRef) {
+      clearInterval(this.intervalRef);
     }
 
-    this.intervalRef.current = setInterval(() => {
+    this.intervalRef = setInterval(() => {
       if (!this.state.isPaused) {
         this.setState(prevState => ({
+          ...prevState,
           timeElapsed: prevState.timeElapsed + 0.1,
         }));
       }
@@ -120,9 +127,9 @@ export abstract class BaseMiniGameComponent<T = {}> extends React.Component<
   };
 
   protected cleanup = () => {
-    if (this.intervalRef.current) {
-      clearInterval(this.intervalRef.current);
-      this.intervalRef.current = null;
+    if (this.intervalRef) {
+      clearInterval(this.intervalRef);
+      this.intervalRef = null;
     }
   };
 

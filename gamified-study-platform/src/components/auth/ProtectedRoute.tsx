@@ -1,6 +1,6 @@
 import React from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../../contexts/AuthContext';
+// import { Navigate, useLocation } from 'react-router-dom';
+// import { useAuth } from '../../contexts/AuthContext';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -9,7 +9,7 @@ interface ProtectedRouteProps {
 
 export function ProtectedRoute({
   children,
-  requireAuth = true,
+  requireAuth: _requireAuth = true,
 }: ProtectedRouteProps) {
   // TEMPORARY BYPASS: Always allow access for development
   // TODO: Remove this bypass when authentication is fixed

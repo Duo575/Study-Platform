@@ -1,6 +1,6 @@
 /**
  * Gamification Engine - Core calculation functions for XP, levels, and streaks
- * 
+ *
  * This module provides the core logic for the gamification system, including:
  * - XP calculation for different activity types
  * - Level progression with dynamic XP requirements
@@ -8,17 +8,17 @@
  * - Achievement progress tracking
  */
 
-import { 
-  XP_REWARDS, 
-  DIFFICULTY_MULTIPLIERS, 
+import {
+  XP_REWARDS,
+  DIFFICULTY_MULTIPLIERS,
   TIME_MULTIPLIERS,
-  LEVEL_XP_REQUIREMENTS
+  LEVEL_XP_REQUIREMENTS,
 } from './constants';
-import type { 
-  GameStats, 
-  QuestDifficulty, 
+import type {
+  GameStats,
+  QuestDifficulty,
   QuestType,
-  StudySession
+  StudySession,
 } from '../types';
 
 /**
@@ -33,9 +33,9 @@ export function calculateStudySessionXP(
   const baseXP = XP_REWARDS.STUDY_SESSION_BASE;
   const timeXP = durationMinutes * XP_REWARDS.STUDY_SESSION_PER_MINUTE;
   const difficultyMultiplier = DIFFICULTY_MULTIPLIERS[difficulty];
-  
+
   // Apply time-based multipliers for session length
-  let timeMultiplier = TIME_MULTIPLIERS.SHORT_SESSION;
+  let timeMultiplier: number = TIME_MULTIPLIERS.SHORT_SESSION;
   if (durationMinutes >= 90) {
     timeMultiplier = TIME_MULTIPLIERS.MARATHON_SESSION;
   } else if (durationMinutes >= 45) {
@@ -45,11 +45,13 @@ export function calculateStudySessionXP(
   }
 
   // Calculate raw XP
-  let totalXP = Math.floor((baseXP + timeXP) * difficultyMultiplier * timeMultiplier);
-  
+  let totalXP = Math.floor(
+    (baseXP + timeXP) * difficultyMultiplier * timeMultiplier
+  );
+
   // Apply focus percentage (for Pomodoro sessions)
   totalXP = Math.floor(totalXP * (focusPercentage / 100));
-  
+
   // Apply bonus if applicable
   if (hasBonus) {
     totalXP += XP_REWARDS.FOCUS_SESSION_BONUS;
@@ -67,20 +69,21 @@ export function calculateQuestXP(
   isEarly: boolean = false
 ): number {
   // Get base XP for quest type
-  const questTypeKey = `${questType.toUpperCase()}_QUEST` as keyof typeof XP_REWARDS;
+  const questTypeKey =
+    `${questType.toUpperCase()}_QUEST` as keyof typeof XP_REWARDS;
   const baseXP = XP_REWARDS[questTypeKey] || XP_REWARDS.QUEST_COMPLETION_BASE;
-  
+
   // Apply difficulty multiplier
   const difficultyMultiplier = DIFFICULTY_MULTIPLIERS[difficulty];
-  
+
   // Calculate XP
   let totalXP = Math.floor(baseXP * difficultyMultiplier);
-  
+
   // Apply early completion bonus if applicable
   if (isEarly) {
     totalXP = Math.floor(totalXP * 1.25); // 25% bonus for early completion
   }
-  
+
   return totalXP;
 }
 
@@ -93,8 +96,8 @@ export function calculateTodoXP(
   completedOnTime: boolean = true
 ): number {
   // Base XP depends on completion timing
-  let baseXP = XP_REWARDS.TODO_COMPLETION;
-  
+  let baseXP: number = XP_REWARDS.TODO_COMPLETION;
+
   if (completedEarly) {
     baseXP = XP_REWARDS.TODO_COMPLETION_EARLY;
   } else if (completedOnTime) {
@@ -103,7 +106,7 @@ export function calculateTodoXP(
 
   // Add bonus for longer tasks (2 XP per 30 minutes)
   const timeBonus = Math.floor(estimatedMinutes / 30) * 2;
-  
+
   return baseXP + timeBonus;
 }
 
@@ -139,26 +142,26 @@ export function calculateLevelFromXP(totalXP: number): number {
  */
 export function calculateXPForLevel(targetLevel: number): number {
   if (targetLevel < 0) return 0;
-  
+
   if (targetLevel >= LEVEL_XP_REQUIREMENTS.length) {
     // For levels beyond our defined requirements, use exponential growth
     const lastLevel = LEVEL_XP_REQUIREMENTS.length - 1;
     const lastXP = LEVEL_XP_REQUIREMENTS[lastLevel];
     const extraLevels = targetLevel - lastLevel;
-    
+
     // Each level beyond defined levels requires 10% more XP than the previous
     let additionalXP = 0;
     let previousLevelXP = lastXP;
-    
+
     for (let i = 0; i < extraLevels; i++) {
       const nextLevelXP = Math.floor(previousLevelXP * 1.1);
-      additionalXP += (nextLevelXP - previousLevelXP);
+      additionalXP += nextLevelXP - previousLevelXP;
       previousLevelXP = nextLevelXP;
     }
-    
+
     return lastXP + additionalXP;
   }
-  
+
   return LEVEL_XP_REQUIREMENTS[targetLevel];
 }
 
@@ -197,13 +200,14 @@ export function updateGameStats(
   // Update weekly stats
   const weeklyStats = { ...currentStats.weeklyStats };
   weeklyStats.xpEarned += xpGained;
-  
+
   // Update activity-specific stats
   if (activityType === 'quest') {
     weeklyStats.questsCompleted += 1;
   } else if (activityType === 'study') {
     // Assuming study sessions are tracked in minutes
-    weeklyStats.studyHours += xpGained / (XP_REWARDS.STUDY_SESSION_PER_MINUTE * 60);
+    weeklyStats.studyHours +=
+      xpGained / (XP_REWARDS.STUDY_SESSION_PER_MINUTE * 60);
   }
 
   const updatedStats: GameStats = {
@@ -235,8 +239,9 @@ export function calculateStudyStreak(studySessions: Date[]): number {
     .sort((a, b) => b.getTime() - a.getTime());
 
   // Remove duplicates (same day sessions)
-  const uniqueDays = Array.from(new Set(sortedSessions.map(date => date.getTime())))
-    .map(time => new Date(time));
+  const uniqueDays = Array.from(
+    new Set(sortedSessions.map(date => date.getTime()))
+  ).map(time => new Date(time));
 
   let streak = 0;
   const today = new Date();
@@ -263,14 +268,17 @@ export function isStreakActive(lastStudyDate: Date): boolean {
   const today = new Date();
   const yesterday = new Date(today);
   yesterday.setDate(today.getDate() - 1);
-  
+
   const lastStudy = new Date(lastStudyDate);
   lastStudy.setHours(0, 0, 0, 0);
   today.setHours(0, 0, 0, 0);
   yesterday.setHours(0, 0, 0, 0);
 
   // Streak is active if user studied today or yesterday
-  return lastStudy.getTime() === today.getTime() || lastStudy.getTime() === yesterday.getTime();
+  return (
+    lastStudy.getTime() === today.getTime() ||
+    lastStudy.getTime() === yesterday.getTime()
+  );
 }
 
 /**
@@ -279,8 +287,8 @@ export function isStreakActive(lastStudyDate: Date): boolean {
 export function validateDailyActivity(
   lastActivityDate: Date | null,
   currentDate: Date = new Date()
-): { 
-  isValid: boolean; 
+): {
+  isValid: boolean;
   daysDifference: number;
   streakMaintained: boolean;
 } {
@@ -290,19 +298,19 @@ export function validateDailyActivity(
 
   const lastDate = new Date(lastActivityDate);
   lastDate.setHours(0, 0, 0, 0);
-  
+
   const today = new Date(currentDate);
   today.setHours(0, 0, 0, 0);
-  
+
   const timeDiff = today.getTime() - lastDate.getTime();
   const daysDifference = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
-  
+
   // Activity is valid for streak if it's a new day (not same day)
   const isValid = daysDifference > 0;
-  
+
   // Streak is maintained if activity is on consecutive day
   const streakMaintained = daysDifference === 1;
-  
+
   return { isValid, daysDifference, streakMaintained };
 }
 

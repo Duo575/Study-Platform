@@ -17,17 +17,17 @@ import {
   isValidDifficulty,
   isValidQuestType,
   isValidPriority,
-  isValidEvolutionStage
+  isValidEvolutionStage,
 } from '../guards';
-import type { 
-  StudySession, 
-  Quest, 
-  Course, 
-  GameStats, 
-  StudyPet, 
-  Achievement, 
-  Todo, 
-  User 
+import type {
+  StudySession,
+  Quest,
+  Course,
+  GameStats,
+  StudyPet,
+  Achievement,
+  Todo,
+  User,
 } from '../index';
 
 describe('Type Guards', () => {
@@ -53,7 +53,7 @@ describe('Type Guards', () => {
         expect(isValidEmail(null as any)).toBe(false);
         expect(isValidEmail(undefined as any)).toBe(false);
         expect(isValidEmail(123 as any)).toBe(false);
-        expect(isValidEmail({}  as any)).toBe(false);
+        expect(isValidEmail({} as any)).toBe(false);
       });
     });
 
@@ -229,29 +229,74 @@ describe('Type Guards', () => {
       const validUser: User = {
         id: '123e4567-e89b-12d3-a456-426614174000',
         email: 'test@example.com',
+        username: 'testuser',
         name: 'Test User',
-        avatar: 'https://example.com/avatar.jpg',
+        profile: {
+          firstName: 'Test',
+          lastName: 'User',
+          avatarUrl: 'https://example.com/avatar.jpg',
+          timezone: 'UTC',
+        },
+        gameStats: {
+          level: 1,
+          totalXP: 0,
+          currentXP: 0,
+          xpToNextLevel: 100,
+          streakDays: 0,
+          achievements: [],
+          lastActivity: new Date(),
+          weeklyStats: {
+            studyHours: 0,
+            questsCompleted: 0,
+            streakMaintained: false,
+            xpEarned: 0,
+            averageScore: 0,
+          },
+        },
+        preferences: {
+          theme: 'light',
+          notifications: {
+            email: true,
+            push: true,
+            inApp: true,
+            studyReminders: true,
+            achievementUnlocks: true,
+            petReminders: true,
+          },
+          studyReminders: true,
+          pomodoroSettings: {
+            workDuration: 25,
+            shortBreakDuration: 5,
+            longBreakDuration: 15,
+            sessionsUntilLongBreak: 4,
+            soundEnabled: true,
+          },
+        },
         createdAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
       };
 
       it('should validate correct user objects', () => {
         expect(isValidUser(validUser)).toBe(true);
-        
+
         // Test with optional fields
         const minimalUser = {
           id: '123e4567-e89b-12d3-a456-426614174000',
           email: 'test@example.com',
           createdAt: new Date(),
-          updatedAt: new Date()
+          updatedAt: new Date(),
         };
         expect(isValidUser(minimalUser)).toBe(true);
       });
 
       it('should reject invalid user objects', () => {
         expect(isValidUser({ ...validUser, id: 'invalid-id' })).toBe(false);
-        expect(isValidUser({ ...validUser, email: 'invalid-email' })).toBe(false);
-        expect(isValidUser({ ...validUser, createdAt: 'invalid-date' })).toBe(false);
+        expect(isValidUser({ ...validUser, email: 'invalid-email' })).toBe(
+          false
+        );
+        expect(isValidUser({ ...validUser, createdAt: 'invalid-date' })).toBe(
+          false
+        );
         expect(isValidUser({ ...validUser, id: undefined })).toBe(false);
       });
 
@@ -266,35 +311,41 @@ describe('Type Guards', () => {
     describe('isValidStudySession', () => {
       const validSession: StudySession = {
         id: '123e4567-e89b-12d3-a456-426614174000',
-        userId: '123e4567-e89b-12d3-a456-426614174001',
         courseId: '123e4567-e89b-12d3-a456-426614174002',
         duration: 60,
-        startedAt: new Date(),
-        endedAt: new Date(),
+        startTime: new Date(),
+        endTime: new Date(),
+        type: 'pomodoro',
         xpEarned: 50,
-        focusPercentage: 85,
-        createdAt: new Date()
       };
 
       it('should validate correct study session objects', () => {
         expect(isValidStudySession(validSession)).toBe(true);
-        
+
         // Test with optional fields
         const minimalSession = {
           id: '123e4567-e89b-12d3-a456-426614174000',
-          userId: '123e4567-e89b-12d3-a456-426614174001',
           duration: 60,
-          startedAt: new Date(),
-          createdAt: new Date()
+          startTime: new Date(),
+          type: 'free_study',
+          xpEarned: 0,
         };
         expect(isValidStudySession(minimalSession)).toBe(true);
       });
 
       it('should reject invalid study session objects', () => {
-        expect(isValidStudySession({ ...validSession, duration: -1 })).toBe(false);
-        expect(isValidStudySession({ ...validSession, xpEarned: -10 })).toBe(false);
-        expect(isValidStudySession({ ...validSession, focusPercentage: 150 })).toBe(false);
-        expect(isValidStudySession({ ...validSession, id: 'invalid' })).toBe(false);
+        expect(isValidStudySession({ ...validSession, duration: -1 })).toBe(
+          false
+        );
+        expect(isValidStudySession({ ...validSession, xpEarned: -10 })).toBe(
+          false
+        );
+        expect(
+          isValidStudySession({ ...validSession, focusPercentage: 150 })
+        ).toBe(false);
+        expect(isValidStudySession({ ...validSession, id: 'invalid' })).toBe(
+          false
+        );
       });
     });
 
@@ -311,18 +362,18 @@ describe('Type Guards', () => {
             type: 'study_time',
             target: 30,
             current: 15,
-            description: 'Study for 30 minutes'
-          }
+            description: 'Study for 30 minutes',
+          },
         ],
         status: 'active',
         courseId: '123e4567-e89b-12d3-a456-426614174001',
         createdAt: new Date(),
-        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000)
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
       };
 
       it('should validate correct quest objects', () => {
         expect(isValidQuest(validQuest)).toBe(true);
-        
+
         // Test with minimal required fields
         const minimalQuest = {
           id: '123e4567-e89b-12d3-a456-426614174000',
@@ -333,14 +384,16 @@ describe('Type Guards', () => {
           xpReward: 20,
           requirements: [],
           status: 'available',
-          createdAt: new Date()
+          createdAt: new Date(),
         };
         expect(isValidQuest(minimalQuest)).toBe(true);
       });
 
       it('should reject invalid quest objects', () => {
         expect(isValidQuest({ ...validQuest, type: 'invalid' })).toBe(false);
-        expect(isValidQuest({ ...validQuest, difficulty: 'invalid' })).toBe(false);
+        expect(isValidQuest({ ...validQuest, difficulty: 'invalid' })).toBe(
+          false
+        );
         expect(isValidQuest({ ...validQuest, xpReward: -10 })).toBe(false);
         expect(isValidQuest({ ...validQuest, title: '' })).toBe(false);
       });
@@ -360,18 +413,18 @@ describe('Type Guards', () => {
             topics: ['let', 'const', 'var'],
             estimatedHours: 2,
             priority: 'high',
-            completed: false
-          }
+            completed: false,
+          },
         ],
         progress: {
           completionPercentage: 25,
           hoursStudied: 5,
           topicsCompleted: 2,
           totalTopics: 8,
-          lastStudied: new Date()
+          lastStudied: new Date(),
         },
         createdAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
       };
 
       it('should validate correct course objects', () => {
@@ -380,7 +433,9 @@ describe('Type Guards', () => {
 
       it('should reject invalid course objects', () => {
         expect(isValidCourse({ ...validCourse, name: '' })).toBe(false);
-        expect(isValidCourse({ ...validCourse, color: 'invalid-color' })).toBe(false);
+        expect(isValidCourse({ ...validCourse, color: 'invalid-color' })).toBe(
+          false
+        );
         expect(isValidCourse({ ...validCourse, progress: null })).toBe(false);
       });
     });
@@ -398,8 +453,9 @@ describe('Type Guards', () => {
           studyHours: 15,
           questsCompleted: 8,
           streakMaintained: true,
-          xpEarned: 300
-        }
+          xpEarned: 300,
+          averageScore: 85,
+        },
       };
 
       it('should validate correct game stats objects', () => {
@@ -408,27 +464,61 @@ describe('Type Guards', () => {
 
       it('should reject invalid game stats objects', () => {
         expect(isValidGameStats({ ...validGameStats, level: 0 })).toBe(false);
-        expect(isValidGameStats({ ...validGameStats, totalXP: -100 })).toBe(false);
-        expect(isValidGameStats({ ...validGameStats, streakDays: -1 })).toBe(false);
+        expect(isValidGameStats({ ...validGameStats, totalXP: -100 })).toBe(
+          false
+        );
+        expect(isValidGameStats({ ...validGameStats, streakDays: -1 })).toBe(
+          false
+        );
       });
     });
 
     describe('isValidPet', () => {
       const validPet: StudyPet = {
         id: '123e4567-e89b-12d3-a456-426614174000',
-        userId: '123e4567-e89b-12d3-a456-426614174001',
         name: 'Buddy',
-        speciesId: 'dragon',
+        species: {
+          id: 'dragon',
+          name: 'Dragon',
+          description: 'A magical dragon companion',
+          baseStats: {
+            happiness: 50,
+            health: 50,
+            intelligence: 50,
+          },
+          evolutionStages: [],
+        },
         level: 3,
         happiness: 75,
         health: 80,
-        evolutionStage: 'teen',
+        evolution: {
+          stage: {
+            id: 'teen',
+            name: 'Teen',
+            description: 'A teenage dragon',
+            imageUrl: '/pets/dragon-teen.png',
+            requiredLevel: 5,
+            stats: {
+              happiness: 75,
+              health: 80,
+              intelligence: 70,
+            },
+            unlockedAbilities: ['fly', 'breathe_fire'],
+          },
+          progress: 60,
+          nextStageRequirements: [
+            {
+              type: 'level_reached',
+              target: 10,
+              current: 3,
+              description: 'Reach level 10',
+            },
+          ],
+        },
         accessories: [],
         lastFed: new Date(),
         lastPlayed: new Date(),
-        lastInteraction: new Date(),
         createdAt: new Date(),
-        updatedAt: new Date()
       };
 
       it('should validate correct pet objects', () => {
@@ -441,7 +531,9 @@ describe('Type Guards', () => {
         expect(isValidPet({ ...validPet, happiness: 150 })).toBe(false);
         expect(isValidPet({ ...validPet, health: -10 })).toBe(false);
         expect(isValidPet({ ...validPet, health: 150 })).toBe(false);
-        expect(isValidPet({ ...validPet, evolutionStage: 'invalid' })).toBe(false);
+        expect(isValidPet({ ...validPet, evolutionStage: 'invalid' })).toBe(
+          false
+        );
       });
     });
 
@@ -455,7 +547,11 @@ describe('Type Guards', () => {
         xpReward: 25,
         iconUrl: '/achievements/first-quest.png',
         unlockedAt: new Date(),
-        progress: 100
+        progress: {
+          current: 100,
+          target: 100,
+          description: 'Complete your first quest',
+        },
       };
 
       it('should validate correct achievement objects', () => {
@@ -463,10 +559,32 @@ describe('Type Guards', () => {
       });
 
       it('should reject invalid achievement objects', () => {
-        expect(isValidAchievement({ ...validAchievement, xpReward: -10 })).toBe(false);
-        expect(isValidAchievement({ ...validAchievement, progress: -10 })).toBe(false);
-        expect(isValidAchievement({ ...validAchievement, progress: 150 })).toBe(false);
-        expect(isValidAchievement({ ...validAchievement, title: '' })).toBe(false);
+        expect(isValidAchievement({ ...validAchievement, xpReward: -10 })).toBe(
+          false
+        );
+        expect(
+          isValidAchievement({
+            ...validAchievement,
+            progress: {
+              current: -10,
+              target: 100,
+              description: 'Invalid progress',
+            },
+          })
+        ).toBe(false);
+        expect(
+          isValidAchievement({
+            ...validAchievement,
+            progress: {
+              current: 150,
+              target: 100,
+              description: 'Invalid progress',
+            },
+          })
+        ).toBe(false);
+        expect(isValidAchievement({ ...validAchievement, title: '' })).toBe(
+          false
+        );
       });
     });
 
@@ -481,19 +599,19 @@ describe('Type Guards', () => {
         estimatedMinutes: 120,
         courseId: '123e4567-e89b-12d3-a456-426614174001',
         createdAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
       };
 
       it('should validate correct todo objects', () => {
         expect(isValidTodo(validTodo)).toBe(true);
-        
+
         // Test with minimal fields
         const minimalTodo = {
           id: '123e4567-e89b-12d3-a456-426614174000',
           title: 'Simple todo',
           completed: false,
           createdAt: new Date(),
-          updatedAt: new Date()
+          updatedAt: new Date(),
         };
         expect(isValidTodo(minimalTodo)).toBe(true);
       });
@@ -501,7 +619,9 @@ describe('Type Guards', () => {
       it('should reject invalid todo objects', () => {
         expect(isValidTodo({ ...validTodo, title: '' })).toBe(false);
         expect(isValidTodo({ ...validTodo, priority: 'invalid' })).toBe(false);
-        expect(isValidTodo({ ...validTodo, estimatedMinutes: -10 })).toBe(false);
+        expect(isValidTodo({ ...validTodo, estimatedMinutes: -10 })).toBe(
+          false
+        );
         expect(isValidTodo({ ...validTodo, completed: 'yes' })).toBe(false);
       });
     });
@@ -538,16 +658,16 @@ describe('Type Guards', () => {
         email: 'test@example.com',
         createdAt: new Date(),
         updatedAt: new Date(),
-        extraProperty: 'should not affect validation'
+        extraProperty: 'should not affect validation',
       };
-      
+
       expect(isValidUser(userWithExtra)).toBe(true);
     });
 
     it('should handle circular references', () => {
       const circular: any = { id: '123e4567-e89b-12d3-a456-426614174000' };
       circular.self = circular;
-      
+
       expect(isValidUser(circular)).toBe(false);
     });
 
@@ -557,9 +677,9 @@ describe('Type Guards', () => {
         email: 'test@example.com',
         name: 'A'.repeat(10000), // Very long name
         createdAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
       };
-      
+
       expect(isValidUser(largeUser)).toBe(true);
     });
   });

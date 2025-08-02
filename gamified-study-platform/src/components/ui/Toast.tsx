@@ -3,23 +3,29 @@ import React, { useState, useEffect } from 'react';
 interface ToastProps {
   children: React.ReactNode;
   visible?: boolean;
+  isOpen?: boolean;
   onClose?: () => void;
   duration?: number;
   variant?: 'default' | 'success' | 'warning' | 'error' | 'info';
+  title?: string;
 }
 
 export const Toast: React.FC<ToastProps> = ({
   children,
   visible = true,
+  isOpen,
   onClose,
   duration = 5000,
   variant = 'default',
+  title,
 }) => {
-  const [isVisible, setIsVisible] = useState(visible);
+  const [isVisible, setIsVisible] = useState(
+    isOpen !== undefined ? isOpen : visible
+  );
 
   useEffect(() => {
-    setIsVisible(visible);
-  }, [visible]);
+    setIsVisible(isOpen !== undefined ? isOpen : visible);
+  }, [visible, isOpen]);
 
   useEffect(() => {
     if (isVisible && duration > 0) {

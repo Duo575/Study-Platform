@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { Button } from '../components/ui/Button';
 import {
@@ -13,6 +13,9 @@ import { useOnboarding } from '../components/onboarding/OnboardingTour';
 import { useFeedback } from '../components/feedback/FeedbackSystem';
 import { Link } from 'react-router-dom';
 import { PetDashboardWidget } from '../components/gamification/pet';
+import LearningRecommendation from '../components/features/LearningRecommendation';
+import { recommendationService } from '../services/recommendationService';
+import type { StudentLearningProfile } from '../types';
 import {
   BookOpen,
   Target,
@@ -28,6 +31,22 @@ export function DashboardPage() {
   const [showModal, setShowModal] = useState(false);
   const { startTour } = useOnboarding();
   const { addMessage } = useFeedback();
+  const [learningProfile, setLearningProfile] = useState<StudentLearningProfile | undefined>();
+  
+  useEffect(() => {
+    const fetchLearningProfile = async () => {
+      if (user?.id) {
+        try {
+          const profile = await recommendationService.getUserLearningProfile(user.id);
+          setLearningProfile(profile);
+        } catch (error) {
+          console.error('Error fetching learning profile:', error);
+        }
+      }
+    };
+    
+    fetchLearningProfile();
+  }, [user?.id]);
 
   const handleGetStarted = () => {
     addMessage({
@@ -314,6 +333,25 @@ export function DashboardPage() {
             <PetDashboardWidget userId={user?.id || ''} />
           </CardContent>
         </Card>
+      </div>
+      
+      {/* Learning Recommendations */}
+      <div className="mt-6">
+        <LearningRecommendation 
+          userId={user?.id || ''} 
+          learningProfile={learningProfile}
+          maxRecommendations={3}
+          showActions={true}
+          className="shadow-md"
+        />
+        <div className="mt-2 text-right">
+          <Link 
+            to="/learning-recommendations" 
+            className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+          >
+            View detailed learning recommendations →
+          </Link>
+        </div>
       </div>
 
       {/* Demo Modal */}

@@ -17,21 +17,28 @@ const DataExport: React.FC = () => {
     createBackup,
     loadBackups,
     deleteBackup,
-    clearError
+    clearError,
   } = useDataExport();
 
   const [activeTab, setActiveTab] = useState<'export' | 'backup'>('export');
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(
+    null
+  );
 
-  const { register, handleSubmit, watch, formState: { errors } } = useForm<DataExportForm>({
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors: _errors },
+  } = useForm<DataExportForm>({
     defaultValues: {
       format: 'json',
       includePersonalData: true,
       includeProgressData: true,
       includeGameData: true,
       includeStudyData: true,
-      dateRangeEnabled: false
-    }
+      dateRangeEnabled: false,
+    },
   });
 
   const dateRangeEnabled = watch('dateRangeEnabled');
@@ -50,13 +57,13 @@ const DataExport: React.FC = () => {
       includePersonalData: data.includePersonalData,
       includeProgressData: data.includeProgressData,
       includeGameData: data.includeGameData,
-      includeStudyData: data.includeStudyData
+      includeStudyData: data.includeStudyData,
     };
 
     if (data.dateRangeEnabled && data.startDate && data.endDate) {
       options.dateRange = {
         start: data.startDate,
-        end: data.endDate
+        end: data.endDate,
       };
     }
 
@@ -73,7 +80,7 @@ const DataExport: React.FC = () => {
     try {
       await deleteBackup(user.id, backupId);
       setShowDeleteConfirm(null);
-    } catch (err) {
+    } catch (_err) {
       // Error is handled by the hook
     }
   };
@@ -82,7 +89,7 @@ const DataExport: React.FC = () => {
     if (!bytes) return 'Unknown size';
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(1024));
-    return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
+    return Math.round((bytes / Math.pow(1024, i)) * 100) / 100 + ' ' + sizes[i];
   };
 
   return (
@@ -118,8 +125,16 @@ const DataExport: React.FC = () => {
             <div className="mb-6 bg-red-50 border border-red-200 rounded-md p-4">
               <div className="flex">
                 <div className="flex-shrink-0">
-                  <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  <svg
+                    className="h-5 w-5 text-red-400"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                      clipRule="evenodd"
+                    />
                   </svg>
                 </div>
                 <div className="ml-3">
@@ -141,23 +156,36 @@ const DataExport: React.FC = () => {
               <div className="flex items-center">
                 <div className="flex-1">
                   <h3 className="text-sm font-medium text-blue-800">
-                    {exportProgress.stage === 'error' ? 'Export Failed' : 'Exporting Data'}
+                    {exportProgress.stage === 'error'
+                      ? 'Export Failed'
+                      : 'Exporting Data'}
                   </h3>
-                  <p className="mt-1 text-sm text-blue-700">{exportProgress.message}</p>
-                  {exportProgress.stage !== 'error' && exportProgress.stage !== 'complete' && (
-                    <div className="mt-2">
-                      <div className="bg-blue-200 rounded-full h-2">
-                        <div
-                          className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                          style={{ width: `${exportProgress.progress}%` }}
-                        />
+                  <p className="mt-1 text-sm text-blue-700">
+                    {exportProgress.message}
+                  </p>
+                  {exportProgress.stage !== 'error' &&
+                    exportProgress.stage !== 'complete' && (
+                      <div className="mt-2">
+                        <div className="bg-blue-200 rounded-full h-2">
+                          <div
+                            className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                            style={{ width: `${exportProgress.progress}%` }}
+                          />
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
                 </div>
                 {exportProgress.stage === 'complete' && (
-                  <svg className="h-5 w-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  <svg
+                    className="h-5 w-5 text-green-500"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                      clipRule="evenodd"
+                    />
                   </svg>
                 )}
               </div>
@@ -166,9 +194,12 @@ const DataExport: React.FC = () => {
 
           {activeTab === 'export' && (
             <div>
-              <h2 className="text-lg font-medium text-gray-900 mb-4">Export Your Data</h2>
+              <h2 className="text-lg font-medium text-gray-900 mb-4">
+                Export Your Data
+              </h2>
               <p className="text-sm text-gray-600 mb-6">
-                Download your study data in various formats. Choose what data to include and the format you prefer.
+                Download your study data in various formats. Choose what data to
+                include and the format you prefer.
               </p>
 
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -186,7 +217,9 @@ const DataExport: React.FC = () => {
                       />
                       <div>
                         <div className="font-medium">JSON</div>
-                        <div className="text-sm text-gray-500">Complete data structure</div>
+                        <div className="text-sm text-gray-500">
+                          Complete data structure
+                        </div>
                       </div>
                     </label>
                     <label className="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
@@ -198,7 +231,9 @@ const DataExport: React.FC = () => {
                       />
                       <div>
                         <div className="font-medium">CSV</div>
-                        <div className="text-sm text-gray-500">Spreadsheet format</div>
+                        <div className="text-sm text-gray-500">
+                          Spreadsheet format
+                        </div>
                       </div>
                     </label>
                     <label className="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
@@ -210,7 +245,9 @@ const DataExport: React.FC = () => {
                       />
                       <div>
                         <div className="font-medium">PDF</div>
-                        <div className="text-sm text-gray-500">Summary report</div>
+                        <div className="text-sm text-gray-500">
+                          Summary report
+                        </div>
                       </div>
                     </label>
                   </div>
@@ -229,7 +266,9 @@ const DataExport: React.FC = () => {
                       />
                       <div>
                         <div className="font-medium">Personal Information</div>
-                        <div className="text-sm text-gray-500">Profile, preferences, and settings</div>
+                        <div className="text-sm text-gray-500">
+                          Profile, preferences, and settings
+                        </div>
                       </div>
                     </label>
                     <label className="flex items-center">
@@ -240,7 +279,9 @@ const DataExport: React.FC = () => {
                       />
                       <div>
                         <div className="font-medium">Study Data</div>
-                        <div className="text-sm text-gray-500">Courses, sessions, and progress</div>
+                        <div className="text-sm text-gray-500">
+                          Courses, sessions, and progress
+                        </div>
                       </div>
                     </label>
                     <label className="flex items-center">
@@ -251,7 +292,9 @@ const DataExport: React.FC = () => {
                       />
                       <div>
                         <div className="font-medium">Gamification Data</div>
-                        <div className="text-sm text-gray-500">XP, achievements, and pet information</div>
+                        <div className="text-sm text-gray-500">
+                          XP, achievements, and pet information
+                        </div>
                       </div>
                     </label>
                     <label className="flex items-center">
@@ -262,7 +305,9 @@ const DataExport: React.FC = () => {
                       />
                       <div>
                         <div className="font-medium">Progress Analytics</div>
-                        <div className="text-sm text-gray-500">Statistics and performance data</div>
+                        <div className="text-sm text-gray-500">
+                          Statistics and performance data
+                        </div>
                       </div>
                     </label>
                   </div>
@@ -277,7 +322,7 @@ const DataExport: React.FC = () => {
                     />
                     <span className="font-medium">Limit to Date Range</span>
                   </label>
-                  
+
                   {dateRangeEnabled && (
                     <div className="grid grid-cols-2 gap-4 ml-6">
                       <div>
@@ -321,9 +366,12 @@ const DataExport: React.FC = () => {
             <div>
               <div className="flex justify-between items-center mb-6">
                 <div>
-                  <h2 className="text-lg font-medium text-gray-900">Backup & Restore</h2>
+                  <h2 className="text-lg font-medium text-gray-900">
+                    Backup & Restore
+                  </h2>
                   <p className="text-sm text-gray-600">
-                    Create backups of your data and restore from previous backups.
+                    Create backups of your data and restore from previous
+                    backups.
                   </p>
                 </div>
                 <button
@@ -338,29 +386,54 @@ const DataExport: React.FC = () => {
               {isLoadingBackups ? (
                 <div className="text-center py-8">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-                  <p className="mt-2 text-sm text-gray-600">Loading backups...</p>
+                  <p className="mt-2 text-sm text-gray-600">
+                    Loading backups...
+                  </p>
                 </div>
               ) : backups.length === 0 ? (
                 <div className="text-center py-8">
-                  <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
+                  <svg
+                    className="mx-auto h-12 w-12 text-gray-400"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"
+                    />
                   </svg>
-                  <h3 className="mt-2 text-sm font-medium text-gray-900">No backups</h3>
-                  <p className="mt-1 text-sm text-gray-500">Create your first backup to get started.</p>
+                  <h3 className="mt-2 text-sm font-medium text-gray-900">
+                    No backups
+                  </h3>
+                  <p className="mt-1 text-sm text-gray-500">
+                    Create your first backup to get started.
+                  </p>
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {backups.map((backup) => (
-                    <div key={backup.id} className="border border-gray-200 rounded-lg p-4">
+                  {backups.map(backup => (
+                    <div
+                      key={backup.id}
+                      className="border border-gray-200 rounded-lg p-4"
+                    >
                       <div className="flex items-center justify-between">
                         <div className="flex-1">
-                          <h3 className="text-sm font-medium text-gray-900">{backup.filename}</h3>
+                          <h3 className="text-sm font-medium text-gray-900">
+                            {backup.filename}
+                          </h3>
                           <div className="mt-1 text-sm text-gray-500">
-                            <span>Created: {format(backup.createdAt, 'PPp')}</span>
+                            <span>
+                              Created: {format(backup.createdAt, 'PPp')}
+                            </span>
                             <span className="mx-2">•</span>
                             <span>Size: {formatFileSize(backup.fileSize)}</span>
                             <span className="mx-2">•</span>
-                            <span className="capitalize">{backup.backupType} backup</span>
+                            <span className="capitalize">
+                              {backup.backupType} backup
+                            </span>
                           </div>
                         </div>
                         <div className="flex space-x-2">
@@ -387,13 +460,26 @@ const DataExport: React.FC = () => {
           <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
             <div className="mt-3 text-center">
               <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
-                <svg className="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                <svg
+                  className="h-6 w-6 text-red-600"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+                  />
                 </svg>
               </div>
-              <h3 className="text-lg font-medium text-gray-900 mt-2">Delete Backup</h3>
+              <h3 className="text-lg font-medium text-gray-900 mt-2">
+                Delete Backup
+              </h3>
               <p className="text-sm text-gray-500 mt-2">
-                Are you sure you want to delete this backup? This action cannot be undone.
+                Are you sure you want to delete this backup? This action cannot
+                be undone.
               </p>
               <div className="flex justify-center space-x-4 mt-4">
                 <button

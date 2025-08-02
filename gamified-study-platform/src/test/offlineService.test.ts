@@ -27,9 +27,9 @@ const mockIDBObjectStore = {
 };
 
 const mockIDBRequest = {
-  result: null,
+  result: null as any,
   error: null,
-  onsuccess: null,
+  onsuccess: null as any,
   onerror: null,
 };
 

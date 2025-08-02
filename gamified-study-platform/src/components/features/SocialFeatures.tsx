@@ -1,18 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Users, 
-  MessageCircle, 
-  Trophy, 
-  Target, 
+import {
+  Users,
+  MessageCircle,
+  Trophy,
+  Target,
   Video,
   Bell,
   Settings,
   ChevronRight,
-  Star,
-  Clock,
-  Crown,
-  Award
+  // Star,
+  // Clock,
+  // Crown,
+  // Award
 } from 'lucide-react';
 import { useSocial } from '../../hooks/useSocial';
 import SocialDashboard from './SocialDashboard';
@@ -36,10 +36,12 @@ const SocialFeatures: React.FC<SocialFeaturesProps> = ({ className = '' }) => {
     fetchMyGroups,
     fetchGroupInvitations,
     setActiveGroup,
-    clearError
+    clearError,
   } = useSocial();
 
-  const [activeView, setActiveView] = useState<'dashboard' | 'chat' | 'leaderboard' | 'challenges' | 'rooms'>('dashboard');
+  const [activeView, setActiveView] = useState<
+    'dashboard' | 'chat' | 'leaderboard' | 'challenges' | 'rooms'
+  >('dashboard');
   const [showGroupSelector, setShowGroupSelector] = useState(false);
 
   useEffect(() => {
@@ -66,35 +68,70 @@ const SocialFeatures: React.FC<SocialFeaturesProps> = ({ className = '' }) => {
       case 'chat':
         return activeGroup ? `${activeGroup.name} - Chat` : 'Group Chat';
       case 'leaderboard':
-        return activeGroup ? `${activeGroup.name} - Leaderboard` : 'Leaderboard';
+        return activeGroup
+          ? `${activeGroup.name} - Leaderboard`
+          : 'Leaderboard';
       case 'challenges':
         return activeGroup ? `${activeGroup.name} - Challenges` : 'Challenges';
       case 'rooms':
-        return activeGroup ? `${activeGroup.name} - Study Rooms` : 'Study Rooms';
+        return activeGroup
+          ? `${activeGroup.name} - Study Rooms`
+          : 'Study Rooms';
       default:
         return 'Social Features';
     }
   };
 
   const navigationItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: <Users className="w-4 h-4" />, requiresGroup: false },
-    { id: 'chat', label: 'Chat', icon: <MessageCircle className="w-4 h-4" />, requiresGroup: true },
-    { id: 'leaderboard', label: 'Leaderboard', icon: <Trophy className="w-4 h-4" />, requiresGroup: true },
-    { id: 'challenges', label: 'Challenges', icon: <Target className="w-4 h-4" />, requiresGroup: true },
-    { id: 'rooms', label: 'Study Rooms', icon: <Video className="w-4 h-4" />, requiresGroup: true },
+    {
+      id: 'dashboard',
+      label: 'Dashboard',
+      icon: <Users className="w-4 h-4" />,
+      requiresGroup: false,
+    },
+    {
+      id: 'chat',
+      label: 'Chat',
+      icon: <MessageCircle className="w-4 h-4" />,
+      requiresGroup: true,
+    },
+    {
+      id: 'leaderboard',
+      label: 'Leaderboard',
+      icon: <Trophy className="w-4 h-4" />,
+      requiresGroup: true,
+    },
+    {
+      id: 'challenges',
+      label: 'Challenges',
+      icon: <Target className="w-4 h-4" />,
+      requiresGroup: true,
+    },
+    {
+      id: 'rooms',
+      label: 'Study Rooms',
+      icon: <Video className="w-4 h-4" />,
+      requiresGroup: true,
+    },
   ];
 
-  const pendingInvitations = invitations.filter(inv => inv.status === 'pending').length;
+  const pendingInvitations = invitations.filter(
+    inv => inv.status === 'pending'
+  ).length;
 
   return (
-    <div className={`bg-white rounded-xl shadow-sm overflow-hidden ${className}`}>
+    <div
+      className={`bg-white rounded-xl shadow-sm overflow-hidden ${className}`}
+    >
       {/* Header */}
       <div className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white p-6">
         <div className="flex items-center justify-between mb-4">
           <div>
             <h1 className="text-2xl font-bold">{getViewTitle()}</h1>
             <p className="text-indigo-100">
-              {activeGroup ? `${activeGroup.stats.totalMembers} members • ${activeGroup.stats.activeMembers} active` : 'Connect and collaborate with fellow learners'}
+              {activeGroup
+                ? `${activeGroup.stats.totalMembers} members • ${activeGroup.stats.activeMembers} active`
+                : 'Connect and collaborate with fellow learners'}
             </p>
           </div>
           <div className="flex items-center gap-3">
@@ -121,7 +158,9 @@ const SocialFeatures: React.FC<SocialFeaturesProps> = ({ className = '' }) => {
             >
               <Users className="w-4 h-4" />
               <span>{activeGroup ? activeGroup.name : 'Select Group'}</span>
-              <ChevronRight className={`w-4 h-4 transition-transform ${showGroupSelector ? 'rotate-90' : ''}`} />
+              <ChevronRight
+                className={`w-4 h-4 transition-transform ${showGroupSelector ? 'rotate-90' : ''}`}
+              />
             </button>
 
             <AnimatePresence>
@@ -133,7 +172,7 @@ const SocialFeatures: React.FC<SocialFeaturesProps> = ({ className = '' }) => {
                   className="absolute top-full left-0 right-0 mt-2 bg-white rounded-lg shadow-lg border border-gray-200 z-10"
                 >
                   <div className="p-2">
-                    {groups.map((group) => (
+                    {groups.map(group => (
                       <button
                         key={group.id}
                         onClick={() => handleGroupSelect(group)}
@@ -149,7 +188,8 @@ const SocialFeatures: React.FC<SocialFeaturesProps> = ({ className = '' }) => {
                         <div className="flex-1">
                           <div className="font-medium">{group.name}</div>
                           <div className="text-sm text-gray-500">
-                            {group.stats.totalMembers} members • {group.stats.activeMembers} active
+                            {group.stats.totalMembers} members •{' '}
+                            {group.stats.activeMembers} active
                           </div>
                         </div>
                         {group.isPrivate && (
@@ -170,10 +210,10 @@ const SocialFeatures: React.FC<SocialFeaturesProps> = ({ className = '' }) => {
       {/* Navigation */}
       <div className="border-b border-gray-200">
         <nav className="flex overflow-x-auto">
-          {navigationItems.map((item) => {
+          {navigationItems.map(item => {
             const isDisabled = item.requiresGroup && !activeGroup;
             const isActive = activeView === item.id;
-            
+
             return (
               <button
                 key={item.id}
@@ -183,8 +223,8 @@ const SocialFeatures: React.FC<SocialFeaturesProps> = ({ className = '' }) => {
                   isActive
                     ? 'border-indigo-500 text-indigo-600 bg-indigo-50'
                     : isDisabled
-                    ? 'border-transparent text-gray-400 cursor-not-allowed'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                      ? 'border-transparent text-gray-400 cursor-not-allowed'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
                 {item.icon}
@@ -269,7 +309,7 @@ const SocialFeatures: React.FC<SocialFeaturesProps> = ({ className = '' }) => {
           )}
 
           {/* No Group Selected State */}
-          {(activeView !== 'dashboard') && !activeGroup && (
+          {activeView !== 'dashboard' && !activeGroup && (
             <motion.div
               key="no-group"
               initial={{ opacity: 0, y: 20 }}
@@ -279,9 +319,12 @@ const SocialFeatures: React.FC<SocialFeaturesProps> = ({ className = '' }) => {
             >
               <div className="text-center">
                 <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No Group Selected</h3>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  No Group Selected
+                </h3>
                 <p className="text-gray-600 mb-4">
-                  Select a group from the dropdown above to access group features.
+                  Select a group from the dropdown above to access group
+                  features.
                 </p>
                 <button
                   onClick={() => setActiveView('dashboard')}

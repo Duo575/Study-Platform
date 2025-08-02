@@ -1,20 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Users, 
-  MessageCircle, 
-  Trophy, 
-  Target, 
-  Calendar,
+import {
+  Users,
+  MessageCircle,
+  Trophy,
+  Target,
+  // Calendar,
   Bell,
-  Settings,
+  // Settings,
   Plus,
   Search,
-  Filter,
+  // Filter,
   Star,
   Crown,
-  Award,
-  TrendingUp
+  // Award,
+  TrendingUp,
 } from 'lucide-react';
 import { useSocial } from '../../hooks/useSocial';
 import CreateGroupModal from './CreateGroupModal';
@@ -25,7 +25,9 @@ interface SocialDashboardProps {
   className?: string;
 }
 
-const SocialDashboard: React.FC<SocialDashboardProps> = ({ className = '' }) => {
+const SocialDashboard: React.FC<SocialDashboardProps> = ({
+  className = '',
+}) => {
   const {
     groups,
     activeGroup,
@@ -37,12 +39,14 @@ const SocialDashboard: React.FC<SocialDashboardProps> = ({ className = '' }) => 
     fetchGroupInvitations,
     fetchGroupActivities,
     setActiveGroup,
-    clearError
+    clearError,
   } = useSocial();
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showJoinModal, setShowJoinModal] = useState(false);
-  const [selectedTab, setSelectedTab] = useState<'overview' | 'groups' | 'invitations' | 'activities'>('overview');
+  const [selectedTab, setSelectedTab] = useState<
+    'overview' | 'groups' | 'invitations' | 'activities'
+  >('overview');
 
   useEffect(() => {
     fetchMyGroups();
@@ -67,27 +71,47 @@ const SocialDashboard: React.FC<SocialDashboardProps> = ({ className = '' }) => 
   const getGroupStats = () => {
     if (groups.length === 0) return null;
 
-    const totalMembers = groups.reduce((sum, g) => sum + g.stats.totalMembers, 0);
+    const totalMembers = groups.reduce(
+      (sum, g) => sum + g.stats.totalMembers,
+      0
+    );
     const totalXP = groups.reduce((sum, g) => sum + g.stats.groupXP, 0);
-    const totalStudyHours = groups.reduce((sum, g) => sum + g.stats.totalStudyHours, 0);
-    const averageLevel = groups.reduce((sum, g) => sum + g.stats.averageLevel, 0) / groups.length;
+    const totalStudyHours = groups.reduce(
+      (sum, g) => sum + g.stats.totalStudyHours,
+      0
+    );
+    const averageLevel =
+      groups.reduce((sum, g) => sum + g.stats.averageLevel, 0) / groups.length;
 
     return {
       totalGroups: groups.length,
       totalMembers,
       totalXP,
       totalStudyHours,
-      averageLevel: Math.round(averageLevel)
+      averageLevel: Math.round(averageLevel),
     };
   };
 
   const stats = getGroupStats();
 
   const tabs = [
-    { id: 'overview', label: 'Overview', icon: <TrendingUp className="w-4 h-4" /> },
+    {
+      id: 'overview',
+      label: 'Overview',
+      icon: <TrendingUp className="w-4 h-4" />,
+    },
     { id: 'groups', label: 'My Groups', icon: <Users className="w-4 h-4" /> },
-    { id: 'invitations', label: 'Invitations', icon: <Bell className="w-4 h-4" />, badge: invitations.filter(i => i.status === 'pending').length },
-    { id: 'activities', label: 'Activities', icon: <MessageCircle className="w-4 h-4" /> },
+    {
+      id: 'invitations',
+      label: 'Invitations',
+      icon: <Bell className="w-4 h-4" />,
+      badge: invitations.filter(i => i.status === 'pending').length,
+    },
+    {
+      id: 'activities',
+      label: 'Activities',
+      icon: <MessageCircle className="w-4 h-4" />,
+    },
   ];
 
   return (
@@ -97,7 +121,9 @@ const SocialDashboard: React.FC<SocialDashboardProps> = ({ className = '' }) => 
         <div className="flex items-center justify-between mb-4">
           <div>
             <h2 className="text-2xl font-bold text-gray-900">Social Hub</h2>
-            <p className="text-gray-600">Connect, collaborate, and compete with fellow learners</p>
+            <p className="text-gray-600">
+              Connect, collaborate, and compete with fellow learners
+            </p>
           </div>
           <div className="flex gap-3">
             <button
@@ -132,23 +158,33 @@ const SocialDashboard: React.FC<SocialDashboardProps> = ({ className = '' }) => 
         {stats && (
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
             <div className="text-center">
-              <div className="text-2xl font-bold text-indigo-600">{stats.totalGroups}</div>
+              <div className="text-2xl font-bold text-indigo-600">
+                {stats.totalGroups}
+              </div>
               <div className="text-sm text-gray-600">Groups</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-green-600">{stats.totalMembers}</div>
+              <div className="text-2xl font-bold text-green-600">
+                {stats.totalMembers}
+              </div>
               <div className="text-sm text-gray-600">Members</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-purple-600">{stats.totalXP.toLocaleString()}</div>
+              <div className="text-2xl font-bold text-purple-600">
+                {stats.totalXP.toLocaleString()}
+              </div>
               <div className="text-sm text-gray-600">Total XP</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-blue-600">{stats.totalStudyHours}h</div>
+              <div className="text-2xl font-bold text-blue-600">
+                {stats.totalStudyHours}h
+              </div>
               <div className="text-sm text-gray-600">Study Time</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-yellow-600">{stats.averageLevel}</div>
+              <div className="text-2xl font-bold text-yellow-600">
+                {stats.averageLevel}
+              </div>
               <div className="text-sm text-gray-600">Avg Level</div>
             </div>
           </div>
@@ -158,7 +194,7 @@ const SocialDashboard: React.FC<SocialDashboardProps> = ({ className = '' }) => 
       {/* Navigation Tabs */}
       <div className="border-b border-gray-200">
         <nav className="flex space-x-8 px-6">
-          {tabs.map((tab) => (
+          {tabs.map(tab => (
             <button
               key={tab.id}
               onClick={() => setSelectedTab(tab.id as any)}
@@ -193,7 +229,9 @@ const SocialDashboard: React.FC<SocialDashboardProps> = ({ className = '' }) => 
             >
               {/* Quick Actions */}
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                  Quick Actions
+                </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   <button
                     onClick={() => setShowCreateModal(true)}
@@ -201,7 +239,9 @@ const SocialDashboard: React.FC<SocialDashboardProps> = ({ className = '' }) => 
                   >
                     <Plus className="w-6 h-6 mx-auto mb-2" />
                     <div className="font-medium">Create Group</div>
-                    <div className="text-sm opacity-90">Start a new study group</div>
+                    <div className="text-sm opacity-90">
+                      Start a new study group
+                    </div>
                   </button>
                   <button
                     onClick={() => setShowJoinModal(true)}
@@ -209,7 +249,9 @@ const SocialDashboard: React.FC<SocialDashboardProps> = ({ className = '' }) => 
                   >
                     <Search className="w-6 h-6 mx-auto mb-2" />
                     <div className="font-medium">Join Group</div>
-                    <div className="text-sm opacity-90">Find groups to join</div>
+                    <div className="text-sm opacity-90">
+                      Find groups to join
+                    </div>
                   </button>
                   <button className="p-4 bg-gradient-to-r from-yellow-500 to-orange-600 text-white rounded-lg hover:from-yellow-600 hover:to-orange-700 transition-all">
                     <Trophy className="w-6 h-6 mx-auto mb-2" />
@@ -226,23 +268,34 @@ const SocialDashboard: React.FC<SocialDashboardProps> = ({ className = '' }) => 
 
               {/* Recent Activity */}
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Activity</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                  Recent Activity
+                </h3>
                 {activities.length === 0 ? (
                   <div className="text-center py-8 bg-gray-50 rounded-lg">
                     <MessageCircle className="w-12 h-12 text-gray-300 mx-auto mb-3" />
                     <p className="text-gray-600">No recent activity</p>
-                    <p className="text-sm text-gray-500">Join a group to see activity here</p>
+                    <p className="text-sm text-gray-500">
+                      Join a group to see activity here
+                    </p>
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {activities.slice(0, 5).map((activity) => (
-                      <div key={activity.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                    {activities.slice(0, 5).map(activity => (
+                      <div
+                        key={activity.id}
+                        className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg"
+                      >
                         <div className="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center">
                           <Users className="w-4 h-4 text-indigo-600" />
                         </div>
                         <div className="flex-1">
-                          <p className="text-sm text-gray-900">{activity.description}</p>
-                          <p className="text-xs text-gray-500">{activity.timestamp.toLocaleString()}</p>
+                          <p className="text-sm text-gray-900">
+                            {activity.description}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {activity.timestamp.toLocaleString()}
+                          </p>
                         </div>
                       </div>
                     ))}
@@ -267,9 +320,12 @@ const SocialDashboard: React.FC<SocialDashboardProps> = ({ className = '' }) => 
               ) : groups.length === 0 ? (
                 <div className="text-center py-12">
                   <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No Groups Yet</h3>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                    No Groups Yet
+                  </h3>
                   <p className="text-gray-600 mb-6">
-                    Join or create your first study group to start collaborating with other learners.
+                    Join or create your first study group to start collaborating
+                    with other learners.
                   </p>
                   <div className="flex gap-3 justify-center">
                     <button
@@ -288,7 +344,7 @@ const SocialDashboard: React.FC<SocialDashboardProps> = ({ className = '' }) => 
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {groups.map((group) => (
+                  {groups.map(group => (
                     <motion.div
                       key={group.id}
                       initial={{ opacity: 0, scale: 0.95 }}
@@ -304,7 +360,9 @@ const SocialDashboard: React.FC<SocialDashboardProps> = ({ className = '' }) => 
                       <div className="flex items-start justify-between mb-4">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-2">
-                            <h3 className="font-semibold text-gray-900">{group.name}</h3>
+                            <h3 className="font-semibold text-gray-900">
+                              {group.name}
+                            </h3>
                             {group.isPrivate && (
                               <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
                                 Private
@@ -312,22 +370,30 @@ const SocialDashboard: React.FC<SocialDashboardProps> = ({ className = '' }) => 
                             )}
                           </div>
                           {group.description && (
-                            <p className="text-sm text-gray-600 mb-3">{group.description}</p>
+                            <p className="text-sm text-gray-600 mb-3">
+                              {group.description}
+                            </p>
                           )}
                         </div>
                         <div className="flex items-center gap-1">
                           <Crown className="w-4 h-4 text-yellow-500" />
-                          <span className="text-sm text-gray-500">Lv.{Math.floor(group.stats.averageLevel)}</span>
+                          <span className="text-sm text-gray-500">
+                            Lv.{Math.floor(group.stats.averageLevel)}
+                          </span>
                         </div>
                       </div>
 
                       <div className="grid grid-cols-2 gap-4 mb-4">
                         <div className="text-center">
-                          <div className="text-lg font-semibold text-gray-900">{group.stats.totalMembers}</div>
+                          <div className="text-lg font-semibold text-gray-900">
+                            {group.stats.totalMembers}
+                          </div>
                           <div className="text-xs text-gray-500">Members</div>
                         </div>
                         <div className="text-center">
-                          <div className="text-lg font-semibold text-green-600">{group.stats.activeMembers}</div>
+                          <div className="text-lg font-semibold text-green-600">
+                            {group.stats.activeMembers}
+                          </div>
                           <div className="text-xs text-gray-500">Active</div>
                         </div>
                       </div>
@@ -356,23 +422,32 @@ const SocialDashboard: React.FC<SocialDashboardProps> = ({ className = '' }) => 
               {invitations.length === 0 ? (
                 <div className="text-center py-12">
                   <Bell className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No Invitations</h3>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                    No Invitations
+                  </h3>
                   <p className="text-gray-600">
                     You don't have any pending group invitations.
                   </p>
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {invitations.map((invitation) => (
-                    <div key={invitation.id} className="p-4 border border-gray-200 rounded-lg">
+                  {invitations.map(invitation => (
+                    <div
+                      key={invitation.id}
+                      className="p-4 border border-gray-200 rounded-lg"
+                    >
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
-                          <h4 className="font-medium text-gray-900">{invitation.groupName}</h4>
+                          <h4 className="font-medium text-gray-900">
+                            {invitation.groupName}
+                          </h4>
                           <p className="text-sm text-gray-600 mb-2">
                             Invited by {invitation.invitedByUsername}
                           </p>
                           {invitation.message && (
-                            <p className="text-sm text-gray-700 mb-3 italic">"{invitation.message}"</p>
+                            <p className="text-sm text-gray-700 mb-3 italic">
+                              "{invitation.message}"
+                            </p>
                           )}
                           <p className="text-xs text-gray-500">
                             Expires {invitation.expiresAt.toLocaleDateString()}
@@ -406,15 +481,20 @@ const SocialDashboard: React.FC<SocialDashboardProps> = ({ className = '' }) => 
               {activities.length === 0 ? (
                 <div className="text-center py-12">
                   <MessageCircle className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No Activity</h3>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                    No Activity
+                  </h3>
                   <p className="text-gray-600">
                     Join a group to see activity from your study groups.
                   </p>
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {activities.map((activity) => (
-                    <div key={activity.id} className="flex items-start gap-4 p-4 bg-gray-50 rounded-lg">
+                  {activities.map(activity => (
+                    <div
+                      key={activity.id}
+                      className="flex items-start gap-4 p-4 bg-gray-50 rounded-lg"
+                    >
                       <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center flex-shrink-0">
                         <Users className="w-5 h-5 text-indigo-600" />
                       </div>
@@ -436,13 +516,13 @@ const SocialDashboard: React.FC<SocialDashboardProps> = ({ className = '' }) => 
       </div>
 
       {/* Modals */}
-      <CreateGroupModal 
-        isOpen={showCreateModal} 
-        onClose={() => setShowCreateModal(false)} 
+      <CreateGroupModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
       />
-      <JoinGroupModal 
-        isOpen={showJoinModal} 
-        onClose={() => setShowJoinModal(false)} 
+      <JoinGroupModal
+        isOpen={showJoinModal}
+        onClose={() => setShowJoinModal(false)}
       />
     </div>
   );

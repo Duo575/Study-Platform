@@ -8,6 +8,7 @@ export interface User {
   id: string;
   email: string;
   username: string;
+  name?: string; // Display name (computed from profile or username)
   profile: UserProfile;
   gameStats: GameStats;
   preferences: UserPreferences;
@@ -39,6 +40,7 @@ export interface WeeklyStats {
   questsCompleted: number;
   streakMaintained: boolean;
   xpEarned: number;
+  averageScore: number;
 }
 
 export interface UserPreferences {
@@ -51,6 +53,7 @@ export interface UserPreferences {
 export interface NotificationSettings {
   email: boolean;
   push: boolean;
+  inApp: boolean;
   studyReminders: boolean;
   achievementUnlocks: boolean;
   petReminders: boolean;
@@ -173,6 +176,8 @@ export interface PetEvolutionStage {
   name: string;
   description: string;
   imageUrl: string;
+  requiredLevel: number;
+  stats: PetStats;
   unlockedAbilities: string[];
 }
 
@@ -190,6 +195,43 @@ export interface PetAccessory {
   imageUrl: string;
   rarity: 'common' | 'rare' | 'epic' | 'legendary';
   unlockedAt: Date;
+}
+
+// Extended StudyPet interface with additional properties
+export interface StudyPetExtended extends StudyPet {
+  mood: PetMood;
+  moodHistory: PetMoodEntry[];
+  totalStudyTime: number;
+  favoriteSubjects: string[];
+  achievements: string[];
+  evolutionStage: 'egg' | 'baby' | 'child' | 'teen' | 'adult' | 'elder';
+}
+
+// Pet mood system
+export interface PetMood {
+  current: 'excited' | 'happy' | 'content' | 'neutral' | 'sad' | 'depressed';
+  factors: MoodFactor[];
+  lastUpdated: Date;
+  trend: 'improving' | 'stable' | 'declining';
+}
+
+export interface MoodFactor {
+  type:
+    | 'study_session'
+    | 'feeding'
+    | 'playing'
+    | 'neglect'
+    | 'achievement'
+    | 'milestone';
+  impact: number; // -100 to 100
+  description: string;
+  timestamp: Date;
+}
+
+export interface PetMoodEntry {
+  mood: PetMood['current'];
+  timestamp: Date;
+  triggers: string[];
 }
 
 export interface Achievement {
@@ -216,6 +258,47 @@ export interface AchievementProgress {
   current: number;
   target: number;
   description: string;
+}
+
+export interface AchievementDefinition {
+  id: string;
+  title: string;
+  description: string;
+  category: AchievementCategory;
+  rarity: 'common' | 'rare' | 'epic' | 'legendary';
+  xpReward: number;
+  iconUrl?: string;
+  requirements: AchievementRequirement;
+  isHidden?: boolean;
+  isSeasonalEvent?: boolean;
+  eventEndDate?: Date;
+}
+
+export interface AchievementRequirement {
+  type:
+    | 'study_time'
+    | 'consistency'
+    | 'quest_completion'
+    | 'pet_care'
+    | 'social'
+    | 'special_event'
+    | 'composite';
+  conditions: AchievementCondition[];
+  operator?: 'AND' | 'OR';
+}
+
+export interface AchievementCondition {
+  metric: string;
+  operator: '>=' | '<=' | '=' | '>' | '<';
+  value: number | string | boolean;
+  timeframe?: 'all_time' | 'daily' | 'weekly' | 'monthly';
+}
+
+export interface AchievementUnlock {
+  achievement: AchievementDefinition;
+  unlockedAt: Date;
+  xpAwarded: number;
+  isNew: boolean;
 }
 
 export interface StudySession {
@@ -1841,12 +1924,15 @@ export interface UnlockRequirement {
     | 'coins_spent'
     | 'study_hours'
     | 'quests_completed'
-    | 'pet_evolution';
-  value: number;
+    | 'pet_evolution'
+    | 'coins'
+    | 'streak_days'
+    | 'level_reached';
+  value?: number;
   target: number;
   current: number;
   description: string;
-  met: boolean;
+  met?: boolean;
 }
 
 export interface ItemEffect {
@@ -1911,4 +1997,156 @@ export interface StoreState {
   isLoading: boolean;
   error: string | null;
   filters: StoreFilters;
+  // Convenience property for quick access to coins
+  coins: number;
+}
+
+// Missing types for components
+export interface SeasonalEvent {
+  id: string;
+  name: string;
+  title: string;
+  description: string;
+  startDate: Date;
+  endDate: Date;
+  isActive: boolean;
+  achievements: any[];
+  specialRewards: {
+    exclusiveBadges?: any[];
+    limitedTimeItems?: any[];
+    xpMultiplier?: number;
+  };
+}
+
+export interface Environment {
+  id: string;
+  name: string;
+  category: 'free' | 'premium';
+  theme: {
+    primaryColor: string;
+    secondaryColor: string;
+    backgroundColor: string;
+    textColor: string;
+    accentColor: string;
+    cssVariables: Record<string, string>;
+  };
+  audio: {
+    ambientTrack: string;
+    musicTracks: MusicTrack[];
+    soundEffects: Record<string, string>;
+    defaultVolume: number;
+  };
+  visuals: {
+    backgroundImage: string;
+    overlayElements: any[];
+    particleEffects: ParticleEffect[];
+  };
+  unlockRequirements?: UnlockRequirement[];
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface MusicTrack {
+  id: string;
+  title: string;
+  artist: string;
+  url: string;
+  duration: number;
+  genre: string;
+  mood?: string;
+}
+
+// Game types
+export interface MiniGame {
+  id: string;
+  name: string;
+  description: string;
+  instructions: string;
+  estimatedDuration: number; // in minutes
+  difficulty: 'easy' | 'medium' | 'hard';
+  category: string;
+  xpReward: number;
+  coinReward: number;
+  unlockRequirements?: UnlockRequirement[];
+}
+
+export interface GameSession {
+  id: string;
+  gameId: string;
+  userId: string;
+  startTime: Date;
+  endTime?: Date;
+  score: number;
+  xpEarned: number;
+  completed: boolean;
+  duration: number; // in seconds
+}
+
+export interface GameResult {
+  success: boolean;
+  score: number;
+  coinsEarned: number;
+  newAchievements: Achievement[];
+  personalBest: boolean;
+  timeSpent: number; // in seconds
+}
+
+export interface ParticleEffect {
+  type: string;
+  count: number;
+  speed: number;
+  size: { min: number; max: number };
+  color: string;
+}
+
+// Environment Store State
+export interface EnvironmentState {
+  currentEnvironment: Environment | null;
+  availableEnvironments: Environment[];
+  unlockedEnvironments: string[];
+  audioSettings: AudioSettings;
+  visualSettings: VisualSettings;
+  isLoading: boolean;
+  error: string | null;
+  preloadedAssets: string[];
+}
+
+export interface AudioSettings {
+  masterVolume: number;
+  ambientVolume: number;
+  musicVolume: number;
+  soundEffectsVolume: number;
+  currentPlaylist?: string;
+  autoPlay: boolean;
+}
+
+export interface VisualSettings {
+  particlesEnabled: boolean;
+  animationsEnabled: boolean;
+  backgroundQuality: 'low' | 'medium' | 'high';
+  reducedMotion: boolean;
+}
+
+export interface EnvironmentCustomization {
+  environmentId: string;
+  customTheme?: Partial<Environment['theme']>;
+  customAudio?: Partial<Environment['audio']>;
+  customVisuals?: Partial<Environment['visuals']>;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface Todo {
+  id: string;
+  title: string;
+  description?: string;
+  completed: boolean;
+  priority: 'low' | 'medium' | 'high';
+  estimatedMinutes: number;
+  courseId?: string;
+  questId?: string;
+  dueDate?: Date;
+  createdAt: Date;
+  completedAt?: Date;
+  updatedAt?: Date;
 }

@@ -24,7 +24,7 @@ export const MusicPlayer: React.FC<MusicPlayerProps> = ({
   const {
     currentTrack,
     isPlaying,
-    playbackPosition,
+    playbackPosition: _playbackPosition,
     audioSettings,
     playMusic,
     pauseMusic,
@@ -119,7 +119,7 @@ export const MusicPlayer: React.FC<MusicPlayerProps> = ({
     }
   };
 
-  const handleStop = () => {
+  const _handleStop = () => {
     stopMusic();
     setCurrentTime(0);
   };

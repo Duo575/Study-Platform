@@ -6,7 +6,7 @@ import { Select } from '../../ui/Select';
 import { Card } from '../../ui/Card';
 import { Badge } from '../../ui/Badge';
 import { LoadingSpinner } from '../../ui/LoadingSpinner';
-import type { Course } from '../../../types';
+// import type { Course } from '../../../types';
 
 interface QuestGeneratorProps {
   onClose?: () => void;

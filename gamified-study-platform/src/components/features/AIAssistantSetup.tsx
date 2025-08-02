@@ -1,24 +1,41 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useAI } from '../../hooks/useAI';
-import { AIPersonality, LearningStyle } from '../../types';
+import { LearningStyle } from '../../types';
 
 const setupSchema = z.object({
-  name: z.string().min(1, 'Assistant name is required').max(50, 'Name too long'),
-  personalityType: z.enum(['encouraging', 'analytical', 'casual', 'professional']),
+  name: z
+    .string()
+    .min(1, 'Assistant name is required')
+    .max(50, 'Name too long'),
+  personalityType: z.enum([
+    'encouraging',
+    'analytical',
+    'casual',
+    'professional',
+  ]),
   communicationStyle: z.enum(['formal', 'friendly', 'motivational', 'direct']),
   studyMethodSuggestions: z.boolean(),
   motivationalMessages: z.boolean(),
   progressCelebrations: z.boolean(),
   reminderStyle: z.enum(['gentle', 'firm', 'playful']),
   explanationDepth: z.enum(['basic', 'intermediate', 'advanced']),
-  learningStyle: z.array(z.enum([
-    'visual', 'auditory', 'kinesthetic', 'reading_writing', 
-    'logical', 'social', 'solitary'
-  ])).min(1, 'Select at least one learning style'),
+  learningStyle: z
+    .array(
+      z.enum([
+        'visual',
+        'auditory',
+        'kinesthetic',
+        'reading_writing',
+        'logical',
+        'social',
+        'solitary',
+      ])
+    )
+    .min(1, 'Select at least one learning style'),
 });
 
 type SetupFormData = z.infer<typeof setupSchema>;
@@ -117,13 +134,16 @@ export const AIAssistantSetup: React.FC<AIAssistantSetupProps> = ({
           Set Up Your AI Study Assistant
         </h2>
         <p className="text-gray-600 dark:text-gray-400">
-          Let's personalize your AI assistant to match your learning style and preferences.
+          Let's personalize your AI assistant to match your learning style and
+          preferences.
         </p>
-        
+
         {/* Progress Bar */}
         <div className="mt-6">
           <div className="flex justify-between text-sm text-gray-500 dark:text-gray-400 mb-2">
-            <span>Step {step} of {totalSteps}</span>
+            <span>
+              Step {step} of {totalSteps}
+            </span>
             <span>{Math.round((step / totalSteps) * 100)}% Complete</span>
           </div>
           <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
@@ -164,7 +184,9 @@ export const AIAssistantSetup: React.FC<AIAssistantSetupProps> = ({
                   placeholder="Give your assistant a name..."
                 />
                 {errors.name && (
-                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.name.message}</p>
+                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                    {errors.name.message}
+                  </p>
                 )}
               </div>
 
@@ -173,31 +195,33 @@ export const AIAssistantSetup: React.FC<AIAssistantSetupProps> = ({
                   Personality Type
                 </label>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {Object.entries(personalityDescriptions).map(([type, description]) => (
-                    <label
-                      key={type}
-                      className={`relative flex cursor-pointer rounded-lg border p-4 focus:outline-none ${
-                        watchedValues.personalityType === type
-                          ? 'border-blue-600 bg-blue-50 dark:bg-blue-900/20'
-                          : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800'
-                      }`}
-                    >
-                      <input
-                        {...register('personalityType')}
-                        type="radio"
-                        value={type}
-                        className="sr-only"
-                      />
-                      <div className="flex flex-col">
-                        <span className="block text-sm font-medium text-gray-900 dark:text-white capitalize">
-                          {type}
-                        </span>
-                        <span className="block text-sm text-gray-500 dark:text-gray-400">
-                          {description}
-                        </span>
-                      </div>
-                    </label>
-                  ))}
+                  {Object.entries(personalityDescriptions).map(
+                    ([type, description]) => (
+                      <label
+                        key={type}
+                        className={`relative flex cursor-pointer rounded-lg border p-4 focus:outline-none ${
+                          watchedValues.personalityType === type
+                            ? 'border-blue-600 bg-blue-50 dark:bg-blue-900/20'
+                            : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800'
+                        }`}
+                      >
+                        <input
+                          {...register('personalityType')}
+                          type="radio"
+                          value={type}
+                          className="sr-only"
+                        />
+                        <div className="flex flex-col">
+                          <span className="block text-sm font-medium text-gray-900 dark:text-white capitalize">
+                            {type}
+                          </span>
+                          <span className="block text-sm text-gray-500 dark:text-gray-400">
+                            {description}
+                          </span>
+                        </div>
+                      </label>
+                    )
+                  )}
                 </div>
               </div>
             </motion.div>
@@ -216,26 +240,28 @@ export const AIAssistantSetup: React.FC<AIAssistantSetupProps> = ({
                   Communication Style
                 </label>
                 <div className="space-y-3">
-                  {['formal', 'friendly', 'motivational', 'direct'].map((style) => (
-                    <label
-                      key={style}
-                      className={`flex items-center p-3 rounded-lg border cursor-pointer ${
-                        watchedValues.communicationStyle === style
-                          ? 'border-blue-600 bg-blue-50 dark:bg-blue-900/20'
-                          : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800'
-                      }`}
-                    >
-                      <input
-                        {...register('communicationStyle')}
-                        type="radio"
-                        value={style}
-                        className="sr-only"
-                      />
-                      <span className="text-sm font-medium text-gray-900 dark:text-white capitalize">
-                        {style}
-                      </span>
-                    </label>
-                  ))}
+                  {['formal', 'friendly', 'motivational', 'direct'].map(
+                    style => (
+                      <label
+                        key={style}
+                        className={`flex items-center p-3 rounded-lg border cursor-pointer ${
+                          watchedValues.communicationStyle === style
+                            ? 'border-blue-600 bg-blue-50 dark:bg-blue-900/20'
+                            : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800'
+                        }`}
+                      >
+                        <input
+                          {...register('communicationStyle')}
+                          type="radio"
+                          value={style}
+                          className="sr-only"
+                        />
+                        <span className="text-sm font-medium text-gray-900 dark:text-white capitalize">
+                          {style}
+                        </span>
+                      </label>
+                    )
+                  )}
                 </div>
               </div>
 
@@ -244,7 +270,7 @@ export const AIAssistantSetup: React.FC<AIAssistantSetupProps> = ({
                   Explanation Depth
                 </label>
                 <div className="space-y-3">
-                  {['basic', 'intermediate', 'advanced'].map((depth) => (
+                  {['basic', 'intermediate', 'advanced'].map(depth => (
                     <label
                       key={depth}
                       className={`flex items-center p-3 rounded-lg border cursor-pointer ${
@@ -282,42 +308,57 @@ export const AIAssistantSetup: React.FC<AIAssistantSetupProps> = ({
                   Learning Styles (Select all that apply)
                 </label>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {Object.entries(learningStyleDescriptions).map(([style, description]) => (
-                    <label
-                      key={style}
-                      className={`relative flex cursor-pointer rounded-lg border p-4 ${
-                        watchedValues.learningStyle?.includes(style as LearningStyle)
-                          ? 'border-blue-600 bg-blue-50 dark:bg-blue-900/20'
-                          : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800'
-                      }`}
-                    >
-                      <input
-                        type="checkbox"
-                        value={style}
-                        checked={watchedValues.learningStyle?.includes(style as LearningStyle)}
-                        onChange={(e) => {
-                          const currentStyles = watchedValues.learningStyle || [];
-                          if (e.target.checked) {
-                            setValue('learningStyle', [...currentStyles, style as LearningStyle]);
-                          } else {
-                            setValue('learningStyle', currentStyles.filter(s => s !== style));
-                          }
-                        }}
-                        className="sr-only"
-                      />
-                      <div className="flex flex-col">
-                        <span className="block text-sm font-medium text-gray-900 dark:text-white capitalize">
-                          {style.replace('_', ' ')}
-                        </span>
-                        <span className="block text-sm text-gray-500 dark:text-gray-400">
-                          {description}
-                        </span>
-                      </div>
-                    </label>
-                  ))}
+                  {Object.entries(learningStyleDescriptions).map(
+                    ([style, description]) => (
+                      <label
+                        key={style}
+                        className={`relative flex cursor-pointer rounded-lg border p-4 ${
+                          watchedValues.learningStyle?.includes(
+                            style as LearningStyle
+                          )
+                            ? 'border-blue-600 bg-blue-50 dark:bg-blue-900/20'
+                            : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800'
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          value={style}
+                          checked={watchedValues.learningStyle?.includes(
+                            style as LearningStyle
+                          )}
+                          onChange={e => {
+                            const currentStyles =
+                              watchedValues.learningStyle || [];
+                            if (e.target.checked) {
+                              setValue('learningStyle', [
+                                ...currentStyles,
+                                style as LearningStyle,
+                              ]);
+                            } else {
+                              setValue(
+                                'learningStyle',
+                                currentStyles.filter(s => s !== style)
+                              );
+                            }
+                          }}
+                          className="sr-only"
+                        />
+                        <div className="flex flex-col">
+                          <span className="block text-sm font-medium text-gray-900 dark:text-white capitalize">
+                            {style.replace('_', ' ')}
+                          </span>
+                          <span className="block text-sm text-gray-500 dark:text-gray-400">
+                            {description}
+                          </span>
+                        </div>
+                      </label>
+                    )
+                  )}
                 </div>
                 {errors.learningStyle && (
-                  <p className="mt-2 text-sm text-red-600 dark:text-red-400">{errors.learningStyle.message}</p>
+                  <p className="mt-2 text-sm text-red-600 dark:text-red-400">
+                    {errors.learningStyle.message}
+                  </p>
                 )}
               </div>
             </motion.div>
@@ -376,7 +417,7 @@ export const AIAssistantSetup: React.FC<AIAssistantSetupProps> = ({
                   Reminder Style
                 </label>
                 <div className="space-y-2">
-                  {['gentle', 'firm', 'playful'].map((style) => (
+                  {['gentle', 'firm', 'playful'].map(style => (
                     <label
                       key={style}
                       className={`flex items-center p-2 rounded border cursor-pointer ${

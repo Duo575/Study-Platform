@@ -42,8 +42,8 @@ export function XPBar({
     return null;
   }
 
-  const { level, currentXP, xpToNextLevel } = gameStats;
-  const progressPercentage = getProgressPercentage(currentXP, currentXP + xpToNextLevel);
+  const { level, currentXP, xpToNextLevel, totalXP } = gameStats;
+  const progressPercentage = getProgressPercentage(totalXP || 0);
 
   return (
     <div className={clsx('w-full', className)}>
@@ -56,14 +56,9 @@ export function XPBar({
           initial={{ scaleX: animated ? 0 : 1, originX: 0 }}
           animate={controls}
         />
-        
+
         {/* Static Bar (for initial render) */}
-        <div 
-          className={clsx(
-            'w-full bg-transparent',
-            sizeClasses[size]
-          )}
-        />
+        <div className={clsx('w-full bg-transparent', sizeClasses[size])} />
       </div>
 
       {/* XP Information */}

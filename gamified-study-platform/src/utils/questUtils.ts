@@ -1,4 +1,4 @@
-import { v4 as uuidv4 } from 'uuid';
+// import { v4 as uuidv4 } from 'uuid';
 import type {
   Quest,
   QuestType,
@@ -258,36 +258,41 @@ export const questUtils = {
     const now = new Date();
 
     switch (type) {
-      case 'daily':
+      case 'daily': {
         // Expires at the end of the day
         const tomorrow = new Date(now);
         tomorrow.setDate(tomorrow.getDate() + 1);
         tomorrow.setHours(0, 0, 0, 0);
         return tomorrow;
+      }
 
-      case 'weekly':
+      case 'weekly': {
         // Expires in 7 days
         const nextWeek = new Date(now);
         nextWeek.setDate(nextWeek.getDate() + 7);
         return nextWeek;
+      }
 
-      case 'milestone':
+      case 'milestone': {
         // Expires in 30 days
         const nextMonth = new Date(now);
         nextMonth.setDate(nextMonth.getDate() + 30);
         return nextMonth;
+      }
 
-      case 'bonus':
+      case 'bonus': {
         // Expires in 14 days
         const twoWeeks = new Date(now);
         twoWeeks.setDate(twoWeeks.getDate() + 14);
         return twoWeeks;
+      }
 
-      default:
+      default: {
         // Default to 7 days
         const sevenDays = new Date(now);
         sevenDays.setDate(sevenDays.getDate() + 7);
         return sevenDays;
+      }
     }
   },
 

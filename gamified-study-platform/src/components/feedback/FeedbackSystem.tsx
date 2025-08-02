@@ -57,7 +57,11 @@ export const FeedbackProvider: React.FC<{ children: React.ReactNode }> = ({
     setMessages(prev => [...prev, newMessage]);
 
     // Auto-remove message after duration (unless persistent)
-    if (!newMessage.persistent && newMessage.duration > 0) {
+    if (
+      !newMessage.persistent &&
+      newMessage.duration &&
+      newMessage.duration > 0
+    ) {
       setTimeout(() => {
         removeMessage(id);
       }, newMessage.duration);

@@ -88,7 +88,12 @@ const QuestBoard: React.FC<QuestBoardProps> = ({ onQuestClick }) => {
   };
 
   const handleSortChange = (
-    sortBy: string | undefined,
+    sortBy:
+      | 'difficulty'
+      | 'created_at'
+      | 'xp_reward'
+      | 'expires_at'
+      | undefined,
     sortOrder: 'asc' | 'desc' | undefined
   ) => {
     updateFilters({
@@ -97,7 +102,7 @@ const QuestBoard: React.FC<QuestBoardProps> = ({ onQuestClick }) => {
     });
   };
 
-  const displayedQuests =
+  const _displayedQuests =
     activeTab === 'active' ? activeQuests : completedQuests;
 
   return (

@@ -20,7 +20,8 @@ export const RoutineSelector: React.FC<RoutineSelectorProps> = ({
   const activeRoutines = routines.filter(r => r.isActive);
   const inactiveRoutines = routines.filter(r => !r.isActive);
 
-  const handleChange = (routineId: string) => {
+  const handleChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const routineId = event.target.value;
     const routine = routines.find(r => r.id === routineId);
     if (routine) {
       onSelect(routine);
@@ -53,20 +54,20 @@ export const RoutineSelector: React.FC<RoutineSelectorProps> = ({
           <option value="" disabled>
             Select a routine...
           </option>
-          
+
           {activeRoutines.length > 0 && (
             <optgroup label="Active Routines">
-              {activeRoutines.map((routine) => (
+              {activeRoutines.map(routine => (
                 <option key={routine.id} value={routine.id}>
                   {routine.name}
                 </option>
               ))}
             </optgroup>
           )}
-          
+
           {inactiveRoutines.length > 0 && (
             <optgroup label="Inactive Routines">
-              {inactiveRoutines.map((routine) => (
+              {inactiveRoutines.map(routine => (
                 <option key={routine.id} value={routine.id}>
                   {routine.name} (Inactive)
                 </option>

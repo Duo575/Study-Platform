@@ -70,7 +70,10 @@ export const testSignIn = async (email: string, password: string) => {
     return { success: true, data };
   } catch (error) {
     console.error('❌ Sign-in exception:', error);
-    return { success: false, error: error.message };
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
   }
 };
 
@@ -105,6 +108,9 @@ export const createTestUser = async () => {
     };
   } catch (error) {
     console.error('❌ Sign-up exception:', error);
-    return { success: false, error: error.message };
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
   }
 };

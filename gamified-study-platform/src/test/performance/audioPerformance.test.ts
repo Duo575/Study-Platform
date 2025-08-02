@@ -165,6 +165,7 @@ describe('Audio Performance Tests', () => {
       const tracks: MusicTrack[] = Array.from({ length: 10 }, (_, i) => ({
         id: `track-${i}`,
         title: `Track ${i}`,
+        artist: `Artist ${i}`,
         duration: 180,
         url: `/music/track-${i}.mp3`,
         genre: 'lofi',
@@ -301,6 +302,7 @@ describe('Audio Performance Tests', () => {
         (_, i) => ({
           id: `track-${i}`,
           title: `Track ${i}`,
+          artist: `Artist ${i}`,
           duration: 180 + (i % 120), // Vary duration
           url: `/music/track-${i}.mp3`,
           genre: i % 2 === 0 ? 'lofi' : 'ambient',
@@ -325,6 +327,7 @@ describe('Audio Performance Tests', () => {
       audioService.addToPlaylist({
         id: 'new-track',
         title: 'New Track',
+        artist: 'New Artist',
         duration: 200,
         url: '/music/new-track.mp3',
         genre: 'classical',

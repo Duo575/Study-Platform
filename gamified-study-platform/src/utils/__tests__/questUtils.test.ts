@@ -17,7 +17,7 @@ describe('Quest Utils', () => {
       estimatedHours: 8,
       priority: 'high',
       completed: false,
-      deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days from now
+      deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
     },
     {
       id: '2',
@@ -26,7 +26,7 @@ describe('Quest Utils', () => {
       topics: ['Components', 'Props', 'State'],
       estimatedHours: 12,
       priority: 'medium',
-      completed: false
+      completed: false,
     },
     {
       id: '3',
@@ -35,8 +35,8 @@ describe('Quest Utils', () => {
       topics: ['Closures', 'Promises', 'Async/Await'],
       estimatedHours: 15,
       priority: 'low',
-      completed: true
-    }
+      completed: true,
+    },
   ];
 
   const mockCourse: Course = {
@@ -50,10 +50,10 @@ describe('Quest Utils', () => {
       hoursStudied: 8,
       topicsCompleted: 3,
       totalTopics: 9,
-      lastStudied: new Date()
+      lastStudied: new Date(),
     },
     createdAt: new Date(),
-    updatedAt: new Date()
+    updatedAt: new Date(),
   };
 
   beforeEach(() => {
@@ -79,7 +79,11 @@ describe('Quest Utils', () => {
     });
 
     it('should include topic in title when provided', () => {
-      const titleWithTopic = questUtils.generateQuestTitle('daily', 'medium', 'JavaScript');
+      const titleWithTopic = questUtils.generateQuestTitle(
+        'daily',
+        'medium',
+        'JavaScript'
+      );
       expect(titleWithTopic).toContain('JavaScript');
     });
 
@@ -94,13 +98,34 @@ describe('Quest Utils', () => {
   describe('Quest Description Generation', () => {
     it('should generate appropriate descriptions for different quest types', () => {
       const requirements = [
-        { type: 'study_time', target: 30, current: 0, description: 'Study for 30 minutes' }
+        {
+          type: 'study_time' as const,
+          target: 30,
+          current: 0,
+          description: 'Study for 30 minutes',
+        },
       ];
 
-      const dailyDesc = questUtils.generateQuestDescription('daily', 'medium', requirements);
-      const weeklyDesc = questUtils.generateQuestDescription('weekly', 'hard', requirements);
-      const milestoneDesc = questUtils.generateQuestDescription('milestone', 'easy', requirements);
-      const bonusDesc = questUtils.generateQuestDescription('bonus', 'medium', requirements);
+      const dailyDesc = questUtils.generateQuestDescription(
+        'daily',
+        'medium',
+        requirements
+      );
+      const weeklyDesc = questUtils.generateQuestDescription(
+        'weekly',
+        'hard',
+        requirements
+      );
+      const milestoneDesc = questUtils.generateQuestDescription(
+        'milestone',
+        'easy',
+        requirements
+      );
+      const bonusDesc = questUtils.generateQuestDescription(
+        'bonus',
+        'medium',
+        requirements
+      );
 
       expect(dailyDesc).toContain('daily');
       expect(weeklyDesc).toContain('week');
@@ -110,20 +135,47 @@ describe('Quest Utils', () => {
 
     it('should include topic information when provided', () => {
       const requirements = [
-        { type: 'study_time', target: 30, current: 0, description: 'Study for 30 minutes' }
+        {
+          type: 'study_time' as const,
+          target: 30,
+          current: 0,
+          description: 'Study for 30 minutes',
+        },
       ];
-      const description = questUtils.generateQuestDescription('daily', 'medium', requirements, 'JavaScript');
+      const description = questUtils.generateQuestDescription(
+        'daily',
+        'medium',
+        requirements,
+        'JavaScript'
+      );
       expect(description).toContain('JavaScript');
     });
 
     it('should include difficulty information', () => {
       const requirements = [
-        { type: 'study_time', target: 30, current: 0, description: 'Study for 30 minutes' }
+        {
+          type: 'study_time' as const,
+          target: 30,
+          current: 0,
+          description: 'Study for 30 minutes',
+        },
       ];
 
-      const easyDesc = questUtils.generateQuestDescription('daily', 'easy', requirements);
-      const mediumDesc = questUtils.generateQuestDescription('daily', 'medium', requirements);
-      const hardDesc = questUtils.generateQuestDescription('daily', 'hard', requirements);
+      const easyDesc = questUtils.generateQuestDescription(
+        'daily',
+        'easy',
+        requirements
+      );
+      const mediumDesc = questUtils.generateQuestDescription(
+        'daily',
+        'medium',
+        requirements
+      );
+      const hardDesc = questUtils.generateQuestDescription(
+        'daily',
+        'hard',
+        requirements
+      );
 
       expect(easyDesc).toContain('easy');
       expect(mediumDesc).toContain('moderate');
@@ -158,8 +210,16 @@ describe('Quest Utils', () => {
   describe('Quest Requirements Generation', () => {
     it('should generate appropriate requirements for daily quests', () => {
       const easyReqs = questUtils.generateRequirements('daily', 'easy');
-      const mediumReqs = questUtils.generateRequirements('daily', 'medium', 'JavaScript');
-      const hardReqs = questUtils.generateRequirements('daily', 'hard', 'React');
+      const mediumReqs = questUtils.generateRequirements(
+        'daily',
+        'medium',
+        'JavaScript'
+      );
+      const hardReqs = questUtils.generateRequirements(
+        'daily',
+        'hard',
+        'React'
+      );
 
       expect(easyReqs).toHaveLength(1);
       expect(easyReqs[0].type).toBe('study_time');
@@ -231,33 +291,53 @@ describe('Quest Utils', () => {
   describe('Expiration Date Generation', () => {
     it('should generate appropriate expiration dates for different quest types', () => {
       const now = new Date();
-      
+
       const dailyExpiration = questUtils.generateExpirationDate('daily');
       const weeklyExpiration = questUtils.generateExpirationDate('weekly');
-      const milestoneExpiration = questUtils.generateExpirationDate('milestone');
+      const milestoneExpiration =
+        questUtils.generateExpirationDate('milestone');
       const bonusExpiration = questUtils.generateExpirationDate('bonus');
 
       // Daily quests should expire tomorrow
       expect(dailyExpiration.getTime()).toBeGreaterThan(now.getTime());
-      expect(dailyExpiration.getTime() - now.getTime()).toBeLessThan(2 * 24 * 60 * 60 * 1000);
+      expect(dailyExpiration.getTime() - now.getTime()).toBeLessThan(
+        2 * 24 * 60 * 60 * 1000
+      );
 
       // Weekly quests should expire in about 7 days
-      expect(weeklyExpiration.getTime() - now.getTime()).toBeGreaterThan(6 * 24 * 60 * 60 * 1000);
-      expect(weeklyExpiration.getTime() - now.getTime()).toBeLessThan(8 * 24 * 60 * 60 * 1000);
+      expect(weeklyExpiration.getTime() - now.getTime()).toBeGreaterThan(
+        6 * 24 * 60 * 60 * 1000
+      );
+      expect(weeklyExpiration.getTime() - now.getTime()).toBeLessThan(
+        8 * 24 * 60 * 60 * 1000
+      );
 
       // Milestone quests should expire in about 30 days
-      expect(milestoneExpiration.getTime() - now.getTime()).toBeGreaterThan(29 * 24 * 60 * 60 * 1000);
-      expect(milestoneExpiration.getTime() - now.getTime()).toBeLessThan(31 * 24 * 60 * 60 * 1000);
+      expect(milestoneExpiration.getTime() - now.getTime()).toBeGreaterThan(
+        29 * 24 * 60 * 60 * 1000
+      );
+      expect(milestoneExpiration.getTime() - now.getTime()).toBeLessThan(
+        31 * 24 * 60 * 60 * 1000
+      );
 
       // Bonus quests should expire in about 14 days
-      expect(bonusExpiration.getTime() - now.getTime()).toBeGreaterThan(13 * 24 * 60 * 60 * 1000);
-      expect(bonusExpiration.getTime() - now.getTime()).toBeLessThan(15 * 24 * 60 * 60 * 1000);
+      expect(bonusExpiration.getTime() - now.getTime()).toBeGreaterThan(
+        13 * 24 * 60 * 60 * 1000
+      );
+      expect(bonusExpiration.getTime() - now.getTime()).toBeLessThan(
+        15 * 24 * 60 * 60 * 1000
+      );
     });
   });
 
   describe('Complete Quest Generation', () => {
     it('should generate a complete quest object', () => {
-      const quest = questUtils.generateQuest('daily', 'medium', 'course-1', 'JavaScript');
+      const quest = questUtils.generateQuest(
+        'daily',
+        'medium',
+        'course-1',
+        'JavaScript'
+      );
 
       expect(quest).toHaveProperty('title');
       expect(quest).toHaveProperty('description');
@@ -279,7 +359,10 @@ describe('Quest Utils', () => {
 
   describe('Course Quest Generation', () => {
     it('should generate quests for a course based on syllabus', () => {
-      const quests = questUtils.generateQuestsForCourse('course-1', mockSyllabusItems);
+      const quests = questUtils.generateQuestsForCourse(
+        'course-1',
+        mockSyllabusItems
+      );
 
       expect(Array.isArray(quests)).toBe(true);
       expect(quests.length).toBeGreaterThan(0);
@@ -298,14 +381,23 @@ describe('Quest Utils', () => {
     });
 
     it('should return empty array for completed syllabus', () => {
-      const completedSyllabus = mockSyllabusItems.map(item => ({ ...item, completed: true }));
-      const quests = questUtils.generateQuestsForCourse('course-1', completedSyllabus);
+      const completedSyllabus = mockSyllabusItems.map(item => ({
+        ...item,
+        completed: true,
+      }));
+      const quests = questUtils.generateQuestsForCourse(
+        'course-1',
+        completedSyllabus
+      );
 
       expect(quests).toHaveLength(0);
     });
 
     it('should generate bonus quests for high priority items', () => {
-      const quests = questUtils.generateQuestsForCourse('course-1', mockSyllabusItems);
+      const quests = questUtils.generateQuestsForCourse(
+        'course-1',
+        mockSyllabusItems
+      );
       const bonusQuests = quests.filter(q => q.type === 'bonus');
 
       expect(bonusQuests.length).toBeGreaterThan(0);
@@ -326,19 +418,24 @@ describe('Quest Utils', () => {
       const lowProgressCourse = {
         ...mockCourse,
         id: 'course-2',
-        progress: { ...mockCourse.progress, completionPercentage: 10 }
+        progress: { ...mockCourse.progress, completionPercentage: 10 },
       };
 
       const highProgressCourse = {
         ...mockCourse,
         id: 'course-3',
-        progress: { ...mockCourse.progress, completionPercentage: 90 }
+        progress: { ...mockCourse.progress, completionPercentage: 90 },
       };
 
-      const weights = questUtils.calculateCourseWeights([lowProgressCourse, highProgressCourse]);
+      const weights = questUtils.calculateCourseWeights([
+        lowProgressCourse,
+        highProgressCourse,
+      ]);
 
-      const lowWeight = weights.find(w => w.courseId === 'course-2')?.weight || 0;
-      const highWeight = weights.find(w => w.courseId === 'course-3')?.weight || 0;
+      const lowWeight =
+        weights.find(w => w.courseId === 'course-2')?.weight || 0;
+      const highWeight =
+        weights.find(w => w.courseId === 'course-3')?.weight || 0;
 
       expect(lowWeight).toBeGreaterThan(highWeight);
     });
@@ -347,19 +444,32 @@ describe('Quest Utils', () => {
       const highPriorityCourse = {
         ...mockCourse,
         id: 'course-high',
-        syllabus: mockSyllabusItems.map(item => ({ ...item, priority: 'high' as const, completed: false }))
+        syllabus: mockSyllabusItems.map(item => ({
+          ...item,
+          priority: 'high' as const,
+          completed: false,
+        })),
       };
 
       const lowPriorityCourse = {
         ...mockCourse,
         id: 'course-low',
-        syllabus: mockSyllabusItems.map(item => ({ ...item, priority: 'low' as const, completed: false }))
+        syllabus: mockSyllabusItems.map(item => ({
+          ...item,
+          priority: 'low' as const,
+          completed: false,
+        })),
       };
 
-      const weights = questUtils.calculateCourseWeights([highPriorityCourse, lowPriorityCourse]);
+      const weights = questUtils.calculateCourseWeights([
+        highPriorityCourse,
+        lowPriorityCourse,
+      ]);
 
-      const highWeight = weights.find(w => w.courseId === 'course-high')?.weight || 0;
-      const lowWeight = weights.find(w => w.courseId === 'course-low')?.weight || 0;
+      const highWeight =
+        weights.find(w => w.courseId === 'course-high')?.weight || 0;
+      const lowWeight =
+        weights.find(w => w.courseId === 'course-low')?.weight || 0;
 
       expect(highWeight).toBeGreaterThan(lowWeight);
     });
@@ -368,27 +478,36 @@ describe('Quest Utils', () => {
       const urgentCourse = {
         ...mockCourse,
         id: 'course-urgent',
-        syllabus: [{
-          ...mockSyllabusItems[0],
-          deadline: new Date(Date.now() + 24 * 60 * 60 * 1000), // Tomorrow
-          completed: false
-        }]
+        syllabus: [
+          {
+            ...mockSyllabusItems[0],
+            deadline: new Date(Date.now() + 24 * 60 * 60 * 1000), // Tomorrow
+            completed: false,
+          },
+        ],
       };
 
       const relaxedCourse = {
         ...mockCourse,
         id: 'course-relaxed',
-        syllabus: [{
-          ...mockSyllabusItems[0],
-          deadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
-          completed: false
-        }]
+        syllabus: [
+          {
+            ...mockSyllabusItems[0],
+            deadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+            completed: false,
+          },
+        ],
       };
 
-      const weights = questUtils.calculateCourseWeights([urgentCourse, relaxedCourse]);
+      const weights = questUtils.calculateCourseWeights([
+        urgentCourse,
+        relaxedCourse,
+      ]);
 
-      const urgentWeight = weights.find(w => w.courseId === 'course-urgent')?.weight || 0;
-      const relaxedWeight = weights.find(w => w.courseId === 'course-relaxed')?.weight || 0;
+      const urgentWeight =
+        weights.find(w => w.courseId === 'course-urgent')?.weight || 0;
+      const relaxedWeight =
+        weights.find(w => w.courseId === 'course-relaxed')?.weight || 0;
 
       expect(urgentWeight).toBeGreaterThan(relaxedWeight);
     });
@@ -418,8 +537,16 @@ describe('Quest Utils', () => {
     });
 
     it('should distribute quests based on course weights', () => {
-      const course1 = { ...mockCourse, id: 'course-1', progress: { ...mockCourse.progress, completionPercentage: 10 } };
-      const course2 = { ...mockCourse, id: 'course-2', progress: { ...mockCourse.progress, completionPercentage: 90 } };
+      const course1 = {
+        ...mockCourse,
+        id: 'course-1',
+        progress: { ...mockCourse.progress, completionPercentage: 10 },
+      };
+      const course2 = {
+        ...mockCourse,
+        id: 'course-2',
+        progress: { ...mockCourse.progress, completionPercentage: 90 },
+      };
 
       const quests = questUtils.generateBalancedQuests([course1, course2]);
 
@@ -440,13 +567,23 @@ describe('Quest Utils', () => {
       difficulty: 'medium',
       xpReward: 30,
       requirements: [
-        { type: 'study_time', target: 30, current: 15, description: 'Study for 30 minutes' },
-        { type: 'complete_topic', target: 1, current: 0, description: 'Complete 1 topic' }
+        {
+          type: 'study_time',
+          target: 30,
+          current: 15,
+          description: 'Study for 30 minutes',
+        },
+        {
+          type: 'complete_topic',
+          target: 1,
+          current: 0,
+          description: 'Complete 1 topic',
+        },
       ],
       status: 'active',
       courseId: 'course-1',
       createdAt: new Date(),
-      expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000)
+      expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
     };
 
     describe('isQuestCompletable', () => {
@@ -467,9 +604,19 @@ describe('Quest Utils', () => {
         const completableQuest = {
           ...mockQuest,
           requirements: [
-            { type: 'study_time', target: 30, current: 30, description: 'Study for 30 minutes' },
-            { type: 'complete_topic', target: 1, current: 1, description: 'Complete 1 topic' }
-          ]
+            {
+              type: 'study_time' as const,
+              target: 30,
+              current: 30,
+              description: 'Study for 30 minutes',
+            },
+            {
+              type: 'complete_topic' as const,
+              target: 1,
+              current: 1,
+              description: 'Complete 1 topic',
+            },
+          ],
         };
 
         expect(questUtils.isQuestCompletable(completableQuest)).toBe(true);
@@ -502,8 +649,13 @@ describe('Quest Utils', () => {
         const overProgressQuest = {
           ...mockQuest,
           requirements: [
-            { type: 'study_time', target: 30, current: 45, description: 'Study for 30 minutes' }
-          ]
+            {
+              type: 'study_time' as const,
+              target: 30,
+              current: 45,
+              description: 'Study for 30 minutes',
+            },
+          ],
         };
 
         expect(questUtils.calculateQuestProgress(overProgressQuest)).toBe(100);
@@ -518,7 +670,7 @@ describe('Quest Utils', () => {
     });
 
     it('should handle invalid quest types gracefully', () => {
-      // @ts-ignore - Testing invalid input
+      // @ts-expect-error - Testing invalid input
       const expiration = questUtils.generateExpirationDate('invalid');
       expect(expiration).toBeInstanceOf(Date);
       expect(expiration.getTime()).toBeGreaterThan(Date.now());
@@ -527,7 +679,7 @@ describe('Quest Utils', () => {
     it('should handle courses with no active syllabus items', () => {
       const completedCourse = {
         ...mockCourse,
-        syllabus: mockSyllabusItems.map(item => ({ ...item, completed: true }))
+        syllabus: mockSyllabusItems.map(item => ({ ...item, completed: true })),
       };
 
       const quests = questUtils.generateBalancedQuests([completedCourse]);
@@ -537,7 +689,7 @@ describe('Quest Utils', () => {
     it('should handle missing or invalid course data', () => {
       const invalidCourse = {
         ...mockCourse,
-        syllabus: []
+        syllabus: [],
       };
 
       const weights = questUtils.calculateCourseWeights([invalidCourse]);

@@ -6,14 +6,14 @@ import { GamificationDashboard } from './GamificationDashboard';
 import { useGamificationStore } from '../../../store/gamificationStore';
 
 export function GamificationDemo() {
-  const { 
-    gameStats, 
-    initializeGameStats, 
-    awardXP, 
-    awardStudySessionXP, 
-    awardQuestXP, 
+  const {
+    gameStats,
+    initializeGameStats,
+    awardXP,
+    awardStudySessionXP,
+    awardQuestXP,
     awardTodoXP,
-    updateStreak
+    updateStreak,
   } = useGamificationStore();
 
   // Initialize demo game stats if none exist
@@ -31,10 +31,11 @@ export function GamificationDemo() {
           studyHours: 5,
           questsCompleted: 3,
           streakMaintained: true,
-          xpEarned: 450
-        }
+          xpEarned: 450,
+          averageScore: 85,
+        },
       });
-      
+
       // Initialize streak
       updateStreak();
     }
@@ -64,16 +65,16 @@ export function GamificationDemo() {
   return (
     <div className="max-w-4xl mx-auto p-4">
       <h1 className="text-2xl font-bold mb-6">Gamification System Demo</h1>
-      
+
       {/* Gamification System (XP Bar, Animations, Level Up Modal) */}
       <GamificationSystem />
-      
+
       {/* Gamification Dashboard */}
       <div className="mb-8">
         <h2 className="text-xl font-semibold mb-4">Gamification Dashboard</h2>
         <GamificationDashboard />
       </div>
-      
+
       {/* Demo Controls */}
       <Card className="p-4 mb-8">
         <h2 className="text-lg font-semibold mb-4">Test Controls</h2>
@@ -92,7 +93,7 @@ export function GamificationDemo() {
           </Button>
         </div>
       </Card>
-      
+
       {/* Current Stats */}
       <Card className="p-4">
         <h2 className="text-lg font-semibold mb-4">Current Game Stats</h2>

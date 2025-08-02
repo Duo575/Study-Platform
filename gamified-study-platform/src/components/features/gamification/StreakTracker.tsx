@@ -33,15 +33,11 @@ export function StreakTracker({
   const flameVariants = {
     active: {
       scale: [1, 1.1, 1],
-      filter: [
-        'brightness(1)',
-        'brightness(1.2)',
-        'brightness(1)',
-      ],
+      filter: ['brightness(1)', 'brightness(1.2)', 'brightness(1)'],
       transition: {
         duration: 1.5,
         repeat: Infinity,
-        repeatType: 'reverse',
+        repeatType: 'mirror' as const,
       },
     },
     inactive: {
@@ -57,17 +53,24 @@ export function StreakTracker({
         <motion.div
           className={clsx(
             'rounded-full flex items-center justify-center',
-            isActive ? 'bg-gradient-to-br from-orange-400 to-red-500' : 'bg-gray-300 dark:bg-gray-600',
+            isActive
+              ? 'bg-gradient-to-br from-orange-400 to-red-500'
+              : 'bg-gray-300 dark:bg-gray-600',
             sizeClasses[size]
           )}
           variants={flameVariants}
           animate={isActive ? 'active' : 'inactive'}
         >
-          <span className={clsx('font-bold text-white', currentStreak >= 100 ? 'text-xs' : '')}>
+          <span
+            className={clsx(
+              'font-bold text-white',
+              currentStreak >= 100 ? 'text-xs' : ''
+            )}
+          >
             {currentStreak}
           </span>
         </motion.div>
-        
+
         {/* Flame Icon for Active Streak */}
         {isActive && currentStreak > 0 && (
           <motion.div
@@ -100,12 +103,20 @@ export function StreakTracker({
 
       {/* Streak Label */}
       {showLabel && (
-        <span className={clsx(
-          'mt-1 font-medium',
-          isActive ? 'text-orange-600 dark:text-orange-400' : 'text-gray-500 dark:text-gray-400',
-          labelSizeClasses[size]
-        )}>
-          {currentStreak === 0 ? 'No Streak' : currentStreak === 1 ? 'Day Streak' : 'Day Streak'}
+        <span
+          className={clsx(
+            'mt-1 font-medium',
+            isActive
+              ? 'text-orange-600 dark:text-orange-400'
+              : 'text-gray-500 dark:text-gray-400',
+            labelSizeClasses[size]
+          )}
+        >
+          {currentStreak === 0
+            ? 'No Streak'
+            : currentStreak === 1
+              ? 'Day Streak'
+              : 'Day Streak'}
         </span>
       )}
     </div>

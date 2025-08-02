@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { usePomodoro } from '../../../hooks/usePomodoro';
 import { Button } from '../../ui/Button';
 import { Card } from '../../ui/Card';
-import { ProgressBar } from '../../ui/ProgressBar';
+// import { ProgressBar } from '../../ui/ProgressBar';
 import { Select } from '../../ui/Select';
 import { Modal } from '../../ui/Modal';
 import { PomodoroSettings } from './PomodoroSettings';
@@ -53,7 +53,8 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
     });
   };
 
-  const handleCourseChange = (courseId: string) => {
+  const handleCourseChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const courseId = event.target.value;
     setLocalCourseId(courseId);
     onCourseChange?.(courseId);
   };
@@ -95,11 +96,7 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
         >
           Complete
         </Button>
-        <Button
-          onClick={skipSession}
-          variant="outline"
-          className="px-4 py-3"
-        >
+        <Button onClick={skipSession} variant="outline" className="px-4 py-3">
           Skip
         </Button>
       </div>
@@ -125,7 +122,10 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
           <motion.div
             className={`relative w-64 h-64 mx-auto rounded-full ${getTimerColor()} p-8 shadow-2xl`}
             animate={{ scale: isActive && !isPaused ? [1, 1.02, 1] : 1 }}
-            transition={{ duration: 1, repeat: isActive && !isPaused ? Infinity : 0 }}
+            transition={{
+              duration: 1,
+              repeat: isActive && !isPaused ? Infinity : 0,
+            }}
           >
             <div className="w-full h-full bg-white dark:bg-gray-800 rounded-full flex items-center justify-center shadow-inner">
               <div className="text-center">
@@ -137,7 +137,7 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
                 </div>
               </div>
             </div>
-            
+
             {/* Progress Ring */}
             <svg
               className="absolute inset-0 w-full h-full transform -rotate-90"
@@ -162,7 +162,9 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
                 strokeDasharray={`${2 * Math.PI * 45}`}
                 strokeDashoffset={`${2 * Math.PI * 45 * (1 - progress / 100)}`}
                 initial={{ strokeDashoffset: 2 * Math.PI * 45 }}
-                animate={{ strokeDashoffset: 2 * Math.PI * 45 * (1 - progress / 100) }}
+                animate={{
+                  strokeDashoffset: 2 * Math.PI * 45 * (1 - progress / 100),
+                }}
                 transition={{ duration: 0.5 }}
               />
             </svg>
@@ -188,9 +190,7 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
           )}
 
           {/* Action Buttons */}
-          <div className="max-w-md mx-auto">
-            {getActionButtons()}
-          </div>
+          <div className="max-w-md mx-auto">{getActionButtons()}</div>
 
           {/* Settings and Break Activities */}
           <div className="flex justify-center gap-4">

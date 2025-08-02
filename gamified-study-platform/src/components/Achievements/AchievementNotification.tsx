@@ -11,12 +11,14 @@ interface AchievementNotificationProps {
  * Achievement Notification Component
  * Shows celebration animations when achievements are unlocked
  */
-export function AchievementNotification({ className = '' }: AchievementNotificationProps) {
+export function AchievementNotification({
+  className = '',
+}: AchievementNotificationProps) {
   const {
     notifications,
     isVisible,
     dismissNotification,
-    clearAllNotifications
+    clearAllNotifications: _clearAllNotifications,
   } = useAchievementNotifications();
 
   if (!isVisible || notifications.length === 0) {
@@ -42,14 +44,14 @@ export function AchievementNotification({ className = '' }: AchievementNotificat
 /**
  * Individual Achievement Unlock Modal
  */
-function AchievementUnlockModal({ 
-  unlock, 
-  index, 
-  onDismiss 
-}: { 
-  unlock: AchievementUnlock; 
-  index: number; 
-  onDismiss: () => void; 
+function AchievementUnlockModal({
+  unlock,
+  index,
+  onDismiss,
+}: {
+  unlock: AchievementUnlock;
+  index: number;
+  onDismiss: () => void;
 }) {
   const [isVisible, setIsVisible] = useState(true);
 
@@ -75,28 +77,28 @@ function AchievementUnlockModal({
           bg: 'from-yellow-400 via-orange-500 to-red-500',
           border: 'border-yellow-400',
           glow: 'shadow-yellow-400/50',
-          text: 'text-yellow-100'
+          text: 'text-yellow-100',
         };
       case 'epic':
         return {
           bg: 'from-purple-400 via-pink-500 to-red-500',
           border: 'border-purple-400',
           glow: 'shadow-purple-400/50',
-          text: 'text-purple-100'
+          text: 'text-purple-100',
         };
       case 'rare':
         return {
           bg: 'from-blue-400 via-indigo-500 to-purple-500',
           border: 'border-blue-400',
           glow: 'shadow-blue-400/50',
-          text: 'text-blue-100'
+          text: 'text-blue-100',
         };
       default:
         return {
           bg: 'from-gray-400 via-gray-500 to-gray-600',
           border: 'border-gray-400',
           glow: 'shadow-gray-400/50',
-          text: 'text-gray-100'
+          text: 'text-gray-100',
         };
     }
   };
@@ -110,11 +112,11 @@ function AchievementUnlockModal({
           initial={{ opacity: 0, scale: 0.5, y: 50 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.5, y: -50 }}
-          transition={{ 
-            type: "spring", 
-            stiffness: 300, 
+          transition={{
+            type: 'spring',
+            stiffness: 300,
             damping: 20,
-            delay: index * 0.1 
+            delay: index * 0.1,
           }}
           className="fixed inset-0 flex items-center justify-center pointer-events-auto"
           style={{ zIndex: 1000 + index }}
@@ -145,19 +147,19 @@ function AchievementUnlockModal({
                   initial={{
                     x: '50%',
                     y: '50%',
-                    scale: 0
+                    scale: 0,
                   }}
                   animate={{
                     x: `${Math.random() * 100}%`,
                     y: `${Math.random() * 100}%`,
                     scale: [0, 1, 0],
-                    rotate: 360
+                    rotate: 360,
                   }}
                   transition={{
                     duration: 2,
                     delay: Math.random() * 0.5,
                     repeat: Infinity,
-                    repeatDelay: 1
+                    repeatDelay: 1,
                   }}
                 />
               ))}
@@ -168,8 +170,18 @@ function AchievementUnlockModal({
               onClick={handleDismiss}
               className="absolute top-4 right-4 text-white hover:text-gray-200 transition-colors"
             >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </button>
 
@@ -185,7 +197,9 @@ function AchievementUnlockModal({
                 <h2 className={`text-2xl font-bold ${colors.text} mb-1`}>
                   🎉 Achievement Unlocked!
                 </h2>
-                <div className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${colors.text} bg-white bg-opacity-20`}>
+                <div
+                  className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${colors.text} bg-white bg-opacity-20`}
+                >
                   {unlock.achievement.rarity.toUpperCase()}
                 </div>
               </motion.div>
@@ -194,10 +208,10 @@ function AchievementUnlockModal({
               <motion.div
                 initial={{ scale: 0, rotate: -180 }}
                 animate={{ scale: 1, rotate: 0 }}
-                transition={{ 
-                  delay: 0.4, 
-                  type: "spring", 
-                  stiffness: 200 
+                transition={{
+                  delay: 0.4,
+                  type: 'spring',
+                  stiffness: 200,
                 }}
                 className="mb-4"
               >
@@ -206,8 +220,9 @@ function AchievementUnlockModal({
                     src={unlock.achievement.iconUrl}
                     alt={unlock.achievement.title}
                     className="w-16 h-16"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = '/achievements/default.png';
+                    onError={e => {
+                      (e.target as HTMLImageElement).src =
+                        '/achievements/default.png';
                     }}
                   />
                 </div>
@@ -226,15 +241,15 @@ function AchievementUnlockModal({
                 <p className={`${colors.text} opacity-90 mb-4`}>
                   {unlock.achievement.description}
                 </p>
-                
+
                 {/* XP Reward */}
                 <motion.div
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
-                  transition={{ 
-                    delay: 0.8, 
-                    type: "spring", 
-                    stiffness: 300 
+                  transition={{
+                    delay: 0.8,
+                    type: 'spring',
+                    stiffness: 300,
                   }}
                   className="inline-flex items-center space-x-2 bg-white bg-opacity-20 rounded-full px-4 py-2"
                 >
@@ -260,14 +275,14 @@ function AchievementUnlockModal({
             {/* Floating Elements */}
             <motion.div
               className="absolute -top-4 -left-4 text-4xl"
-              animate={{ 
+              animate={{
                 rotate: [0, 10, -10, 0],
-                scale: [1, 1.1, 1]
+                scale: [1, 1.1, 1],
               }}
-              transition={{ 
-                duration: 2, 
+              transition={{
+                duration: 2,
                 repeat: Infinity,
-                repeatType: "reverse"
+                repeatType: 'reverse',
               }}
             >
               🏆
@@ -275,15 +290,15 @@ function AchievementUnlockModal({
 
             <motion.div
               className="absolute -top-2 -right-2 text-3xl"
-              animate={{ 
+              animate={{
                 rotate: [0, -10, 10, 0],
-                scale: [1, 1.2, 1]
+                scale: [1, 1.2, 1],
               }}
-              transition={{ 
-                duration: 1.5, 
+              transition={{
+                duration: 1.5,
                 repeat: Infinity,
-                repeatType: "reverse",
-                delay: 0.5
+                repeatType: 'reverse',
+                delay: 0.5,
               }}
             >
               ⭐
@@ -291,15 +306,15 @@ function AchievementUnlockModal({
 
             <motion.div
               className="absolute -bottom-2 -left-2 text-2xl"
-              animate={{ 
+              animate={{
                 y: [0, -5, 0],
-                rotate: [0, 5, -5, 0]
+                rotate: [0, 5, -5, 0],
               }}
-              transition={{ 
-                duration: 2.5, 
+              transition={{
+                duration: 2.5,
                 repeat: Infinity,
-                repeatType: "reverse",
-                delay: 1
+                repeatType: 'reverse',
+                delay: 1,
               }}
             >
               🎉
@@ -315,12 +330,12 @@ function AchievementUnlockModal({
  * Mini Achievement Toast Notification
  * For less intrusive notifications
  */
-export function AchievementToast({ 
-  unlock, 
-  onDismiss 
-}: { 
-  unlock: AchievementUnlock; 
-  onDismiss: () => void; 
+export function AchievementToast({
+  unlock,
+  onDismiss,
+}: {
+  unlock: AchievementUnlock;
+  onDismiss: () => void;
 }) {
   const [isVisible, setIsVisible] = useState(true);
 
@@ -351,7 +366,7 @@ export function AchievementToast({
             <div className="w-10 h-10 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-lg flex items-center justify-center">
               <span className="text-white text-lg">🏆</span>
             </div>
-            
+
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between">
                 <p className="text-sm font-medium text-gray-900">
@@ -361,16 +376,26 @@ export function AchievementToast({
                   onClick={handleDismiss}
                   className="text-gray-400 hover:text-gray-600"
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
                   </svg>
                 </button>
               </div>
-              
+
               <p className="text-sm text-gray-600 truncate">
                 {unlock.achievement.title}
               </p>
-              
+
               <p className="text-xs text-blue-600 font-medium">
                 +{unlock.xpAwarded} XP
               </p>

@@ -67,8 +67,8 @@ export const StoreInterface = lazy(() =>
 );
 
 export const InventoryManager = lazy(() =>
-  import('../store/InventoryManager').then(module => ({
-    default: module.InventoryManager,
+  import('../store/InventoryDisplay').then(module => ({
+    default: module.InventoryDisplay,
   }))
 );
 
@@ -87,56 +87,58 @@ export const PetHealthDashboard = lazy(() =>
 
 // Lazy load advanced features
 export const PerformanceAnalysis = lazy(() =>
-  import('../PerformanceAnalysis/PerformanceAnalysis').then(module => ({
-    default: module.PerformanceAnalysis,
+  import('../PerformanceAnalysis/PerformanceDashboard').then(module => ({
+    default: module.PerformanceDashboard,
   }))
 );
 
 export const DataExportInterface = lazy(() =>
-  import('../export/DataExportInterface').then(module => ({
-    default: module.DataExportInterface,
+  import('../features/DataExport').then(module => ({
+    default: module.DataExport,
   }))
 );
 
 export const AdvancedSettings = lazy(() =>
-  import('../settings/AdvancedSettings').then(module => ({
-    default: module.AdvancedSettings,
+  import('../settings/DataManagement').then(module => ({
+    default: module.DataManagement,
   }))
 );
 
 // Lazy load admin components
 export const AdminDashboard = lazy(() =>
-  import('../admin/AdminDashboard').then(module => ({
-    default: module.AdminDashboard,
+  import('../admin/PerformanceDashboard').then(module => ({
+    default: module.PerformanceDashboard,
   }))
 );
 
 export const UserManagement = lazy(() =>
-  import('../admin/UserManagement').then(module => ({
-    default: module.UserManagement,
+  import('../profile/ProfileForm').then(module => ({
+    default: module.ProfileForm,
   }))
 );
 
 // Lazy load social features
 export const StudyGroups = lazy(() =>
-  import('../social/StudyGroups').then(module => ({
-    default: module.StudyGroups,
+  import('../features/StudyRooms').then(module => ({
+    default: module.StudyRooms,
   }))
 );
 
 export const SocialFeed = lazy(() =>
-  import('../social/SocialFeed').then(module => ({
-    default: module.SocialFeed,
+  import('../features/GroupChat').then(module => ({
+    default: module.GroupChat,
   }))
 );
 
 // Lazy load AI features
 export const AIAssistant = lazy(() =>
-  import('../ai/AIAssistant').then(module => ({ default: module.AIAssistant }))
+  import('../features/AIAssistantSetup').then(module => ({
+    default: module.AIAssistantSetup,
+  }))
 );
 
 export const SmartRecommendations = lazy(() =>
-  import('../ai/SmartRecommendations').then(module => ({
-    default: module.SmartRecommendations,
+  import('../features/AIAssistantSetup').then(module => ({
+    default: module.AIAssistantSetup,
   }))
 );

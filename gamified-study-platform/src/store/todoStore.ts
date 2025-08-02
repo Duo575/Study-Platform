@@ -44,10 +44,13 @@ const calculateTodoXP = (todo: TodoItem): number => {
 };
 
 interface TodoFilters {
-  search: string;
-  priority: 'all' | 'low' | 'medium' | 'high';
-  status: 'all' | 'completed' | 'pending';
+  search?: string;
+  priority?: 'low' | 'medium' | 'high' | 'all';
+  completed?: boolean;
   courseId?: string;
+  dueDate?: 'today' | 'week' | 'overdue' | 'all';
+  sortBy?: 'created_at' | 'due_date' | 'priority' | 'estimated_time';
+  sortOrder?: 'asc' | 'desc';
 }
 
 interface TodoStats {
@@ -57,6 +60,7 @@ interface TodoStats {
   overdue: number;
   completionRate: number;
   totalEstimatedTime: number;
+  completedTime: number;
 }
 
 interface TodoState {
@@ -91,8 +95,11 @@ export const useTodoStore = create<TodoState>((set, get) => ({
   filters: {
     search: '',
     priority: 'all',
-    status: 'all',
+    completed: undefined,
     courseId: undefined,
+    dueDate: 'all',
+    sortBy: 'created_at',
+    sortOrder: 'desc',
   },
   currentPage: 1,
   totalPages: 1,
@@ -304,8 +311,11 @@ export const useTodoStore = create<TodoState>((set, get) => ({
       filters: {
         search: '',
         priority: 'all',
-        status: 'all',
+        completed: undefined,
         courseId: undefined,
+        dueDate: 'all',
+        sortBy: 'created_at',
+        sortOrder: 'desc',
       },
     });
   },
@@ -378,6 +388,9 @@ export const useTodoSelectors = () => {
         (total, todo) => total + (todo.estimatedMinutes || 0),
         0
       ),
+      completedTime: store.todos
+        .filter(t => t.completed)
+        .reduce((total, todo) => total + (todo.estimatedMinutes || 0), 0),
     };
   }, [store.todos]);
 

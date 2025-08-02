@@ -1,12 +1,12 @@
 import React, { useState, useMemo } from 'react';
 import { Card } from '../ui/Card';
-import { Button } from '../ui/Button';
+// import { Button } from '../ui/Button';
 import { Select } from '../ui/Select';
 import { ProgressBar } from '../ui/ProgressBar';
-import { 
-  getPerformanceTrend,
+import {
+  // getPerformanceTrend,
   formatStudyTime,
-  PERFORMANCE_CONSTANTS 
+  // PERFORMANCE_CONSTANTS
 } from '../../utils/performanceAnalysis';
 import type { SubjectPerformance } from '../../types';
 
@@ -16,15 +16,23 @@ interface PerformanceTrendsProps {
 }
 
 type TimeRange = '7d' | '30d' | '90d' | '1y';
-type TrendMetric = 'performance' | 'study_time' | 'consistency' | 'quest_completion';
+type TrendMetric =
+  | 'performance'
+  | 'study_time'
+  | 'consistency'
+  | 'quest_completion';
 
 /**
  * Performance Trends Component
  * Shows historical performance data and trends analysis
  */
-export function PerformanceTrends({ performances, className = '' }: PerformanceTrendsProps) {
+export function PerformanceTrends({
+  performances,
+  className = '',
+}: PerformanceTrendsProps) {
   const [timeRange, setTimeRange] = useState<TimeRange>('30d');
-  const [selectedMetric, setSelectedMetric] = useState<TrendMetric>('performance');
+  const [selectedMetric, setSelectedMetric] =
+    useState<TrendMetric>('performance');
   const [selectedSubject, setSelectedSubject] = useState<string>('all');
 
   // Filter performances based on selected subject
@@ -48,13 +56,15 @@ export function PerformanceTrends({ performances, className = '' }: PerformanceT
       <div className="p-6">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
-          <h3 className="text-lg font-semibold text-gray-900">Performance Trends</h3>
-          
+          <h3 className="text-lg font-semibold text-gray-900">
+            Performance Trends
+          </h3>
+
           <div className="flex items-center space-x-4">
             {/* Subject Filter */}
             <Select
               value={selectedSubject}
-              onChange={(value) => setSelectedSubject(value)}
+              onChange={value => setSelectedSubject(value)}
               className="w-48"
             >
               <option value="all">All Subjects</option>
@@ -68,7 +78,7 @@ export function PerformanceTrends({ performances, className = '' }: PerformanceT
             {/* Metric Filter */}
             <Select
               value={selectedMetric}
-              onChange={(value) => setSelectedMetric(value as TrendMetric)}
+              onChange={value => setSelectedMetric(value as TrendMetric)}
               className="w-40"
             >
               <option value="performance">Performance</option>
@@ -80,7 +90,7 @@ export function PerformanceTrends({ performances, className = '' }: PerformanceT
             {/* Time Range Filter */}
             <Select
               value={timeRange}
-              onChange={(value) => setTimeRange(value as TimeRange)}
+              onChange={value => setTimeRange(value as TimeRange)}
               className="w-32"
             >
               <option value="7d">7 Days</option>
@@ -129,16 +139,21 @@ export function PerformanceTrends({ performances, className = '' }: PerformanceT
         {/* Subject Comparison */}
         {selectedSubject === 'all' && (
           <div>
-            <h4 className="font-medium text-gray-900 mb-4">Subject Comparison</h4>
-            <SubjectComparison performances={performances} metric={selectedMetric} />
+            <h4 className="font-medium text-gray-900 mb-4">
+              Subject Comparison
+            </h4>
+            <SubjectComparison
+              performances={performances}
+              metric={selectedMetric}
+            />
           </div>
         )}
 
         {/* Insights */}
         <div className="mt-6 p-4 bg-blue-50 rounded-lg">
           <h4 className="font-medium text-blue-900 mb-2">📊 Trend Insights</h4>
-          <TrendInsights 
-            performances={filteredPerformances} 
+          <TrendInsights
+            performances={filteredPerformances}
             metric={selectedMetric}
             timeRange={timeRange}
           />
@@ -151,12 +166,12 @@ export function PerformanceTrends({ performances, className = '' }: PerformanceT
 /**
  * Summary Card Component
  */
-function SummaryCard({ 
-  title, 
-  value, 
-  metric, 
+function SummaryCard({
+  title,
+  value,
+  metric,
   trend,
-  isPositive 
+  isPositive,
 }: {
   title: string;
   value: number;
@@ -173,15 +188,22 @@ function SummaryCard({
   const getTrendIcon = (t?: 'up' | 'down' | 'stable') => {
     if (!t) return null;
     switch (t) {
-      case 'up': return <span className="text-green-500">↗️</span>;
-      case 'down': return <span className="text-red-500">↘️</span>;
-      case 'stable': return <span className="text-gray-500">→</span>;
+      case 'up':
+        return <span className="text-green-500">↗️</span>;
+      case 'down':
+        return <span className="text-red-500">↘️</span>;
+      case 'stable':
+        return <span className="text-gray-500">→</span>;
     }
   };
 
   const getValueColor = () => {
     if (isPositive) return 'text-green-600';
-    if (metric === 'performance' || metric === 'consistency' || metric === 'quest_completion') {
+    if (
+      metric === 'performance' ||
+      metric === 'consistency' ||
+      metric === 'quest_completion'
+    ) {
       if (value >= 85) return 'text-green-600';
       if (value >= 70) return 'text-blue-600';
       if (value >= 50) return 'text-yellow-600';
@@ -226,7 +248,7 @@ function TrendChart({ data, metric }: { data: any[]; metric: TrendMetric }) {
           const height = ((point.value - minValue) / range) * 100;
           return (
             <div key={index} className="flex-1 flex flex-col items-center">
-              <div 
+              <div
                 className="w-full bg-blue-500 rounded-t transition-all duration-300 hover:bg-blue-600"
                 style={{ height: `${Math.max(height, 5)}%` }}
                 title={`${point.label}: ${point.value}`}
@@ -245,24 +267,28 @@ function TrendChart({ data, metric }: { data: any[]; metric: TrendMetric }) {
 /**
  * Subject Comparison Component
  */
-function SubjectComparison({ 
-  performances, 
-  metric 
-}: { 
-  performances: SubjectPerformance[]; 
+function SubjectComparison({
+  performances,
+  metric,
+}: {
+  performances: SubjectPerformance[];
   metric: TrendMetric;
 }) {
   const getValue = (performance: SubjectPerformance, met: TrendMetric) => {
     switch (met) {
-      case 'performance': return performance.performanceScore;
-      case 'study_time': return performance.totalStudyTime;
-      case 'consistency': return performance.consistencyScore;
-      case 'quest_completion': return performance.questCompletionScore;
+      case 'performance':
+        return performance.performanceScore;
+      case 'study_time':
+        return performance.totalStudyTime;
+      case 'consistency':
+        return performance.consistencyScore;
+      case 'quest_completion':
+        return performance.questCompletionScore;
     }
   };
 
-  const sortedPerformances = [...performances].sort((a, b) => 
-    getValue(b, metric) - getValue(a, metric)
+  const sortedPerformances = [...performances].sort(
+    (a, b) => getValue(b, metric) - getValue(a, metric)
   );
 
   const maxValue = Math.max(...performances.map(p => getValue(p, metric)));
@@ -272,9 +298,12 @@ function SubjectComparison({
       {sortedPerformances.map(performance => {
         const value = getValue(performance, metric);
         const percentage = maxValue > 0 ? (value / maxValue) * 100 : 0;
-        
+
         return (
-          <div key={performance.courseId} className="flex items-center space-x-4">
+          <div
+            key={performance.courseId}
+            className="flex items-center space-x-4"
+          >
             <div className="w-32 text-sm text-gray-700 truncate">
               {performance.courseName}
             </div>
@@ -284,15 +313,22 @@ function SubjectComparison({
                 max={100}
                 className="h-3"
                 color={
-                  metric === 'study_time' ? 'blue' :
-                  value >= 85 ? 'green' :
-                  value >= 70 ? 'blue' :
-                  value >= 50 ? 'yellow' : 'red'
+                  metric === 'study_time'
+                    ? 'blue'
+                    : value >= 85
+                      ? 'green'
+                      : value >= 70
+                        ? 'blue'
+                        : value >= 50
+                          ? 'yellow'
+                          : 'red'
                 }
               />
             </div>
             <div className="w-16 text-sm font-medium text-gray-900 text-right">
-              {metric === 'study_time' ? formatStudyTime(value) : `${Math.round(value)}`}
+              {metric === 'study_time'
+                ? formatStudyTime(value)
+                : `${Math.round(value)}`}
             </div>
           </div>
         );
@@ -304,54 +340,76 @@ function SubjectComparison({
 /**
  * Trend Insights Component
  */
-function TrendInsights({ 
-  performances, 
-  metric, 
-  timeRange 
-}: { 
-  performances: SubjectPerformance[]; 
+function TrendInsights({
+  performances,
+  metric,
+  timeRange,
+}: {
+  performances: SubjectPerformance[];
   metric: TrendMetric;
   timeRange: TimeRange;
 }) {
   const insights = useMemo(() => {
     const insights: string[] = [];
-    
+
     if (performances.length === 0) {
-      insights.push("No performance data available for analysis.");
+      insights.push('No performance data available for analysis.');
       return insights;
     }
 
     // Calculate averages
-    const avgPerformance = performances.reduce((sum, p) => sum + p.performanceScore, 0) / performances.length;
-    const avgConsistency = performances.reduce((sum, p) => sum + p.consistencyScore, 0) / performances.length;
-    
+    const avgPerformance =
+      performances.reduce((sum, p) => sum + p.performanceScore, 0) /
+      performances.length;
+    const avgConsistency =
+      performances.reduce((sum, p) => sum + p.consistencyScore, 0) /
+      performances.length;
+
     // Performance insights
     if (avgPerformance >= 85) {
-      insights.push("🎉 Excellent overall performance across subjects!");
+      insights.push('🎉 Excellent overall performance across subjects!');
     } else if (avgPerformance >= 70) {
-      insights.push("👍 Good performance with room for improvement in some areas.");
+      insights.push(
+        '👍 Good performance with room for improvement in some areas.'
+      );
     } else if (avgPerformance >= 50) {
-      insights.push("⚠️ Performance needs attention - consider focusing on struggling subjects.");
+      insights.push(
+        '⚠️ Performance needs attention - consider focusing on struggling subjects.'
+      );
     } else {
-      insights.push("🚨 Critical performance issues detected - immediate action recommended.");
+      insights.push(
+        '🚨 Critical performance issues detected - immediate action recommended.'
+      );
     }
 
     // Consistency insights
     if (avgConsistency >= 80) {
-      insights.push("📈 Great study consistency - this builds strong learning habits.");
+      insights.push(
+        '📈 Great study consistency - this builds strong learning habits.'
+      );
     } else if (avgConsistency < 50) {
-      insights.push("📉 Study consistency could be improved for better retention.");
+      insights.push(
+        '📉 Study consistency could be improved for better retention.'
+      );
     }
 
     // Subject-specific insights
-    const strugglingSubjects = performances.filter(p => p.performanceScore < 60);
+    const strugglingSubjects = performances.filter(
+      p => p.performanceScore < 60
+    );
     if (strugglingSubjects.length > 0) {
-      insights.push(`🎯 ${strugglingSubjects.length} subject(s) need immediate attention.`);
+      insights.push(
+        `🎯 ${strugglingSubjects.length} subject(s) need immediate attention.`
+      );
     }
 
-    const excellentSubjects = performances.filter(p => p.performanceScore >= 85);
+    const excellentSubjects = performances.filter(
+      p => p.performanceScore >= 85
+    );
     if (excellentSubjects.length > 0) {
-      insights.push(`⭐ ${excellentSubjects.length} subject(s) showing excellent performance.`);
+      insights.push(
+        `⭐ ${excellentSubjects.length} subject(s) showing excellent performance.`
+      );
     }
 
     return insights;
@@ -371,52 +429,71 @@ function TrendInsights({
 // Helper functions
 function getMetricLabel(metric: TrendMetric): string {
   switch (metric) {
-    case 'performance': return 'Overall Performance';
-    case 'study_time': return 'Study Time';
-    case 'consistency': return 'Study Consistency';
-    case 'quest_completion': return 'Quest Completion';
+    case 'performance':
+      return 'Overall Performance';
+    case 'study_time':
+      return 'Study Time';
+    case 'consistency':
+      return 'Study Consistency';
+    case 'quest_completion':
+      return 'Quest Completion';
   }
 }
 
 function calculateTrendData(
-  performances: SubjectPerformance[], 
-  metric: TrendMetric, 
+  performances: SubjectPerformance[],
+  metric: TrendMetric,
   timeRange: TimeRange
 ): Array<{ label: string; value: number }> {
   // This is a simplified implementation
   // In a real app, you'd fetch historical data from the database
-  const days = timeRange === '7d' ? 7 : timeRange === '30d' ? 30 : timeRange === '90d' ? 90 : 365;
+  const days =
+    timeRange === '7d'
+      ? 7
+      : timeRange === '30d'
+        ? 30
+        : timeRange === '90d'
+          ? 90
+          : 365;
   const data: Array<{ label: string; value: number }> = [];
-  
+
   for (let i = days - 1; i >= 0; i--) {
     const date = new Date();
     date.setDate(date.getDate() - i);
-    
+
     // Simulate trend data based on current performance
-    const baseValue = performances.reduce((sum, p) => {
-      switch (metric) {
-        case 'performance': return sum + p.performanceScore;
-        case 'study_time': return sum + p.totalStudyTime;
-        case 'consistency': return sum + p.consistencyScore;
-        case 'quest_completion': return sum + p.questCompletionScore;
-      }
-    }, 0) / (performances.length || 1);
-    
+    const baseValue =
+      performances.reduce((sum, p) => {
+        switch (metric) {
+          case 'performance':
+            return sum + p.performanceScore;
+          case 'study_time':
+            return sum + p.totalStudyTime;
+          case 'consistency':
+            return sum + p.consistencyScore;
+          case 'quest_completion':
+            return sum + p.questCompletionScore;
+        }
+      }, 0) / (performances.length || 1);
+
     // Add some variation to simulate historical data
     const variation = (Math.random() - 0.5) * 20;
     const value = Math.max(0, baseValue + variation);
-    
+
     data.push({
-      label: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-      value: Math.round(value)
+      label: date.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+      }),
+      value: Math.round(value),
     });
   }
-  
+
   return data;
 }
 
 function calculateSummaryStats(
-  performances: SubjectPerformance[], 
+  performances: SubjectPerformance[],
   metric: TrendMetric
 ): {
   current: number;
@@ -431,32 +508,37 @@ function calculateSummaryStats(
       best: 0,
       improvement: 0,
       trend: 'stable',
-      improvementTrend: 'stable'
+      improvementTrend: 'stable',
     };
   }
 
   const getValue = (p: SubjectPerformance) => {
     switch (metric) {
-      case 'performance': return p.performanceScore;
-      case 'study_time': return p.totalStudyTime;
-      case 'consistency': return p.consistencyScore;
-      case 'quest_completion': return p.questCompletionScore;
+      case 'performance':
+        return p.performanceScore;
+      case 'study_time':
+        return p.totalStudyTime;
+      case 'consistency':
+        return p.consistencyScore;
+      case 'quest_completion':
+        return p.questCompletionScore;
     }
   };
 
   const values = performances.map(getValue);
   const current = values.reduce((sum, val) => sum + val, 0) / values.length;
   const best = Math.max(...values);
-  
+
   // Simulate improvement calculation (would use historical data in real app)
   const improvement = Math.random() * 10 - 5; // Random improvement between -5 and +5
-  
+
   return {
     current: Math.round(current),
     best: Math.round(best),
     improvement: Math.round(improvement),
     trend: improvement > 2 ? 'up' : improvement < -2 ? 'down' : 'stable',
-    improvementTrend: improvement > 0 ? 'up' : improvement < 0 ? 'down' : 'stable'
+    improvementTrend:
+      improvement > 0 ? 'up' : improvement < 0 ? 'down' : 'stable',
   };
 }
 

@@ -1,15 +1,28 @@
 import React, { useState, useEffect } from 'react';
-import { RefreshCw, Filter, TrendingUp, Clock, CheckCircle, X } from 'lucide-react';
+import {
+  RefreshCw,
+  Filter,
+  TrendingUp,
+  Clock,
+  CheckCircle,
+} from 'lucide-react';
 import RecommendationCard from './RecommendationCard';
 import { recommendationService } from '../../services/recommendationService';
-import type { StudyRecommendation, RecommendationFilters } from '../../services/recommendationService';
+import type {
+  StudyRecommendation,
+  RecommendationFilters,
+} from '../../services/recommendationService';
 
 interface RecommendationsDashboardProps {
   userId: string;
 }
 
-const RecommendationsDashboard: React.FC<RecommendationsDashboardProps> = ({ userId }) => {
-  const [recommendations, setRecommendations] = useState<StudyRecommendation[]>([]);
+const RecommendationsDashboard: React.FC<RecommendationsDashboardProps> = ({
+  userId,
+}) => {
+  const [recommendations, setRecommendations] = useState<StudyRecommendation[]>(
+    []
+  );
   const [isLoading, setIsLoading] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
   const [filters, setFilters] = useState<RecommendationFilters>({});
@@ -22,7 +35,10 @@ const RecommendationsDashboard: React.FC<RecommendationsDashboardProps> = ({ use
   const loadRecommendations = async () => {
     try {
       setIsLoading(true);
-      const data = await recommendationService.getActiveRecommendations(userId, filters);
+      const data = await recommendationService.getActiveRecommendations(
+        userId,
+        filters
+      );
       setRecommendations(data);
     } catch (error) {
       console.error('Error loading recommendations:', error);
@@ -34,7 +50,8 @@ const RecommendationsDashboard: React.FC<RecommendationsDashboardProps> = ({ use
   const generateNewRecommendations = async () => {
     try {
       setIsGenerating(true);
-      const newRecommendations = await recommendationService.generateRecommendations(userId);
+      const newRecommendations =
+        await recommendationService.generateRecommendations(userId);
       setRecommendations(newRecommendations);
     } catch (error) {
       console.error('Error generating recommendations:', error);
@@ -61,9 +78,17 @@ const RecommendationsDashboard: React.FC<RecommendationsDashboardProps> = ({ use
     }
   };
 
-  const handleUpdateActionItem = async (recommendationId: string, actionItemId: string, isCompleted: boolean) => {
+  const handleUpdateActionItem = async (
+    recommendationId: string,
+    actionItemId: string,
+    isCompleted: boolean
+  ) => {
     try {
-      await recommendationService.updateActionItem(recommendationId, actionItemId, isCompleted);
+      await recommendationService.updateActionItem(
+        recommendationId,
+        actionItemId,
+        isCompleted
+      );
       await loadRecommendations();
     } catch (error) {
       console.error('Error updating action item:', error);
@@ -72,10 +97,12 @@ const RecommendationsDashboard: React.FC<RecommendationsDashboardProps> = ({ use
 
   const getRecommendationStats = () => {
     const total = recommendations.length;
-    const critical = recommendations.filter(r => r.priority === 'critical').length;
+    const critical = recommendations.filter(
+      r => r.priority === 'critical'
+    ).length;
     const high = recommendations.filter(r => r.priority === 'high').length;
     const applied = recommendations.filter(r => r.isApplied).length;
-    
+
     return { total, critical, high, applied };
   };
 
@@ -94,12 +121,14 @@ const RecommendationsDashboard: React.FC<RecommendationsDashboardProps> = ({ use
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Smart Study Recommendations</h2>
+          <h2 className="text-2xl font-bold text-gray-900">
+            Smart Study Recommendations
+          </h2>
           <p className="text-gray-600 mt-1">
             Personalized suggestions to improve your study performance
           </p>
         </div>
-        
+
         <div className="flex items-center space-x-3">
           <button
             onClick={() => setShowFilters(!showFilters)}
@@ -108,13 +137,15 @@ const RecommendationsDashboard: React.FC<RecommendationsDashboardProps> = ({ use
             <Filter className="w-4 h-4" />
             <span>Filters</span>
           </button>
-          
+
           <button
             onClick={generateNewRecommendations}
             disabled={isGenerating}
             className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            <RefreshCw className={`w-4 h-4 ${isGenerating ? 'animate-spin' : ''}`} />
+            <RefreshCw
+              className={`w-4 h-4 ${isGenerating ? 'animate-spin' : ''}`}
+            />
             <span>{isGenerating ? 'Generating...' : 'Refresh'}</span>
           </button>
         </div>
@@ -129,29 +160,37 @@ const RecommendationsDashboard: React.FC<RecommendationsDashboardProps> = ({ use
           </div>
           <p className="text-2xl font-bold text-gray-900 mt-1">{stats.total}</p>
         </div>
-        
+
         <div className="bg-white p-4 rounded-lg border shadow-sm">
           <div className="flex items-center space-x-2">
             <Clock className="w-5 h-5 text-red-600" />
             <span className="text-sm font-medium text-gray-600">Critical</span>
           </div>
-          <p className="text-2xl font-bold text-red-600 mt-1">{stats.critical}</p>
+          <p className="text-2xl font-bold text-red-600 mt-1">
+            {stats.critical}
+          </p>
         </div>
-        
+
         <div className="bg-white p-4 rounded-lg border shadow-sm">
           <div className="flex items-center space-x-2">
             <TrendingUp className="w-5 h-5 text-orange-600" />
-            <span className="text-sm font-medium text-gray-600">High Priority</span>
+            <span className="text-sm font-medium text-gray-600">
+              High Priority
+            </span>
           </div>
-          <p className="text-2xl font-bold text-orange-600 mt-1">{stats.high}</p>
+          <p className="text-2xl font-bold text-orange-600 mt-1">
+            {stats.high}
+          </p>
         </div>
-        
+
         <div className="bg-white p-4 rounded-lg border shadow-sm">
           <div className="flex items-center space-x-2">
             <CheckCircle className="w-5 h-5 text-green-600" />
             <span className="text-sm font-medium text-gray-600">Applied</span>
           </div>
-          <p className="text-2xl font-bold text-green-600 mt-1">{stats.applied}</p>
+          <p className="text-2xl font-bold text-green-600 mt-1">
+            {stats.applied}
+          </p>
         </div>
       </div>
 
@@ -165,7 +204,9 @@ const RecommendationsDashboard: React.FC<RecommendationsDashboardProps> = ({ use
               </label>
               <select
                 value={filters.type || ''}
-                onChange={(e) => setFilters({ ...filters, type: e.target.value as any })}
+                onChange={e =>
+                  setFilters({ ...filters, type: e.target.value as any })
+                }
                 className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">All Types</option>
@@ -177,14 +218,16 @@ const RecommendationsDashboard: React.FC<RecommendationsDashboardProps> = ({ use
                 <option value="time_management">Time Management</option>
               </select>
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Priority
               </label>
               <select
                 value={filters.priority || ''}
-                onChange={(e) => setFilters({ ...filters, priority: e.target.value as any })}
+                onChange={e =>
+                  setFilters({ ...filters, priority: e.target.value as any })
+                }
                 className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">All Priorities</option>
@@ -194,14 +237,16 @@ const RecommendationsDashboard: React.FC<RecommendationsDashboardProps> = ({ use
                 <option value="low">Low</option>
               </select>
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Category
               </label>
               <select
                 value={filters.category || ''}
-                onChange={(e) => setFilters({ ...filters, category: e.target.value as any })}
+                onChange={e =>
+                  setFilters({ ...filters, category: e.target.value as any })
+                }
                 className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">All Categories</option>
@@ -211,7 +256,7 @@ const RecommendationsDashboard: React.FC<RecommendationsDashboardProps> = ({ use
                 <option value="ongoing">Ongoing</option>
               </select>
             </div>
-            
+
             <div className="flex items-end">
               <button
                 onClick={() => setFilters({})}
@@ -228,7 +273,9 @@ const RecommendationsDashboard: React.FC<RecommendationsDashboardProps> = ({ use
       {recommendations.length === 0 ? (
         <div className="text-center py-12">
           <TrendingUp className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No recommendations available</h3>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            No recommendations available
+          </h3>
           <p className="text-gray-600 mb-4">
             Generate new recommendations based on your current study patterns.
           </p>
@@ -242,7 +289,7 @@ const RecommendationsDashboard: React.FC<RecommendationsDashboardProps> = ({ use
         </div>
       ) : (
         <div className="space-y-4">
-          {recommendations.map((recommendation) => (
+          {recommendations.map(recommendation => (
             <RecommendationCard
               key={recommendation.id}
               recommendation={recommendation}

@@ -226,10 +226,12 @@ export const TodoListItem: React.FC<TodoListItemProps> = React.memo(
           isOpen={isDeleteDialogOpen}
           onClose={() => setIsDeleteDialogOpen(false)}
           onConfirm={handleDelete}
+          onCancel={() => setIsDeleteDialogOpen(false)}
           title="Delete Todo"
           message="Are you sure you want to delete this todo? This action cannot be undone."
-          confirmText="Delete"
-          confirmVariant="danger"
+          confirmLabel="Delete"
+          cancelLabel="Cancel"
+          variant="danger"
         />
       </>
     );
