@@ -11,7 +11,7 @@ import type {
   ScheduleSlotForm,
   WeeklySchedule,
   RoutineAnalytics,
-  RoutineFilters
+  RoutineFilters,
 } from '../types';
 
 interface RoutineStore extends RoutineState {
@@ -22,13 +22,16 @@ interface RoutineStore extends RoutineState {
   deleteRoutine: (id: string) => Promise<void>;
   toggleRoutineActive: (id: string, isActive: boolean) => Promise<void>;
   setActiveRoutine: (routine: Routine | null) => void;
-  
+
   // Schedule slot actions
   createScheduleSlot: (slotData: ScheduleSlotForm) => Promise<ScheduleSlot>;
-  updateScheduleSlot: (id: string, updates: Partial<ScheduleSlotForm>) => Promise<void>;
+  updateScheduleSlot: (
+    id: string,
+    updates: Partial<ScheduleSlotForm>
+  ) => Promise<void>;
   deleteScheduleSlot: (id: string) => Promise<void>;
   getWeeklySchedule: (routineId: string) => Promise<WeeklySchedule>;
-  
+
   // Performance tracking
   recordSlotCompletion: (
     slotId: string,
@@ -39,25 +42,28 @@ interface RoutineStore extends RoutineState {
     notes?: string
   ) => Promise<void>;
   calculateDailyPerformance: (routineId: string, date: string) => Promise<void>;
-  
+
   // Templates
   fetchTemplates: () => Promise<void>;
-  createRoutineFromTemplate: (templateId: string, name: string) => Promise<Routine>;
-  
+  createRoutineFromTemplate: (
+    templateId: string,
+    name: string
+  ) => Promise<Routine>;
+
   // Analytics
   getRoutineAnalytics: (routineId: string) => Promise<RoutineAnalytics>;
-  
+
   // Suggestions
   fetchSuggestions: () => Promise<void>;
   generateSuggestions: () => Promise<void>;
   applySuggestion: (suggestionId: string) => Promise<void>;
   dismissSuggestion: (suggestionId: string) => Promise<void>;
-  
+
   // Filters and UI state
   setFilters: (filters: Partial<RoutineFilters>) => void;
   setSelectedDate: (date: Date) => void;
   setWeeklyView: (weeklyView: WeeklySchedule) => void;
-  
+
   // Error handling
   setError: (error: string | null) => void;
   clearError: () => void;
@@ -89,9 +95,12 @@ export const useRoutineStore = create<RoutineStore>()(
           const routines = await RoutineService.getRoutines();
           set({ routines, isLoading: false });
         } catch (error) {
-          set({ 
-            error: error instanceof Error ? error.message : 'Failed to fetch routines',
-            isLoading: false 
+          set({
+            error:
+              error instanceof Error
+                ? error.message
+                : 'Failed to fetch routines',
+            isLoading: false,
           });
         }
       },
@@ -102,13 +111,16 @@ export const useRoutineStore = create<RoutineStore>()(
           const newRoutine = await RoutineService.createRoutine(routineData);
           set(state => ({
             routines: [newRoutine, ...state.routines],
-            isLoading: false
+            isLoading: false,
           }));
           return newRoutine;
         } catch (error) {
-          set({ 
-            error: error instanceof Error ? error.message : 'Failed to create routine',
-            isLoading: false 
+          set({
+            error:
+              error instanceof Error
+                ? error.message
+                : 'Failed to create routine',
+            isLoading: false,
           });
           throw error;
         }
@@ -117,18 +129,27 @@ export const useRoutineStore = create<RoutineStore>()(
       updateRoutine: async (id: string, updates: Partial<RoutineForm>) => {
         set({ isLoading: true, error: null });
         try {
-          const updatedRoutine = await RoutineService.updateRoutine(id, updates);
+          const updatedRoutine = await RoutineService.updateRoutine(
+            id,
+            updates
+          );
           set(state => ({
-            routines: state.routines.map(routine => 
+            routines: state.routines.map(routine =>
               routine.id === id ? updatedRoutine : routine
             ),
-            activeRoutine: state.activeRoutine?.id === id ? updatedRoutine : state.activeRoutine,
-            isLoading: false
+            activeRoutine:
+              state.activeRoutine?.id === id
+                ? updatedRoutine
+                : state.activeRoutine,
+            isLoading: false,
           }));
         } catch (error) {
-          set({ 
-            error: error instanceof Error ? error.message : 'Failed to update routine',
-            isLoading: false 
+          set({
+            error:
+              error instanceof Error
+                ? error.message
+                : 'Failed to update routine',
+            isLoading: false,
           });
         }
       },
@@ -139,13 +160,17 @@ export const useRoutineStore = create<RoutineStore>()(
           await RoutineService.deleteRoutine(id);
           set(state => ({
             routines: state.routines.filter(routine => routine.id !== id),
-            activeRoutine: state.activeRoutine?.id === id ? null : state.activeRoutine,
-            isLoading: false
+            activeRoutine:
+              state.activeRoutine?.id === id ? null : state.activeRoutine,
+            isLoading: false,
           }));
         } catch (error) {
-          set({ 
-            error: error instanceof Error ? error.message : 'Failed to delete routine',
-            isLoading: false 
+          set({
+            error:
+              error instanceof Error
+                ? error.message
+                : 'Failed to delete routine',
+            isLoading: false,
           });
         }
       },
@@ -154,16 +179,20 @@ export const useRoutineStore = create<RoutineStore>()(
         try {
           await RoutineService.toggleRoutineActive(id, isActive);
           set(state => ({
-            routines: state.routines.map(routine => 
+            routines: state.routines.map(routine =>
               routine.id === id ? { ...routine, isActive } : routine
             ),
-            activeRoutine: state.activeRoutine?.id === id 
-              ? { ...state.activeRoutine, isActive } 
-              : state.activeRoutine
+            activeRoutine:
+              state.activeRoutine?.id === id
+                ? { ...state.activeRoutine, isActive }
+                : state.activeRoutine,
           }));
         } catch (error) {
-          set({ 
-            error: error instanceof Error ? error.message : 'Failed to toggle routine status'
+          set({
+            error:
+              error instanceof Error
+                ? error.message
+                : 'Failed to toggle routine status',
           });
         }
       },
@@ -177,54 +206,79 @@ export const useRoutineStore = create<RoutineStore>()(
         set({ isLoading: true, error: null });
         try {
           const newSlot = await RoutineService.createScheduleSlot(slotData);
-          
+
           // Update the routine with the new slot
           set(state => ({
-            routines: state.routines.map(routine => 
-              routine.id === slotData.routineId 
-                ? { ...routine, scheduleSlots: [...routine.scheduleSlots, newSlot] }
+            routines: state.routines.map(routine =>
+              routine.id === slotData.routineId
+                ? {
+                    ...routine,
+                    scheduleSlots: [...routine.scheduleSlots, newSlot],
+                  }
                 : routine
             ),
-            activeRoutine: state.activeRoutine?.id === slotData.routineId
-              ? { ...state.activeRoutine, scheduleSlots: [...state.activeRoutine.scheduleSlots, newSlot] }
-              : state.activeRoutine,
-            isLoading: false
+            activeRoutine:
+              state.activeRoutine?.id === slotData.routineId &&
+              state.activeRoutine
+                ? {
+                    ...state.activeRoutine,
+                    scheduleSlots: [
+                      ...state.activeRoutine.scheduleSlots,
+                      newSlot,
+                    ],
+                  }
+                : state.activeRoutine,
+            isLoading: false,
           }));
-          
+
           return newSlot;
         } catch (error) {
-          set({ 
-            error: error instanceof Error ? error.message : 'Failed to create schedule slot',
-            isLoading: false 
+          set({
+            error:
+              error instanceof Error
+                ? error.message
+                : 'Failed to create schedule slot',
+            isLoading: false,
           });
           throw error;
         }
       },
 
-      updateScheduleSlot: async (id: string, updates: Partial<ScheduleSlotForm>) => {
+      updateScheduleSlot: async (
+        id: string,
+        updates: Partial<ScheduleSlotForm>
+      ) => {
         set({ isLoading: true, error: null });
         try {
-          const updatedSlot = await RoutineService.updateScheduleSlot(id, updates);
-          
+          const updatedSlot = await RoutineService.updateScheduleSlot(
+            id,
+            updates
+          );
+
           set(state => ({
             routines: state.routines.map(routine => ({
               ...routine,
-              scheduleSlots: routine.scheduleSlots.map(slot => 
+              scheduleSlots: routine.scheduleSlots.map(slot =>
                 slot.id === id ? updatedSlot : slot
-              )
+              ),
             })),
-            activeRoutine: state.activeRoutine ? {
-              ...state.activeRoutine,
-              scheduleSlots: state.activeRoutine.scheduleSlots.map(slot => 
-                slot.id === id ? updatedSlot : slot
-              )
-            } : null,
-            isLoading: false
+            activeRoutine: state.activeRoutine
+              ? {
+                  ...state.activeRoutine,
+                  scheduleSlots: state.activeRoutine.scheduleSlots.map(slot =>
+                    slot.id === id ? updatedSlot : slot
+                  ),
+                }
+              : null,
+            isLoading: false,
           }));
         } catch (error) {
-          set({ 
-            error: error instanceof Error ? error.message : 'Failed to update schedule slot',
-            isLoading: false 
+          set({
+            error:
+              error instanceof Error
+                ? error.message
+                : 'Failed to update schedule slot',
+            isLoading: false,
           });
         }
       },
@@ -233,34 +287,47 @@ export const useRoutineStore = create<RoutineStore>()(
         set({ isLoading: true, error: null });
         try {
           await RoutineService.deleteScheduleSlot(id);
-          
+
           set(state => ({
             routines: state.routines.map(routine => ({
               ...routine,
-              scheduleSlots: routine.scheduleSlots.filter(slot => slot.id !== id)
+              scheduleSlots: routine.scheduleSlots.filter(
+                slot => slot.id !== id
+              ),
             })),
-            activeRoutine: state.activeRoutine ? {
-              ...state.activeRoutine,
-              scheduleSlots: state.activeRoutine.scheduleSlots.filter(slot => slot.id !== id)
-            } : null,
-            isLoading: false
+            activeRoutine: state.activeRoutine
+              ? {
+                  ...state.activeRoutine,
+                  scheduleSlots: state.activeRoutine.scheduleSlots.filter(
+                    slot => slot.id !== id
+                  ),
+                }
+              : null,
+            isLoading: false,
           }));
         } catch (error) {
-          set({ 
-            error: error instanceof Error ? error.message : 'Failed to delete schedule slot',
-            isLoading: false 
+          set({
+            error:
+              error instanceof Error
+                ? error.message
+                : 'Failed to delete schedule slot',
+            isLoading: false,
           });
         }
       },
 
       getWeeklySchedule: async (routineId: string) => {
         try {
-          const weeklySchedule = await RoutineService.getWeeklySchedule(routineId);
+          const weeklySchedule =
+            await RoutineService.getWeeklySchedule(routineId);
           set({ weeklyView: weeklySchedule });
           return weeklySchedule;
         } catch (error) {
-          set({ 
-            error: error instanceof Error ? error.message : 'Failed to fetch weekly schedule'
+          set({
+            error:
+              error instanceof Error
+                ? error.message
+                : 'Failed to fetch weekly schedule',
           });
           throw error;
         }
@@ -284,15 +351,18 @@ export const useRoutineStore = create<RoutineStore>()(
             qualityRating,
             notes
           );
-          
+
           // Optionally refresh routine data to show updated completion status
           const { activeRoutine } = get();
           if (activeRoutine) {
             await get().calculateDailyPerformance(activeRoutine.id, date);
           }
         } catch (error) {
-          set({ 
-            error: error instanceof Error ? error.message : 'Failed to record slot completion'
+          set({
+            error:
+              error instanceof Error
+                ? error.message
+                : 'Failed to record slot completion',
           });
         }
       },
@@ -301,8 +371,11 @@ export const useRoutineStore = create<RoutineStore>()(
         try {
           await RoutineService.calculateDailyPerformance(routineId, date);
         } catch (error) {
-          set({ 
-            error: error instanceof Error ? error.message : 'Failed to calculate daily performance'
+          set({
+            error:
+              error instanceof Error
+                ? error.message
+                : 'Failed to calculate daily performance',
           });
         }
       },
@@ -314,9 +387,12 @@ export const useRoutineStore = create<RoutineStore>()(
           const templates = await RoutineService.getRoutineTemplates();
           set({ templates, isLoading: false });
         } catch (error) {
-          set({ 
-            error: error instanceof Error ? error.message : 'Failed to fetch templates',
-            isLoading: false 
+          set({
+            error:
+              error instanceof Error
+                ? error.message
+                : 'Failed to fetch templates',
+            isLoading: false,
           });
         }
       },
@@ -324,16 +400,22 @@ export const useRoutineStore = create<RoutineStore>()(
       createRoutineFromTemplate: async (templateId: string, name: string) => {
         set({ isLoading: true, error: null });
         try {
-          const newRoutine = await RoutineService.createRoutineFromTemplate(templateId, name);
+          const newRoutine = await RoutineService.createRoutineFromTemplate(
+            templateId,
+            name
+          );
           set(state => ({
             routines: [newRoutine, ...state.routines],
-            isLoading: false
+            isLoading: false,
           }));
           return newRoutine;
         } catch (error) {
-          set({ 
-            error: error instanceof Error ? error.message : 'Failed to create routine from template',
-            isLoading: false 
+          set({
+            error:
+              error instanceof Error
+                ? error.message
+                : 'Failed to create routine from template',
+            isLoading: false,
           });
           throw error;
         }
@@ -344,8 +426,11 @@ export const useRoutineStore = create<RoutineStore>()(
         try {
           return await RoutineService.getRoutineAnalytics(routineId);
         } catch (error) {
-          set({ 
-            error: error instanceof Error ? error.message : 'Failed to fetch routine analytics'
+          set({
+            error:
+              error instanceof Error
+                ? error.message
+                : 'Failed to fetch routine analytics',
           });
           throw error;
         }
@@ -358,9 +443,12 @@ export const useRoutineStore = create<RoutineStore>()(
           const suggestions = await RoutineService.getRoutineSuggestions();
           set({ suggestions, isLoading: false });
         } catch (error) {
-          set({ 
-            error: error instanceof Error ? error.message : 'Failed to fetch suggestions',
-            isLoading: false 
+          set({
+            error:
+              error instanceof Error
+                ? error.message
+                : 'Failed to fetch suggestions',
+            isLoading: false,
           });
         }
       },
@@ -370,8 +458,11 @@ export const useRoutineStore = create<RoutineStore>()(
           await RoutineService.generateSuggestions();
           await get().fetchSuggestions(); // Refresh suggestions
         } catch (error) {
-          set({ 
-            error: error instanceof Error ? error.message : 'Failed to generate suggestions'
+          set({
+            error:
+              error instanceof Error
+                ? error.message
+                : 'Failed to generate suggestions',
           });
         }
       },
@@ -380,15 +471,18 @@ export const useRoutineStore = create<RoutineStore>()(
         try {
           await RoutineService.applySuggestion(suggestionId);
           set(state => ({
-            suggestions: state.suggestions.map(suggestion => 
-              suggestion.id === suggestionId 
+            suggestions: state.suggestions.map(suggestion =>
+              suggestion.id === suggestionId
                 ? { ...suggestion, isApplied: true, appliedAt: new Date() }
                 : suggestion
-            )
+            ),
           }));
         } catch (error) {
-          set({ 
-            error: error instanceof Error ? error.message : 'Failed to apply suggestion'
+          set({
+            error:
+              error instanceof Error
+                ? error.message
+                : 'Failed to apply suggestion',
           });
         }
       },
@@ -397,11 +491,16 @@ export const useRoutineStore = create<RoutineStore>()(
         try {
           await RoutineService.dismissSuggestion(suggestionId);
           set(state => ({
-            suggestions: state.suggestions.filter(suggestion => suggestion.id !== suggestionId)
+            suggestions: state.suggestions.filter(
+              suggestion => suggestion.id !== suggestionId
+            ),
           }));
         } catch (error) {
-          set({ 
-            error: error instanceof Error ? error.message : 'Failed to dismiss suggestion'
+          set({
+            error:
+              error instanceof Error
+                ? error.message
+                : 'Failed to dismiss suggestion',
           });
         }
       },
@@ -409,7 +508,7 @@ export const useRoutineStore = create<RoutineStore>()(
       // Filters and UI state
       setFilters: (filters: Partial<RoutineFilters>) => {
         set(state => ({
-          filters: { ...state.filters, ...filters }
+          filters: { ...state.filters, ...filters },
         }));
       },
 

@@ -45,6 +45,17 @@ interface PomodoroState {
   // Timer tick (called every second)
   tick: () => void;
 
+  // Helper methods
+  startTimerInterval: () => void;
+  clearTimerInterval: () => void;
+  getNextSessionState: (completed: boolean) => {
+    sessionType: 'work' | 'short_break' | 'long_break';
+    sessionNumber: number;
+    timeRemaining: number;
+    cycleId?: string;
+  };
+  playNotificationSound: () => void;
+
   // Reset state
   reset: () => void;
 }
@@ -167,12 +178,10 @@ export const usePomodoroStore = create<PomodoroState>((set, get) => ({
 
         // Award XP through gamification system
         const gamificationStore = useGamificationStore.getState();
-        await gamificationStore.awardXP(userId, xpEarned, 'pomodoro_session', {
-          sessionType: timer.sessionType,
-          duration: sessionDuration,
-          courseId: timer.currentSession.courseId,
-          todoItemId: timer.currentSession.todoItemId,
-        });
+        await gamificationStore.awardXP(
+          xpEarned,
+          `Pomodoro Session (${sessionDuration}min)`
+        );
 
         // Integrate with pet system for pomodoro completion
         try {
@@ -190,12 +199,8 @@ export const usePomodoroStore = create<PomodoroState>((set, get) => ({
         }
       }
 
-      // Complete the session with XP
-      await PomodoroService.completeSession(
-        timer.currentSession.id,
-        completed,
-        xpEarned
-      );
+      // Complete the session
+      await PomodoroService.completeSession(timer.currentSession.id, completed);
 
       // Move to next session type
       const nextState = get().getNextSessionState(completed);
@@ -307,13 +312,49 @@ export const usePomodoroStore = create<PomodoroState>((set, get) => ({
 
   // Helper methods (these would be added to the store)
   startTimerInterval: () => {
-    // This would be implemented with setInterval
-    // For now, we'll assume it's handled by the component
+    const { timer } = get();
+    if (timer.intervalId) return;
+
+    const intervalId = setInterval(() => {
+      const currentState = get();
+      const { timer: currentTimer } = currentState;
+
+      if (!currentTimer.isActive || currentTimer.timeRemaining <= 0) {
+        return;
+      }
+
+      set({
+        timer: {
+          ...currentTimer,
+          timeRemaining: Math.max(0, currentTimer.timeRemaining - 1),
+        },
+      });
+
+      // Auto-complete when time reaches 0
+      if (currentTimer.timeRemaining <= 1) {
+        currentState.stopTimer(currentTimer.currentSession?.userId || '', true);
+      }
+    }, 1000);
+
+    set({
+      timer: {
+        ...timer,
+        intervalId,
+      },
+    });
   },
 
   clearTimerInterval: () => {
-    // This would clear the interval
-    // For now, we'll assume it's handled by the component
+    const { timer } = get();
+    if (timer.intervalId) {
+      clearInterval(timer.intervalId);
+      set({
+        timer: {
+          ...timer,
+          intervalId: null,
+        },
+      });
+    }
   },
 
   getNextSessionState: (completed: boolean) => {

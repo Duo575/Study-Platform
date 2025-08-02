@@ -103,16 +103,21 @@ export const MiniGameManager: React.FC<MiniGameManagerProps> = ({
 
     try {
       setLoading(true);
-      const result = await miniGameService.endGame(currentSession.id, score);
+
+      // End the game with just the score - the service will calculate the result
+      const gameResult = await miniGameService.endGame(
+        currentSession.id,
+        score
+      );
 
       setCompletion({
-        result,
+        result: gameResult,
         showResults: true,
       });
 
       // Notify parent about coins earned
-      if (onCoinsEarned && result.coinsEarned > 0) {
-        onCoinsEarned(result.coinsEarned);
+      if (onCoinsEarned && gameResult.coinsEarned > 0) {
+        onCoinsEarned(gameResult.coinsEarned);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to complete game');

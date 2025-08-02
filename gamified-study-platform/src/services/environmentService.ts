@@ -26,6 +26,39 @@ export class EnvironmentManagerService implements EnvironmentManager {
   }
 
   /**
+   * Convert BasicEnvironment to full Environment with defaults
+   */
+  private convertToFullEnvironment(basicEnv: any): Environment {
+    return {
+      id: basicEnv.id || '',
+      name: basicEnv.name || '',
+      category: basicEnv.category || 'free',
+      theme: basicEnv.theme || {
+        primaryColor: '#3B82F6',
+        secondaryColor: '#1E40AF',
+        backgroundColor: '#F8FAFC',
+        textColor: '#1F2937',
+        accentColor: '#10B981',
+        cssVariables: {},
+      },
+      audio: basicEnv.audio || {
+        ambientTrack: basicEnv.audioUrl || '',
+        musicTracks: [],
+        soundEffects: {},
+        defaultVolume: 0.5,
+      },
+      visuals: basicEnv.visuals || {
+        backgroundImage: basicEnv.visualUrl || '',
+        overlayElements: [],
+        particleEffects: [],
+      },
+      unlockRequirements: basicEnv.unlockRequirements || [],
+      createdAt: basicEnv.createdAt || new Date(),
+      updatedAt: basicEnv.updatedAt || new Date(),
+    };
+  }
+
+  /**
    * Initialize Web Audio API context
    */
   private initializeAudioContext(): void {
@@ -46,12 +79,13 @@ export class EnvironmentManagerService implements EnvironmentManager {
       // For now, we'll use static data that matches what's in the store
       const environmentsData = await this.fetchEnvironmentsData();
 
-      // Validate each environment
+      // Validate and convert each environment
       const validEnvironments: Environment[] = [];
       for (const envData of environmentsData) {
         const validation = this.validateEnvironment(envData);
         if (validation.isValid && isEnvironment(envData)) {
-          validEnvironments.push(envData);
+          const fullEnvironment = this.convertToFullEnvironment(envData);
+          validEnvironments.push(fullEnvironment);
         } else {
           console.warn('Invalid environment data:', envData, validation.errors);
         }
@@ -85,9 +119,10 @@ export class EnvironmentManagerService implements EnvironmentManager {
           );
         }
 
-        // Add to local cache
-        this.environments.push(environmentData);
-        return environmentData;
+        // Convert and add to local cache
+        const fullEnvironment = this.convertToFullEnvironment(environmentData);
+        this.environments.push(fullEnvironment);
+        return fullEnvironment;
       }
 
       return environment;
@@ -208,7 +243,7 @@ export class EnvironmentManagerService implements EnvironmentManager {
   /**
    * Preload assets for a specific environment
    */
-  private async preloadEnvironmentAssets(environmentId: string): Promise<void> {
+  async preloadEnvironmentAssets(environmentId: string): Promise<void> {
     try {
       if (this.preloadedAssets.has(environmentId)) {
         return; // Already preloaded
@@ -224,12 +259,8 @@ export class EnvironmentManagerService implements EnvironmentManager {
         );
       }
 
-      // Preload background video if available
-      if (environment.visuals.backgroundVideo) {
-        preloadPromises.push(
-          this.preloadVideo(environment.visuals.backgroundVideo)
-        );
-      }
+      // Note: backgroundVideo is not part of the Environment interface
+      // If needed, it should be added to the visuals interface
 
       // Preload overlay element images
       environment.visuals.overlayElements?.forEach(element => {
@@ -324,7 +355,7 @@ export class EnvironmentManagerService implements EnvironmentManager {
               `Checking study hours requirement: ${requirement.target}`
             );
             break;
-          case 'streak':
+          case 'streak_days':
             // Check user's streak days
             console.log(`Checking streak requirement: ${requirement.target}`);
             break;
@@ -631,18 +662,65 @@ export class EnvironmentManagerService implements EnvironmentManager {
   }
 
   /**
+   * Customize environment settings
+   */
+  async customizeEnvironment(
+    environmentId: string,
+    customizations: EnvironmentCustomization
+  ): Promise<void> {
+    const environment = await this.loadEnvironment(environmentId);
+
+    // Apply customizations to the environment
+    if (customizations.customAudio) {
+      environment.audio = {
+        ...environment.audio,
+        ...customizations.customAudio,
+      };
+    }
+
+    if (customizations.customVisuals) {
+      environment.visuals = {
+        ...environment.visuals,
+        ...customizations.customVisuals,
+      };
+    }
+
+    // Update the current environment if it's the one being customized
+    if (this.currentEnvironment?.id === environmentId) {
+      this.currentEnvironment = environment;
+    }
+
+    // Update the environment in the environments array
+    const index = this.environments.findIndex(env => env.id === environmentId);
+    if (index !== -1) {
+      this.environments[index] = environment;
+    }
+  }
+
+  /**
    * Validate environment configuration
    */
   validateEnvironment(environment: any): {
     isValid: boolean;
     errors: string[];
   } {
-    // The imported validateEnvironment returns a different type, so we need to adapt it
-    const result = validateEnvironment(environment);
-    if (typeof result === 'boolean') {
-      return { isValid: result, errors: [] };
+    try {
+      // Use the isEnvironment guard function instead
+      const isValid = isEnvironment(environment);
+      const errors: string[] = [];
+
+      if (!isValid) {
+        if (!environment?.id) errors.push('Missing id');
+        if (!environment?.name) errors.push('Missing name');
+        if (!environment?.type) errors.push('Missing type');
+        if (typeof environment?.isUnlocked !== 'boolean')
+          errors.push('Missing or invalid isUnlocked');
+      }
+
+      return { isValid, errors };
+    } catch (error) {
+      return { isValid: false, errors: ['Validation error: ' + String(error)] };
     }
-    return result as { isValid: boolean; errors: string[] };
   }
 
   /**

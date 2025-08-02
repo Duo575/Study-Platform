@@ -139,6 +139,29 @@ const initialState: PetState = {
   autoPlayThreshold: 40,
 };
 
+// Helper function to convert StudyPet to StudyPetExtended
+const convertToExtendedPet = (
+  pet: StudyPet | null
+): StudyPetExtended | null => {
+  if (!pet) return null;
+
+  return {
+    ...pet,
+    mood: {
+      current: 'content',
+      factors: [],
+      lastUpdated: new Date(),
+      trend: 'stable',
+    },
+    moodHistory: [],
+    totalStudyTime: 0,
+    favoriteSubjects: [],
+    achievements: [],
+    evolutionStage: 'baby',
+    updatedAt: new Date(),
+  };
+};
+
 export const usePetStore = create<PetState & PetActions>()(
   devtools(
     persist(
@@ -149,7 +172,8 @@ export const usePetStore = create<PetState & PetActions>()(
           try {
             set({ isLoading: true, error: null });
             const pet = await petService.getUserPet(userId);
-            set({ pet, isLoading: false });
+            const extendedPet = convertToExtendedPet(pet);
+            set({ pet: extendedPet, isLoading: false });
 
             // Check if pet needs attention
             if (pet) {
@@ -177,7 +201,7 @@ export const usePetStore = create<PetState & PetActions>()(
             set({ isLoading: true, isAdopting: true, error: null });
             const pet = await petService.adoptPet(userId, petData);
             set({
-              pet,
+              pet: convertToExtendedPet(pet),
               isLoading: false,
               isAdopting: false,
               lastInteraction: new Date(),
@@ -203,7 +227,7 @@ export const usePetStore = create<PetState & PetActions>()(
             });
             const pet = await petService.feedPet(userId);
             set({
-              pet,
+              pet: convertToExtendedPet(pet),
               isLoading: false,
               isInteracting: false,
               lastInteraction: new Date(),
@@ -232,7 +256,7 @@ export const usePetStore = create<PetState & PetActions>()(
             });
             const pet = await petService.playWithPet(userId);
             set({
-              pet,
+              pet: convertToExtendedPet(pet),
               isLoading: false,
               isInteracting: false,
               lastInteraction: new Date(),
@@ -258,7 +282,7 @@ export const usePetStore = create<PetState & PetActions>()(
 
             if (result.evolved) {
               set({
-                pet: result.pet,
+                pet: convertToExtendedPet(result.pet),
                 isLoading: false,
                 isEvolving: false,
                 lastInteraction: new Date(),
@@ -267,7 +291,7 @@ export const usePetStore = create<PetState & PetActions>()(
               return true;
             } else {
               set({
-                pet: result.pet,
+                pet: convertToExtendedPet(result.pet),
                 isLoading: false,
                 isEvolving: false,
               });
@@ -295,7 +319,7 @@ export const usePetStore = create<PetState & PetActions>()(
               activityType,
               durationMinutes
             );
-            set({ pet });
+            set({ pet: convertToExtendedPet(pet) });
 
             // Check if pet can evolve after gaining XP
             await get().checkEvolution(userId);
@@ -320,7 +344,7 @@ export const usePetStore = create<PetState & PetActions>()(
             set({ isLoading: true, error: null });
             const pet = await petService.addPetAccessory(userId, accessory);
             set({
-              pet,
+              pet: convertToExtendedPet(pet),
               isLoading: false,
               lastInteraction: new Date(),
             });
@@ -342,10 +366,11 @@ export const usePetStore = create<PetState & PetActions>()(
                 id: 'basic-kibble',
                 name: 'Basic Kibble',
                 description: 'Standard pet food that restores hunger',
+                type: 'meal',
                 cost: 10,
                 effects: [
-                  { type: 'hunger', value: -30 },
-                  { type: 'health', value: 5 },
+                  { type: 'hunger', value: -30, description: 'Reduces hunger' },
+                  { type: 'health', value: 5, description: 'Restores health' },
                 ],
                 rarity: 'common',
                 imageUrl: '/items/basic-kibble.png',
@@ -355,10 +380,15 @@ export const usePetStore = create<PetState & PetActions>()(
                 id: 'premium-treats',
                 name: 'Premium Treats',
                 description: 'Delicious treats that boost happiness',
+                type: 'treat',
                 cost: 25,
                 effects: [
-                  { type: 'hunger', value: -20 },
-                  { type: 'happiness', value: 15 },
+                  { type: 'hunger', value: -20, description: 'Reduces hunger' },
+                  {
+                    type: 'happiness',
+                    value: 15,
+                    description: 'Increases happiness',
+                  },
                 ],
                 rarity: 'rare',
                 imageUrl: '/items/premium-treats.png',
@@ -383,8 +413,16 @@ export const usePetStore = create<PetState & PetActions>()(
                 description: 'A fun ball that increases happiness',
                 cost: 15,
                 effects: [
-                  { type: 'happiness', value: 20 },
-                  { type: 'energy', value: -10 },
+                  {
+                    type: 'happiness',
+                    value: 20,
+                    description: 'Increases happiness',
+                  },
+                  {
+                    type: 'energy',
+                    value: -10,
+                    description: 'Uses some energy',
+                  },
                 ],
                 rarity: 'common',
                 imageUrl: '/items/ball.png',
@@ -397,12 +435,20 @@ export const usePetStore = create<PetState & PetActions>()(
                 description: 'A challenging toy that boosts intelligence',
                 cost: 40,
                 effects: [
-                  { type: 'happiness', value: 15 },
-                  { type: 'evolution_boost', value: 5 },
+                  {
+                    type: 'happiness',
+                    value: 15,
+                    description: 'Increases happiness',
+                  },
+                  {
+                    type: 'special',
+                    value: 5,
+                    description: 'Boosts evolution progress',
+                  },
                 ],
                 rarity: 'epic',
                 imageUrl: '/items/puzzle-toy.png',
-                category: 'training',
+                category: 'educational',
                 durability: 20,
               },
             ];
@@ -425,7 +471,7 @@ export const usePetStore = create<PetState & PetActions>()(
             // General care action that improves all stats slightly
             const pet = await petService.feedPet(userId); // Using existing service method
             set({
-              pet,
+              pet: convertToExtendedPet(pet),
               isLoading: false,
               isInteracting: false,
               lastInteraction: new Date(),
@@ -523,6 +569,9 @@ export const usePetStore = create<PetState & PetActions>()(
               completedRequirements: pet.evolution.nextStageRequirements
                 .filter(req => req.completed)
                 .map(req => req.id),
+              missingRequirements: pet.evolution.nextStageRequirements.filter(
+                req => !req.completed
+              ),
               progress: Math.min(100, pet.level * 20 + pet.happiness * 0.5),
             };
 

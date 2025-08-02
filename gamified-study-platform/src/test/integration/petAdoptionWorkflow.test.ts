@@ -110,7 +110,7 @@ describe('Pet Adoption Workflow Integration Tests', () => {
 
   const mockAdoptedPet: StudyPet = {
     id: 'pet-123',
-
+    userId: 'user-123',
     name: 'Fluffy',
     species: mockSpecies[0],
     level: 1,

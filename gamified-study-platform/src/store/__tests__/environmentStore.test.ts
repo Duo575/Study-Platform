@@ -31,44 +31,68 @@ describe('useEnvironmentStore', () => {
     {
       id: 'classroom',
       name: 'Classroom',
-      description: 'A quiet classroom environment',
-      imageUrl: '/classroom.jpg',
-      ambientSounds: [],
-      musicTracks: [],
-      visualSettings: {
-        particlesEnabled: true,
-        animationsEnabled: true,
-        backgroundQuality: 'medium',
-        reducedMotion: false,
+      category: 'free',
+      theme: {
+        primaryColor: '#4F46E5',
+        secondaryColor: '#7C3AED',
+        backgroundColor: '#F8FAFC',
+        textColor: '#1E293B',
+        accentColor: '#06B6D4',
+        cssVariables: {},
       },
-      unlockRequirements: {
-        level: 1,
-        achievements: [],
-        studyTime: 0,
+      audio: {
+        ambientTrack: '/classroom-ambient.mp3',
+        musicTracks: [],
+        soundEffects: {},
+        defaultVolume: 0.5,
       },
-      customizations: [],
+      visuals: {
+        backgroundImage: '/classroom.jpg',
+        overlayElements: [],
+        particleEffects: [],
+      },
+      unlockRequirements: [
+        {
+          type: 'level',
+          target: 1,
+          current: 0,
+          description: 'Reach level 1',
+        },
+      ],
       createdAt: new Date(),
       updatedAt: new Date(),
     },
     {
       id: 'office',
       name: 'Office',
-      description: 'A professional office environment',
-      imageUrl: '/office.jpg',
-      ambientSounds: [],
-      musicTracks: [],
-      visualSettings: {
-        particlesEnabled: false,
-        animationsEnabled: true,
-        backgroundQuality: 'high',
-        reducedMotion: false,
+      category: 'premium',
+      theme: {
+        primaryColor: '#059669',
+        secondaryColor: '#0D9488',
+        backgroundColor: '#F0FDF4',
+        textColor: '#1F2937',
+        accentColor: '#F59E0B',
+        cssVariables: {},
       },
-      unlockRequirements: {
-        level: 1,
-        achievements: [],
-        studyTime: 0,
+      audio: {
+        ambientTrack: '/office-ambient.mp3',
+        musicTracks: [],
+        soundEffects: {},
+        defaultVolume: 0.4,
       },
-      customizations: [],
+      visuals: {
+        backgroundImage: '/office.jpg',
+        overlayElements: [],
+        particleEffects: [],
+      },
+      unlockRequirements: [
+        {
+          type: 'level',
+          target: 1,
+          current: 0,
+          description: 'Reach level 1',
+        },
+      ],
       createdAt: new Date(),
       updatedAt: new Date(),
     },
@@ -568,7 +592,12 @@ describe('useEnvironmentStore', () => {
       const store = useEnvironmentStore.getState();
       const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 
-      const customization = { primaryColor: '#00FF00' };
+      const customization = {
+        environmentId: 'classroom',
+        customTheme: { primaryColor: '#00FF00' },
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
       store.updateCustomization('classroom', customization);
 
       expect(consoleSpy).toHaveBeenCalledWith(

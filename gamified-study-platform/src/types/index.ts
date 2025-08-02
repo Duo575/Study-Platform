@@ -43,6 +43,8 @@ export interface MiniGameProgress {
   totalPlays: number;
   averageScore: number;
   achievements: string[];
+  totalTimeSpent: number;
+  completionRate: number;
 }
 
 export interface User {
@@ -191,6 +193,7 @@ export interface StudyPet {
   lastFed: Date;
   lastPlayed: Date;
   createdAt: Date;
+  updatedAt?: Date; // Add missing updatedAt property
 }
 
 export interface PetSpecies {
@@ -233,6 +236,18 @@ export interface PetAccessory {
   unlockedAt: Date;
 }
 
+export interface PetToy {
+  id: string;
+  name: string;
+  description: string;
+  imageUrl: string;
+  rarity: 'common' | 'rare' | 'epic' | 'legendary';
+  effects: PetEffect[];
+  cost: number;
+  durability: number;
+  category: 'interactive' | 'comfort' | 'exercise' | 'educational';
+}
+
 // Extended StudyPet interface with additional properties
 export interface StudyPetExtended extends StudyPet {
   mood: PetMood;
@@ -267,7 +282,9 @@ export interface MoodFactor {
     | 'playing'
     | 'neglect'
     | 'achievement'
-    | 'milestone';
+    | 'milestone'
+    | 'attention'
+    | 'happiness';
   impact: number; // -100 to 100
   description: string;
   timestamp: Date;
@@ -319,6 +336,7 @@ export interface PetFood {
   name: string;
   description: string;
   type: 'treat' | 'meal' | 'snack' | 'medicine' | 'special';
+  category?: 'basic' | 'premium' | 'special';
   rarity: 'common' | 'rare' | 'epic' | 'legendary';
   cost: number;
   effects: PetEffect[];
@@ -331,7 +349,14 @@ export interface PetFood {
 }
 
 export interface PetEffect {
-  type: 'happiness' | 'health' | 'energy' | 'mood' | 'xp' | 'special';
+  type:
+    | 'happiness'
+    | 'health'
+    | 'energy'
+    | 'mood'
+    | 'xp'
+    | 'special'
+    | 'hunger';
   value: number;
   duration?: number; // in minutes, undefined for permanent effects
   description: string;
@@ -349,7 +374,10 @@ export interface EvolutionRequirement {
     | 'special'
     | 'level_reached'
     | 'streak_days'
-    | 'quests_completed';
+    | 'quests_completed'
+    | 'happiness_maintained'
+    | 'health_maintained'
+    | 'care_consistency';
   description: string;
   target: number | string;
   current: number | string;
@@ -365,6 +393,23 @@ export interface EvolutionEligibility {
   nextStage?: PetEvolutionStage;
   completedRequirements: string[];
   missingRequirements: EvolutionRequirement[];
+}
+
+// Evolution Result
+export interface EvolutionResult {
+  success: boolean;
+  newStage?: PetEvolutionStage;
+  previousStage?: PetEvolutionStage;
+  unlockedAbilities?: string[];
+  celebrationAnimation?: string;
+  rewards?: Array<{
+    type: 'coins' | 'xp' | 'item' | 'ability';
+    amount?: number;
+    itemId?: string;
+    abilityId?: string;
+  }>;
+  message?: string;
+  error?: string;
 }
 
 export interface Achievement {
@@ -385,7 +430,8 @@ export type AchievementCategory =
   | 'quest_completion'
   | 'pet_care'
   | 'social'
-  | 'special_event';
+  | 'special_event'
+  | 'games';
 
 export interface AchievementProgress {
   current: number;
@@ -474,6 +520,7 @@ export interface PomodoroTimer {
   sessionNumber: number;
   cycleId: string;
   settings: PomodoroSettings;
+  intervalId?: NodeJS.Timeout | null;
 }
 
 export interface PomodoroAnalytics {
@@ -523,6 +570,19 @@ export interface BreakActivity {
   type: 'physical' | 'mental' | 'creative' | 'social';
   xpBonus?: number;
   icon: string;
+}
+
+export interface PetActivity {
+  id: string;
+  petId: string;
+  type: 'feeding' | 'playing' | 'studying' | 'sleeping' | 'evolution';
+  timestamp: Date;
+  duration?: number; // in minutes
+  xpGained?: number;
+  moodChange?: number;
+  healthChange?: number;
+  energyChange?: number;
+  description: string;
 }
 
 // API Response types
@@ -2244,6 +2304,7 @@ export interface MiniGame {
   category: string;
   xpReward: number;
   coinReward: number;
+  imageUrl?: string;
   unlockRequirements?: UnlockRequirement[];
 }
 
@@ -2257,6 +2318,8 @@ export interface GameSession {
   xpEarned: number;
   completed: boolean;
   duration: number; // in seconds
+  difficulty?: 'easy' | 'medium' | 'hard';
+  coinsEarned?: number;
 }
 
 export interface GameResult {
@@ -2266,6 +2329,19 @@ export interface GameResult {
   newAchievements: Achievement[];
   personalBest: boolean;
   timeSpent: number; // in seconds
+}
+
+export interface MiniGameManager {
+  getAvailableGames(): MiniGame[];
+  startGame(gameId: string, userId: string): Promise<GameSession>;
+  endGame(sessionId: string, score: number): Promise<GameResult>;
+  getGameProgress(gameId: string, userId?: string): MiniGameProgress;
+  updateProgress(
+    gameId: string,
+    userId: string,
+    progress: Partial<MiniGameProgress>
+  ): Promise<void>;
+  getLeaderboard(gameId: string): Promise<any[]>;
 }
 
 export interface ParticleEffect {

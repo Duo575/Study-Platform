@@ -13,13 +13,15 @@ import type {
   RoutineAnalytics,
   WeeklySchedule,
   ActivityBreakdown,
-  WeeklyRoutineTrend
+  WeeklyRoutineTrend,
 } from '../types';
 
 export class RoutineService {
   // Routine CRUD operations
   static async createRoutine(routineData: RoutineForm): Promise<Routine> {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) throw new Error('User not authenticated');
 
     const { data, error } = await supabase
@@ -39,16 +41,20 @@ export class RoutineService {
   }
 
   static async getRoutines(): Promise<Routine[]> {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) throw new Error('User not authenticated');
 
     const { data, error } = await supabase
       .from('routines')
-      .select(`
+      .select(
+        `
         *,
         schedule_slots(*),
         routine_performance(*)
-      `)
+      `
+      )
       .eq('user_id', user.id)
       .order('created_at', { ascending: false });
 
@@ -59,11 +65,13 @@ export class RoutineService {
   static async getRoutineById(id: string): Promise<Routine> {
     const { data, error } = await supabase
       .from('routines')
-      .select(`
+      .select(
+        `
         *,
         schedule_slots(*),
         routine_performance(*)
-      `)
+      `
+      )
       .eq('id', id)
       .single();
 
@@ -71,7 +79,10 @@ export class RoutineService {
     return this.mapRoutineFromDB(data);
   }
 
-  static async updateRoutine(id: string, updates: Partial<RoutineForm>): Promise<Routine> {
+  static async updateRoutine(
+    id: string,
+    updates: Partial<RoutineForm>
+  ): Promise<Routine> {
     const { data, error } = await supabase
       .from('routines')
       .update({
@@ -89,15 +100,15 @@ export class RoutineService {
   }
 
   static async deleteRoutine(id: string): Promise<void> {
-    const { error } = await supabase
-      .from('routines')
-      .delete()
-      .eq('id', id);
+    const { error } = await supabase.from('routines').delete().eq('id', id);
 
     if (error) throw error;
   }
 
-  static async toggleRoutineActive(id: string, isActive: boolean): Promise<void> {
+  static async toggleRoutineActive(
+    id: string,
+    isActive: boolean
+  ): Promise<void> {
     const { error } = await supabase
       .from('routines')
       .update({ is_active: isActive })
@@ -107,17 +118,21 @@ export class RoutineService {
   }
 
   // Schedule slot operations
-  static async createScheduleSlot(slotData: ScheduleSlotForm): Promise<ScheduleSlot> {
+  static async createScheduleSlot(
+    slotData: ScheduleSlotForm
+  ): Promise<ScheduleSlot> {
     // Check for conflicts first
     const conflicts = await this.detectConflicts(
       slotData.dayOfWeek,
       slotData.startTime,
       slotData.endTime,
-      slotData.routineId
+      slotData.routineId || ''
     );
 
     if (conflicts.length > 0) {
-      throw new Error(`Schedule conflict detected with: ${conflicts[0].activityName}`);
+      throw new Error(
+        `Schedule conflict detected with: ${conflicts[0].activityName}`
+      );
     }
 
     const { data, error } = await supabase
@@ -141,7 +156,10 @@ export class RoutineService {
     return this.mapScheduleSlotFromDB(data);
   }
 
-  static async updateScheduleSlot(id: string, updates: Partial<ScheduleSlotForm>): Promise<ScheduleSlot> {
+  static async updateScheduleSlot(
+    id: string,
+    updates: Partial<ScheduleSlotForm>
+  ): Promise<ScheduleSlot> {
     const { data, error } = await supabase
       .from('schedule_slots')
       .update({
@@ -204,14 +222,13 @@ export class RoutineService {
     routineId: string,
     excludeSlotId?: string
   ): Promise<ScheduleConflict[]> {
-    const { data, error } = await supabase
-      .rpc('detect_schedule_conflicts', {
-        p_routine_id: routineId,
-        p_day_of_week: dayOfWeek,
-        p_start_time: startTime,
-        p_end_time: endTime,
-        p_exclude_slot_id: excludeSlotId || null,
-      });
+    const { data, error } = await supabase.rpc('detect_schedule_conflicts', {
+      p_routine_id: routineId,
+      p_day_of_week: dayOfWeek,
+      p_start_time: startTime,
+      p_end_time: endTime,
+      p_exclude_slot_id: excludeSlotId || null,
+    });
 
     if (error) throw error;
     return data || [];
@@ -249,7 +266,10 @@ export class RoutineService {
     return this.mapSlotCompletionFromDB(data);
   }
 
-  static async getRoutinePerformance(routineId: string, days: number = 30): Promise<RoutinePerformance[]> {
+  static async getRoutinePerformance(
+    routineId: string,
+    days: number = 30
+  ): Promise<RoutinePerformance[]> {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
 
@@ -264,7 +284,10 @@ export class RoutineService {
     return data.map(this.mapRoutinePerformanceFromDB);
   }
 
-  static async calculateDailyPerformance(routineId: string, date: string): Promise<void> {
+  static async calculateDailyPerformance(
+    routineId: string,
+    date: string
+  ): Promise<void> {
     // Get all slots for the routine
     const { data: slots, error: slotsError } = await supabase
       .from('schedule_slots')
@@ -277,7 +300,10 @@ export class RoutineService {
     const { data: completions, error: completionsError } = await supabase
       .from('slot_completions')
       .select('*')
-      .in('slot_id', slots.map(s => s.id))
+      .in(
+        'slot_id',
+        slots.map(s => s.id)
+      )
       .eq('date', date);
 
     if (completionsError) throw completionsError;
@@ -285,7 +311,10 @@ export class RoutineService {
     const totalSlots = slots.length;
     const completedSlots = completions.filter(c => c.completed).length;
     const totalPlannedMinutes = await this.calculatePlannedMinutes(routineId);
-    const actualMinutes = completions.reduce((sum, c) => sum + (c.actual_duration || 0), 0);
+    const actualMinutes = completions.reduce(
+      (sum, c) => sum + (c.actual_duration || 0),
+      0
+    );
 
     // Upsert performance record
     const { error: performanceError } = await supabase
@@ -297,7 +326,10 @@ export class RoutineService {
         completed_slots: completedSlots,
         total_planned_minutes: totalPlannedMinutes,
         actual_minutes: actualMinutes,
-        efficiency_score: totalPlannedMinutes > 0 ? (actualMinutes / totalPlannedMinutes) * 100 : 0,
+        efficiency_score:
+          totalPlannedMinutes > 0
+            ? (actualMinutes / totalPlannedMinutes) * 100
+            : 0,
       });
 
     if (performanceError) throw performanceError;
@@ -315,9 +347,12 @@ export class RoutineService {
     return data.map(this.mapRoutineTemplateFromDB);
   }
 
-  static async createRoutineFromTemplate(templateId: string, name: string): Promise<Routine> {
+  static async createRoutineFromTemplate(
+    templateId: string,
+    name: string
+  ): Promise<Routine> {
     const template = await this.getTemplateById(templateId);
-    
+
     // Create routine
     const routine = await this.createRoutine({
       name,
@@ -344,17 +379,24 @@ export class RoutineService {
   }
 
   // Analytics
-  static async getRoutineAnalytics(routineId: string): Promise<RoutineAnalytics> {
+  static async getRoutineAnalytics(
+    routineId: string
+  ): Promise<RoutineAnalytics> {
     const [performance, consistency] = await Promise.all([
       this.getRoutinePerformance(routineId, 30),
       this.calculateConsistencyScore(routineId),
     ]);
 
-    const averageCompletionRate = performance.length > 0
-      ? performance.reduce((sum, p) => sum + p.completionRate, 0) / performance.length
-      : 0;
+    const averageCompletionRate =
+      performance.length > 0
+        ? performance.reduce((sum, p) => sum + p.completionRate, 0) /
+          performance.length
+        : 0;
 
-    const totalActiveTime = performance.reduce((sum, p) => sum + p.actualMinutes, 0);
+    const totalActiveTime = performance.reduce(
+      (sum, p) => sum + p.actualMinutes,
+      0
+    );
 
     // Calculate weekly trends
     const weeklyTrends = this.calculateWeeklyTrends(performance);
@@ -377,7 +419,9 @@ export class RoutineService {
 
   // Suggestions
   static async getRoutineSuggestions(): Promise<RoutineSuggestion[]> {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) throw new Error('User not authenticated');
 
     const { data, error } = await supabase
@@ -394,7 +438,9 @@ export class RoutineService {
   }
 
   static async generateSuggestions(): Promise<void> {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) throw new Error('User not authenticated');
 
     const { error } = await supabase.rpc('generate_routine_suggestions', {
@@ -440,18 +486,24 @@ export class RoutineService {
     return this.mapRoutineTemplateFromDB(data);
   }
 
-  private static async calculateConsistencyScore(routineId: string): Promise<number> {
-    const { data, error } = await supabase
-      .rpc('calculate_routine_consistency', {
+  private static async calculateConsistencyScore(
+    routineId: string
+  ): Promise<number> {
+    const { data, error } = await supabase.rpc(
+      'calculate_routine_consistency',
+      {
         p_routine_id: routineId,
         p_days_back: 30,
-      });
+      }
+    );
 
     if (error) throw error;
     return data || 0;
   }
 
-  private static async calculatePlannedMinutes(routineId: string): Promise<number> {
+  private static async calculatePlannedMinutes(
+    routineId: string
+  ): Promise<number> {
     const { data, error } = await supabase
       .from('schedule_slots')
       .select('start_time, end_time')
@@ -467,15 +519,17 @@ export class RoutineService {
     }, 0);
   }
 
-  private static calculateWeeklyTrends(performance: RoutinePerformance[]): WeeklyRoutineTrend[] {
+  private static calculateWeeklyTrends(
+    performance: RoutinePerformance[]
+  ): WeeklyRoutineTrend[] {
     const weeklyData: { [key: string]: RoutinePerformance[] } = {};
-    
+
     performance.forEach(p => {
       const date = new Date(p.date);
       const weekStart = new Date(date);
       weekStart.setDate(date.getDate() - date.getDay());
       const weekKey = weekStart.toISOString().split('T')[0];
-      
+
       if (!weeklyData[weekKey]) {
         weeklyData[weekKey] = [];
       }
@@ -484,13 +538,19 @@ export class RoutineService {
 
     return Object.entries(weeklyData).map(([weekStart, weekData]) => ({
       weekStart,
-      completionRate: weekData.reduce((sum, p) => sum + p.completionRate, 0) / weekData.length,
+      completionRate:
+        weekData.reduce((sum, p) => sum + p.completionRate, 0) /
+        weekData.length,
       totalMinutes: weekData.reduce((sum, p) => sum + p.actualMinutes, 0),
-      efficiencyScore: weekData.reduce((sum, p) => sum + p.efficiencyScore, 0) / weekData.length,
+      efficiencyScore:
+        weekData.reduce((sum, p) => sum + p.efficiencyScore, 0) /
+        weekData.length,
     }));
   }
 
-  private static async calculateActivityBreakdown(routineId: string): Promise<ActivityBreakdown[]> {
+  private static async calculateActivityBreakdown(
+    routineId: string
+  ): Promise<ActivityBreakdown[]> {
     const { data, error } = await supabase
       .from('schedule_slots')
       .select('activity_type')
@@ -511,7 +571,8 @@ export class RoutineService {
           percentage: 0,
         };
       }
-      breakdown[slot.activity_type].percentage = ((breakdown[slot.activity_type].percentage * total + 1) / total) * 100;
+      breakdown[slot.activity_type].percentage =
+        ((breakdown[slot.activity_type].percentage * total + 1) / total) * 100;
     });
 
     return Object.values(breakdown);
@@ -527,8 +588,12 @@ export class RoutineService {
       color: data.color,
       isActive: data.is_active,
       templateId: data.template_id,
-      scheduleSlots: (data.schedule_slots || []).map(this.mapScheduleSlotFromDB),
-      performance: (data.routine_performance || []).map(this.mapRoutinePerformanceFromDB),
+      scheduleSlots: (data.schedule_slots || []).map(
+        this.mapScheduleSlotFromDB
+      ),
+      performance: (data.routine_performance || []).map(
+        this.mapRoutinePerformanceFromDB
+      ),
       createdAt: new Date(data.created_at),
       updatedAt: new Date(data.updated_at),
     };

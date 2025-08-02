@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { usePetStore } from '../petStore';
 import type {
+  StudyPet,
   StudyPetExtended,
   PetForm,
   PetSpecies,
@@ -81,6 +82,8 @@ describe('usePetStore', () => {
     favoriteSubjects: [],
     achievements: [],
     evolutionStage: 'baby',
+    updatedAt: new Date(),
+    userId: mockUserId,
   };
 
   const mockSpecies: PetSpecies[] = [
@@ -94,8 +97,22 @@ describe('usePetStore', () => {
         intelligence: 50,
       },
       evolutionStages: [
-        { name: 'baby', requirements: { level: 1 } },
-        { name: 'adult', requirements: { level: 5 } },
+        {
+          id: 'baby-stage',
+          name: 'baby',
+          description: 'Baby stage',
+          imageUrl: '/baby.png',
+          unlockedAbilities: [],
+          requirements: { level: 1 },
+        },
+        {
+          id: 'adult-stage',
+          name: 'adult',
+          description: 'Adult stage',
+          imageUrl: '/adult.png',
+          unlockedAbilities: [],
+          requirements: { level: 5 },
+        },
       ],
     },
   ];
@@ -114,13 +131,17 @@ describe('usePetStore', () => {
     vi.mocked(petService.checkAndEvolvePet).mockResolvedValue({
       evolved: false,
       pet: mockStudyPet,
+      newStage: null,
     });
     vi.mocked(petService.updatePetFromStudyActivity).mockResolvedValue(
       mockStudyPet
     );
     vi.mocked(petService.getPetAccessories).mockResolvedValue([]);
     vi.mocked(petService.addPetAccessory).mockResolvedValue(mockStudyPet);
-    vi.mocked(petService.checkPetNeeds).mockResolvedValue([]);
+    vi.mocked(petService.checkPetNeeds).mockResolvedValue({
+      needsAttention: false,
+      reason: null,
+    });
 
     // Set up hunger system mocks
     vi.mocked(petHungerSystem.calculateHungerFromTime).mockReturnValue(40);
@@ -271,7 +292,7 @@ describe('usePetStore', () => {
 
     it('should set adopting state during adoption', async () => {
       let resolveAdoption: (value: any) => void;
-      const adoptionPromise = new Promise(resolve => {
+      const adoptionPromise = new Promise<StudyPet>(resolve => {
         resolveAdoption = resolve;
       });
       vi.mocked(petService).adoptPet.mockReturnValue(adoptionPromise);
@@ -329,7 +350,7 @@ describe('usePetStore', () => {
 
     it('should set interaction state during feeding', async () => {
       let resolveFeed: (value: any) => void;
-      const feedPromise = new Promise(resolve => {
+      const feedPromise = new Promise<StudyPet>(resolve => {
         resolveFeed = resolve;
       });
       vi.mocked(petService).feedPet.mockReturnValue(feedPromise);
@@ -393,7 +414,16 @@ describe('usePetStore', () => {
     it('should evolve pet when possible', async () => {
       const evolvedPet = {
         ...mockStudyPet,
-        evolution: { ...mockStudyPet.evolution, stage: 'adult' },
+        evolution: {
+          ...mockStudyPet.evolution,
+          stage: {
+            id: 'adult-stage',
+            name: 'adult',
+            description: 'Adult stage',
+            imageUrl: '/adult.png',
+            unlockedAbilities: [],
+          },
+        },
       };
       vi.mocked(petService).checkAndEvolvePet.mockResolvedValue({
         pet: evolvedPet,
@@ -596,6 +626,7 @@ describe('usePetStore', () => {
         id: 'test-food',
         name: 'Test Food',
         description: 'Test food item',
+        type: 'meal',
         cost: 10,
         effects: [],
         rarity: 'common',
@@ -710,6 +741,7 @@ describe('usePetStore', () => {
         happiness: 40, // Below play threshold
         hunger: 50, // Above feed threshold
         energy: 70,
+        mood: 'idle' as const,
         needsAttention: true,
         timeSinceLastFed: 60,
         timeSinceLastPlayed: 120,

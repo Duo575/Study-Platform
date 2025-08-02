@@ -19,7 +19,7 @@ import type {
   InvitationStatus,
   ChallengeStatus,
   GroupMessage,
-  MessageType
+  MessageType,
 } from '../types';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -30,7 +30,7 @@ class StudyGroupService {
     if (!user.data.user) throw new Error('User not authenticated');
 
     const inviteCode = this.generateInviteCode();
-    
+
     const { data, error } = await supabase
       .from('study_groups')
       .insert({
@@ -49,7 +49,42 @@ class StudyGroupService {
     // Add creator as owner
     await this.addMemberToGroup(data.id, user.data.user.id, 'owner');
 
-    return this.mapDatabaseGroupToStudyGroup(data);
+    return {
+      ...this.mapDatabaseGroupToStudyGroup(data),
+      members: [],
+      stats: {
+        totalMembers: 1,
+        activeMembers: 1,
+        totalStudyHours: 0,
+        totalQuestsCompleted: 0,
+        groupXP: 0,
+        averageLevel: 1,
+        weeklyProgress: {
+          totalXP: 0,
+          totalStudyTime: 0,
+          totalQuestsCompleted: 0,
+          activeMembers: 1,
+          groupChallengesCompleted: 0,
+        },
+        achievements: [],
+      },
+      settings: {
+        allowInvites: true,
+        requireApproval: false,
+        shareProgress: true,
+        enableCompetition: true,
+        enableGroupChallenges: true,
+        studyRoomEnabled: true,
+        notificationSettings: {
+          memberJoined: true,
+          memberLeft: true,
+          challengeStarted: true,
+          challengeCompleted: true,
+          milestoneReached: true,
+          studySessionStarted: false,
+        },
+      },
+    };
   }
 
   async getMyGroups(): Promise<StudyGroup[]> {
@@ -58,7 +93,8 @@ class StudyGroupService {
 
     const { data, error } = await supabase
       .from('group_memberships')
-      .select(`
+      .select(
+        `
         group_id,
         study_groups (
           id,
@@ -71,7 +107,8 @@ class StudyGroupService {
           created_at,
           updated_at
         )
-      `)
+      `
+      )
       .eq('user_id', user.data.user.id);
 
     if (error) throw error;
@@ -81,12 +118,12 @@ class StudyGroupService {
         const group = membership.study_groups;
         const members = await this.getGroupMembers(group.id);
         const stats = await this.calculateGroupStats(group.id);
-        
+
         return {
           ...this.mapDatabaseGroupToStudyGroup(group),
           members,
           stats,
-          settings: this.getDefaultGroupSettings()
+          settings: this.getDefaultGroupSettings(),
         };
       })
     );
@@ -110,7 +147,7 @@ class StudyGroupService {
       ...this.mapDatabaseGroupToStudyGroup(data),
       members,
       stats,
-      settings: this.getDefaultGroupSettings()
+      settings: this.getDefaultGroupSettings(),
     };
   }
 
@@ -148,7 +185,12 @@ class StudyGroupService {
     await this.addMemberToGroup(groupData.id, user.data.user.id, 'member');
 
     // Log activity
-    await this.logGroupActivity(groupData.id, user.data.user.id, 'member_joined', 'joined the group');
+    await this.logGroupActivity(
+      groupData.id,
+      user.data.user.id,
+      'member_joined',
+      'joined the group'
+    );
 
     return this.getGroupById(groupData.id);
   }
@@ -166,10 +208,18 @@ class StudyGroupService {
     if (error) throw error;
 
     // Log activity
-    await this.logGroupActivity(groupId, user.data.user.id, 'member_left', 'left the group');
+    await this.logGroupActivity(
+      groupId,
+      user.data.user.id,
+      'member_left',
+      'left the group'
+    );
   }
 
-  async updateGroup(groupId: string, updates: Partial<CreateGroupForm>): Promise<StudyGroup> {
+  async updateGroup(
+    groupId: string,
+    updates: Partial<CreateGroupForm>
+  ): Promise<StudyGroup> {
     const user = await supabase.auth.getUser();
     if (!user.data.user) throw new Error('User not authenticated');
 
@@ -186,7 +236,7 @@ class StudyGroupService {
         description: updates.description,
         max_members: updates.maxMembers,
         is_private: updates.isPrivate,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       })
       .eq('id', groupId)
       .select()
@@ -201,7 +251,8 @@ class StudyGroupService {
   async getGroupMembers(groupId: string): Promise<GroupMember[]> {
     const { data, error } = await supabase
       .from('group_memberships')
-      .select(`
+      .select(
+        `
         id,
         user_id,
         group_id,
@@ -217,7 +268,8 @@ class StudyGroupService {
           streak_days,
           last_activity
         )
-      `)
+      `
+      )
       .eq('group_id', groupId);
 
     if (error) throw error;
@@ -241,11 +293,13 @@ class StudyGroupService {
           xpEarned: 0,
           studyTime: 0,
           questsCompleted: 0,
-          achievementsUnlocked: 0
-        }
+          achievementsUnlocked: 0,
+        },
       },
       isActive: this.isUserActive(membership.game_stats?.last_activity),
-      lastSeen: new Date(membership.game_stats?.last_activity || membership.joined_at)
+      lastSeen: new Date(
+        membership.game_stats?.last_activity || membership.joined_at
+      ),
     }));
   }
 
@@ -254,11 +308,14 @@ class StudyGroupService {
     if (!user.data.user) throw new Error('User not authenticated');
 
     // Check if user has permission to invite
-    const userRole = await this.getUserRoleInGroup(inviteData.groupId, user.data.user.id);
+    const userRole = await this.getUserRoleInGroup(
+      inviteData.groupId,
+      user.data.user.id
+    );
     if (!userRole) throw new Error('You are not a member of this group');
 
     const group = await this.getGroupById(inviteData.groupId);
-    
+
     // Find target user
     let targetUserId: string;
     if (inviteData.username) {
@@ -286,7 +343,7 @@ class StudyGroupService {
       message: inviteData.message,
       status: 'pending',
       expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
-      createdAt: new Date()
+      createdAt: new Date(),
     };
 
     // TODO: Store invitation in database
@@ -294,12 +351,17 @@ class StudyGroupService {
   }
 
   // Challenge Management
-  async createChallenge(challengeData: CreateChallengeForm): Promise<GroupChallenge> {
+  async createChallenge(
+    challengeData: CreateChallengeForm
+  ): Promise<GroupChallenge> {
     const user = await supabase.auth.getUser();
     if (!user.data.user) throw new Error('User not authenticated');
 
     // Check permissions
-    const userRole = await this.getUserRoleInGroup(challengeData.groupId, user.data.user.id);
+    const userRole = await this.getUserRoleInGroup(
+      challengeData.groupId,
+      user.data.user.id
+    );
     if (!userRole || !['owner', 'admin'].includes(userRole)) {
       throw new Error('Insufficient permissions');
     }
@@ -312,24 +374,34 @@ class StudyGroupService {
       type: challengeData.type,
       goal: {
         ...challengeData.goal,
-        description: challengeData.description
+        description: challengeData.description,
       },
       rewards: challengeData.rewards,
       participants: [],
       status: 'upcoming',
       startDate: new Date(),
-      endDate: new Date(Date.now() + challengeData.duration * 24 * 60 * 60 * 1000),
+      endDate: new Date(
+        Date.now() + challengeData.duration * 24 * 60 * 60 * 1000
+      ),
       createdBy: user.data.user.id,
-      createdAt: new Date()
+      createdAt: new Date(),
     };
 
     // TODO: Store challenge in database
-    await this.logGroupActivity(challengeData.groupId, user.data.user.id, 'challenge_started', `created challenge: ${challengeData.title}`);
+    await this.logGroupActivity(
+      challengeData.groupId,
+      user.data.user.id,
+      'challenge_started',
+      `created challenge: ${challengeData.title}`
+    );
 
     return challenge;
   }
 
-  async getGroupChallenges(groupId: string, filters?: ChallengeFilters): Promise<GroupChallenge[]> {
+  async getGroupChallenges(
+    groupId: string,
+    filters?: ChallengeFilters
+  ): Promise<GroupChallenge[]> {
     // TODO: Implement database query with filters
     return [];
   }
@@ -361,10 +433,10 @@ class StudyGroupService {
         maxParticipants: 10,
         backgroundMusic: false,
         focusMode: false,
-        ...roomData.settings
+        ...roomData.settings,
       },
       createdBy: user.data.user.id,
-      createdAt: new Date()
+      createdAt: new Date(),
     };
 
     // TODO: Store study room in database
@@ -385,12 +457,12 @@ class StudyGroupService {
 
   // Leaderboard Management
   async getGroupLeaderboard(
-    groupId: string, 
-    type: LeaderboardType, 
+    groupId: string,
+    type: LeaderboardType,
     period: LeaderboardPeriod
   ): Promise<GroupLeaderboard> {
     const members = await this.getGroupMembers(groupId);
-    
+
     // Sort members based on leaderboard type
     const sortedMembers = members.sort((a, b) => {
       switch (type) {
@@ -414,7 +486,7 @@ class StudyGroupService {
       avatarUrl: member.avatarUrl,
       value: this.getLeaderboardValue(member, type),
       change: 0, // TODO: Calculate change from previous period
-      isCurrentUser: false // TODO: Check if current user
+      isCurrentUser: false, // TODO: Check if current user
     }));
 
     return {
@@ -423,20 +495,23 @@ class StudyGroupService {
       type,
       period,
       entries,
-      lastUpdated: new Date()
+      lastUpdated: new Date(),
     };
   }
 
   // Activity Management
-  async getGroupActivities(groupId: string, limit = 50): Promise<GroupActivity[]> {
+  async getGroupActivities(
+    groupId: string,
+    limit = 50
+  ): Promise<GroupActivity[]> {
     // TODO: Implement database query for group activities
     return [];
   }
 
   async logGroupActivity(
-    groupId: string, 
-    userId: string, 
-    type: GroupActivity['type'], 
+    groupId: string,
+    userId: string,
+    type: GroupActivity['type'],
     description: string,
     data?: Record<string, any>
   ): Promise<void> {
@@ -450,8 +525,8 @@ class StudyGroupService {
   }
 
   async sendGroupMessage(
-    groupId: string, 
-    content: string, 
+    groupId: string,
+    content: string,
     type: MessageType = 'text'
   ): Promise<GroupMessage> {
     const user = await supabase.auth.getUser();
@@ -466,7 +541,7 @@ class StudyGroupService {
       type,
       reactions: [],
       timestamp: new Date(),
-      isDeleted: false
+      isDeleted: false,
     };
 
     // TODO: Store message in database
@@ -475,9 +550,7 @@ class StudyGroupService {
 
   // Search and Discovery
   async searchGroups(filters: GroupFilters): Promise<StudyGroup[]> {
-    let query = supabase
-      .from('study_groups')
-      .select('*');
+    let query = supabase.from('study_groups').select('*');
 
     if (filters.search) {
       query = query.ilike('name', `%${filters.search}%`);
@@ -499,14 +572,16 @@ class StudyGroupService {
     return Math.random().toString(36).substring(2, 8).toUpperCase();
   }
 
-  private async addMemberToGroup(groupId: string, userId: string, role: GroupMember['role']): Promise<void> {
-    const { error } = await supabase
-      .from('group_memberships')
-      .insert({
-        group_id: groupId,
-        user_id: userId,
-        role
-      });
+  private async addMemberToGroup(
+    groupId: string,
+    userId: string,
+    role: GroupMember['role']
+  ): Promise<void> {
+    const { error } = await supabase.from('group_memberships').insert({
+      group_id: groupId,
+      user_id: userId,
+      role,
+    });
 
     if (error) throw error;
   }
@@ -521,7 +596,10 @@ class StudyGroupService {
     return count || 0;
   }
 
-  private async getUserRoleInGroup(groupId: string, userId: string): Promise<GroupMember['role'] | null> {
+  private async getUserRoleInGroup(
+    groupId: string,
+    userId: string
+  ): Promise<GroupMember['role'] | null> {
     const { data, error } = await supabase
       .from('group_memberships')
       .select('role')
@@ -535,22 +613,37 @@ class StudyGroupService {
 
   private async calculateGroupStats(groupId: string) {
     const members = await this.getGroupMembers(groupId);
-    
+
     return {
       totalMembers: members.length,
       activeMembers: members.filter(m => m.isActive).length,
       totalStudyHours: members.reduce((sum, m) => sum + m.stats.studyHours, 0),
-      totalQuestsCompleted: members.reduce((sum, m) => sum + m.stats.questsCompleted, 0),
-      averageLevel: members.length > 0 ? members.reduce((sum, m) => sum + m.stats.level, 0) / members.length : 0,
+      totalQuestsCompleted: members.reduce(
+        (sum, m) => sum + m.stats.questsCompleted,
+        0
+      ),
+      averageLevel:
+        members.length > 0
+          ? members.reduce((sum, m) => sum + m.stats.level, 0) / members.length
+          : 0,
       groupXP: members.reduce((sum, m) => sum + m.stats.totalXP, 0),
       weeklyProgress: {
-        totalXP: members.reduce((sum, m) => sum + m.stats.weeklyProgress.xpEarned, 0),
-        totalStudyTime: members.reduce((sum, m) => sum + m.stats.weeklyProgress.studyTime, 0),
-        totalQuestsCompleted: members.reduce((sum, m) => sum + m.stats.weeklyProgress.questsCompleted, 0),
+        totalXP: members.reduce(
+          (sum, m) => sum + m.stats.weeklyProgress.xpEarned,
+          0
+        ),
+        totalStudyTime: members.reduce(
+          (sum, m) => sum + m.stats.weeklyProgress.studyTime,
+          0
+        ),
+        totalQuestsCompleted: members.reduce(
+          (sum, m) => sum + m.stats.weeklyProgress.questsCompleted,
+          0
+        ),
         activeMembers: members.filter(m => m.isActive).length,
-        groupChallengesCompleted: 0
+        groupChallengesCompleted: 0,
       },
-      achievements: []
+      achievements: [],
     };
   }
 
@@ -568,19 +661,23 @@ class StudyGroupService {
         challengeStarted: true,
         challengeCompleted: true,
         milestoneReached: true,
-        studySessionStarted: false
-      }
+        studySessionStarted: false,
+      },
     };
   }
 
   private isUserActive(lastActivity?: string): boolean {
     if (!lastActivity) return false;
     const lastActiveDate = new Date(lastActivity);
-    const daysSinceActive = (Date.now() - lastActiveDate.getTime()) / (1000 * 60 * 60 * 24);
+    const daysSinceActive =
+      (Date.now() - lastActiveDate.getTime()) / (1000 * 60 * 60 * 24);
     return daysSinceActive <= 7; // Active if seen within last 7 days
   }
 
-  private getLeaderboardValue(member: GroupMember, type: LeaderboardType): number {
+  private getLeaderboardValue(
+    member: GroupMember,
+    type: LeaderboardType
+  ): number {
     switch (type) {
       case 'xp':
         return member.stats.totalXP;
@@ -597,7 +694,9 @@ class StudyGroupService {
     }
   }
 
-  private mapDatabaseGroupToStudyGroup(dbGroup: any): Omit<StudyGroup, 'members' | 'stats' | 'settings'> {
+  private mapDatabaseGroupToStudyGroup(
+    dbGroup: any
+  ): Omit<StudyGroup, 'members' | 'stats' | 'settings'> {
     return {
       id: dbGroup.id,
       name: dbGroup.name,
@@ -607,7 +706,7 @@ class StudyGroupService {
       isPrivate: dbGroup.is_private,
       createdBy: dbGroup.created_by,
       createdAt: new Date(dbGroup.created_at),
-      updatedAt: new Date(dbGroup.updated_at)
+      updatedAt: new Date(dbGroup.updated_at),
     };
   }
 }

@@ -119,7 +119,8 @@ export function mapDatabasePetToStudyPet(
 
   // Create and return the study pet
   return {
-    id: String(dbPet.user_id || ''),
+    id: String(dbPet.id || ''),
+    userId: String(dbPet.user_id || ''),
     name: String(dbPet.name || ''),
     species,
     level: Number(dbPet.level) || 1,

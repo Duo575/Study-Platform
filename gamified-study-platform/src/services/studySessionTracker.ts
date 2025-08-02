@@ -269,10 +269,12 @@ export class StudySessionTracker {
           type: 'attention',
           impact: impact.happinessChange,
           description: 'Recent study session',
+          timestamp: new Date(),
         },
         ...(pet.mood?.factors?.filter(f => f.type !== 'attention') || []),
       ],
-      lastChanged: new Date(),
+      lastUpdated: new Date(),
+      trend: 'stable',
     };
 
     // Create activity record
@@ -300,7 +302,7 @@ export class StudySessionTracker {
           ...pet.evolution,
           progress: newEvolutionProgress,
         },
-        activities: [activity, ...(pet.activities || [])].slice(0, 50), // Keep last 50 activities
+        updatedAt: new Date(),
       };
 
       // This would typically be done through a proper service call
@@ -403,7 +405,7 @@ export class StudySessionTracker {
       // Fallback to basic coin awarding
       const storeStore = useStoreStore.getState();
       const baseCoins = Math.floor(duration / 5);
-      await storeStore.addCoins(baseCoins);
+      storeStore.updateCoins(baseCoins);
     }
 
     // Award XP through gamification system
@@ -430,10 +432,12 @@ export class StudySessionTracker {
           type: 'attention',
           impact: 5,
           description: 'Starting study session together',
+          timestamp: new Date(),
         },
         ...(pet.mood?.factors?.filter(f => f.type !== 'attention') || []),
       ],
-      lastChanged: new Date(),
+      lastUpdated: new Date(),
+      trend: 'stable',
     };
 
     // Update pet mood

@@ -489,7 +489,7 @@ export class UnlockManager {
       // Deduct coins if applicable
       if (content.coinCost) {
         const storeStore = useStoreStore.getState();
-        await storeStore.spendCoins(content.coinCost);
+        storeStore.updateCoins(-content.coinCost);
       }
 
       const celebrationLevel = this.getCelebrationLevel(content.rarity);

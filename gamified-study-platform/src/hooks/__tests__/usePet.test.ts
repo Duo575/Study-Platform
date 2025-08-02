@@ -64,6 +64,7 @@ describe('usePet Hook', () => {
 
   const mockStudyPet: StudyPet = {
     id: 'pet-123',
+    userId: 'user-123',
     name: 'Buddy',
     species: mockPetSpecies[0],
     level: 3,

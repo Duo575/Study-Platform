@@ -222,8 +222,9 @@ export class StudyBreakManager {
     breakSession.activityType = 'traditional';
     breakSession.breakActivityId = activityId;
     breakSession.xpEarned =
-      this.calculateBreakXP(breakSession.breakType, false) + activity.xpBonus;
-    breakSession.coinsEarned = Math.floor(activity.xpBonus * 2); // Small coin reward
+      this.calculateBreakXP(breakSession.breakType, false) +
+      (activity.xpBonus || 0);
+    breakSession.coinsEarned = Math.floor((activity.xpBonus || 0) * 2); // Small coin reward
 
     // Update time tracking (reset consecutive game breaks)
     const tracker = this.getTimeTracker(breakSession.userId);

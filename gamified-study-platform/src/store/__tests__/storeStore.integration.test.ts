@@ -3,16 +3,16 @@ import { useStoreStore } from '../storeStore';
 import StoreManager from '../../services/storeManager';
 
 describe('Store Integration with StoreManager', () => {
-  let store: ReturnType<typeof useStoreStore>;
   let storeManager: StoreManager;
 
   beforeEach(() => {
-    store = useStoreStore.getState();
+    const store = useStoreStore.getState();
     storeManager = StoreManager.getInstance();
     store.resetStore();
   });
 
   it('should initialize store with items from StoreManager', async () => {
+    const store = useStoreStore.getState();
     await store.initializeStore();
 
     expect(store.items.length).toBeGreaterThan(0);
@@ -21,17 +21,19 @@ describe('Store Integration with StoreManager', () => {
   });
 
   it('should get filtered items using StoreManager', async () => {
+    const store = useStoreStore.getState();
     await store.initializeStore();
 
     store.setFilters({ category: 'pet_food' });
     const filteredItems = store.getFilteredItems();
 
-    expect(filteredItems.every(item => item.category === 'pet_food')).toBe(
-      true
-    );
+    expect(
+      filteredItems.every((item: any) => item.category === 'pet_food')
+    ).toBe(true);
   });
 
   it('should check purchase eligibility using StoreManager', async () => {
+    const store = useStoreStore.getState();
     await store.initializeStore();
 
     // Set up user economy with sufficient funds
@@ -51,6 +53,7 @@ describe('Store Integration with StoreManager', () => {
   });
 
   it('should process purchase using StoreManager', async () => {
+    const store = useStoreStore.getState();
     await store.initializeStore();
 
     // Set up user economy with sufficient funds
@@ -79,6 +82,7 @@ describe('Store Integration with StoreManager', () => {
   });
 
   it('should get item by ID using StoreManager', async () => {
+    const store = useStoreStore.getState();
     await store.initializeStore();
 
     const item = store.getItemById('food_basic_kibble');
@@ -87,6 +91,7 @@ describe('Store Integration with StoreManager', () => {
   });
 
   it('should add new item using StoreManager', async () => {
+    const store = useStoreStore.getState();
     await store.initializeStore();
 
     const newItem = {
@@ -98,6 +103,8 @@ describe('Store Integration with StoreManager', () => {
       currency: 'coins' as const,
       rarity: 'common' as const,
       imageUrl: '/test.png',
+      isLimited: false,
+      tags: ['test'],
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -112,6 +119,7 @@ describe('Store Integration with StoreManager', () => {
   });
 
   it('should update item using StoreManager', async () => {
+    const store = useStoreStore.getState();
     await store.initializeStore();
 
     store.updateStoreItem('food_basic_kibble', {
@@ -125,6 +133,7 @@ describe('Store Integration with StoreManager', () => {
   });
 
   it('should verify StoreManager singleton integration', async () => {
+    const store = useStoreStore.getState();
     const managerFromStore = StoreManager.getInstance();
     expect(managerFromStore).toBe(storeManager);
 

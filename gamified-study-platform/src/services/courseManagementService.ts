@@ -1,14 +1,17 @@
 import { supabase } from '../lib/supabase';
 import { courseService } from './database';
-import { parseSyllabusWithValidation, generateTemplateSyllabus } from './syllabusParser';
+import {
+  parseSyllabusWithValidation,
+  generateTemplateSyllabus,
+} from './syllabusParser';
 import { questService } from './questService';
 import { getRandomCourseColor } from '../utils/helpers';
-import type { 
-  Course, 
-  SyllabusItem, 
-  CourseForm, 
+import type {
+  Course,
+  SyllabusItem,
+  CourseForm,
   CourseProgress,
-  CourseFilters 
+  CourseFilters,
 } from '../types';
 
 /**
@@ -19,16 +22,18 @@ export const courseManagementService = {
    * Create a new course with syllabus parsing
    */
   async createCourse(
-    userId: string, 
+    userId: string,
     courseData: CourseForm,
     generateQuests: boolean = true
   ): Promise<Course> {
     try {
       // Parse the syllabus
       const parseResult = parseSyllabusWithValidation(courseData.syllabus);
-      
+
       if (!parseResult.success) {
-        throw new Error(`Syllabus parsing failed: ${parseResult.errors.join(', ')}`);
+        throw new Error(
+          `Syllabus parsing failed: ${parseResult.errors.join(', ')}`
+        );
       }
 
       // Create the course in the database
@@ -37,7 +42,7 @@ export const courseManagementService = {
         name: courseData.name,
         description: courseData.description,
         color: courseData.color || getRandomCourseColor(),
-        syllabus: parseResult.items
+        syllabus: parseResult.items as any,
       });
 
       // Initialize course progress
@@ -60,10 +65,10 @@ export const courseManagementService = {
           hoursStudied: 0,
           topicsCompleted: 0,
           totalTopics: parseResult.items.length,
-          lastStudied: new Date()
+          lastStudied: new Date(),
         },
         createdAt: new Date(dbCourse.created_at),
-        updatedAt: new Date(dbCourse.updated_at)
+        updatedAt: new Date(dbCourse.updated_at),
       };
 
       return course;
@@ -86,11 +91,13 @@ export const courseManagementService = {
       // Parse syllabus if provided
       if (courseData.syllabus) {
         const parseResult = parseSyllabusWithValidation(courseData.syllabus);
-        
+
         if (!parseResult.success) {
-          throw new Error(`Syllabus parsing failed: ${parseResult.errors.join(', ')}`);
+          throw new Error(
+            `Syllabus parsing failed: ${parseResult.errors.join(', ')}`
+          );
         }
-        
+
         syllabusItems = parseResult.items;
       }
 
@@ -98,7 +105,7 @@ export const courseManagementService = {
       const updateData: any = {
         name: courseData.name,
         description: courseData.description,
-        color: courseData.color
+        color: courseData.color,
       };
 
       if (syllabusItems) {
@@ -124,7 +131,7 @@ export const courseManagementService = {
         syllabus: syllabusItems || dbCourse.syllabus,
         progress,
         createdAt: new Date(dbCourse.created_at),
-        updatedAt: new Date(dbCourse.updated_at)
+        updatedAt: new Date(dbCourse.updated_at),
       };
 
       return course;
@@ -150,7 +157,7 @@ export const courseManagementService = {
         syllabus: dbCourse.syllabus || [],
         progress,
         createdAt: new Date(dbCourse.created_at),
-        updatedAt: new Date(dbCourse.updated_at)
+        updatedAt: new Date(dbCourse.updated_at),
       };
 
       return course;
@@ -163,14 +170,17 @@ export const courseManagementService = {
   /**
    * Get all courses for a user with progress
    */
-  async getUserCoursesWithProgress(userId: string, filters?: CourseFilters): Promise<Course[]> {
+  async getUserCoursesWithProgress(
+    userId: string,
+    filters?: CourseFilters
+  ): Promise<Course[]> {
     try {
       const dbCourses = await courseService.getByUserId(userId);
-      
+
       const courses: Course[] = await Promise.all(
-        dbCourses.map(async (dbCourse) => {
+        dbCourses.map(async dbCourse => {
           const progress = await this.getCourseProgress(dbCourse.id);
-          
+
           return {
             id: dbCourse.id,
             name: dbCourse.name,
@@ -179,7 +189,7 @@ export const courseManagementService = {
             syllabus: dbCourse.syllabus || [],
             progress,
             createdAt: new Date(dbCourse.created_at),
-            updatedAt: new Date(dbCourse.updated_at)
+            updatedAt: new Date(dbCourse.updated_at),
           };
         })
       );
@@ -207,7 +217,7 @@ export const courseManagementService = {
     try {
       // Get current course
       const dbCourse = await courseService.getById(courseId);
-      
+
       // Update the syllabus item
       const updatedSyllabus = dbCourse.syllabus.map((item: SyllabusItem) =>
         item.id === syllabusItemId ? { ...item, completed } : item
@@ -232,17 +242,18 @@ export const courseManagementService = {
   /**
    * Initialize course progress tracking
    */
-  async initializeCourseProgress(courseId: string, syllabusItems: SyllabusItem[]): Promise<void> {
+  async initializeCourseProgress(
+    courseId: string,
+    syllabusItems: SyllabusItem[]
+  ): Promise<void> {
     try {
-      const { data, error } = await supabase
-        .from('course_progress')
-        .insert({
-          course_id: courseId,
-          completion_percentage: 0,
-          total_time_spent: 0,
-          topics_completed: {},
-          last_studied: new Date().toISOString()
-        });
+      const { data, error } = await supabase.from('course_progress').insert({
+        course_id: courseId,
+        completion_percentage: 0,
+        total_time_spent: 0,
+        topics_completed: {},
+        last_studied: new Date().toISOString(),
+      });
 
       if (error) throw error;
     } catch (error) {
@@ -254,25 +265,33 @@ export const courseManagementService = {
   /**
    * Update course progress based on syllabus completion
    */
-  async updateCourseProgress(courseId: string, syllabusItems: SyllabusItem[]): Promise<void> {
+  async updateCourseProgress(
+    courseId: string,
+    syllabusItems: SyllabusItem[]
+  ): Promise<void> {
     try {
       const completedItems = syllabusItems.filter(item => item.completed);
-      const completionPercentage = Math.round((completedItems.length / syllabusItems.length) * 100);
-      
-      const topicsCompleted = completedItems.reduce((acc, item) => {
-        acc[item.id] = {
-          completed_at: new Date().toISOString(),
-          estimated_hours: item.estimatedHours
-        };
-        return acc;
-      }, {} as Record<string, any>);
+      const completionPercentage = Math.round(
+        (completedItems.length / syllabusItems.length) * 100
+      );
+
+      const topicsCompleted = completedItems.reduce(
+        (acc, item) => {
+          acc[item.id] = {
+            completed_at: new Date().toISOString(),
+            estimated_hours: item.estimatedHours,
+          };
+          return acc;
+        },
+        {} as Record<string, any>
+      );
 
       const { data, error } = await supabase
         .from('course_progress')
         .update({
           completion_percentage: completionPercentage,
           topics_completed: topicsCompleted,
-          last_studied: new Date().toISOString()
+          last_studied: new Date().toISOString(),
         })
         .eq('course_id', courseId);
 
@@ -296,14 +315,16 @@ export const courseManagementService = {
 
       if (error) throw error;
 
-      const topicsCompleted = data.topics_completed ? Object.keys(data.topics_completed).length : 0;
-      
+      const topicsCompleted = data.topics_completed
+        ? Object.keys(data.topics_completed).length
+        : 0;
+
       return {
         completionPercentage: data.completion_percentage || 0,
         hoursStudied: Math.round((data.total_time_spent || 0) / 60), // Convert minutes to hours
         topicsCompleted,
         totalTopics: data.total_topics || 0,
-        lastStudied: new Date(data.last_studied || new Date())
+        lastStudied: new Date(data.last_studied || new Date()),
       };
     } catch (error) {
       console.error('Error getting course progress:', error);
@@ -312,7 +333,7 @@ export const courseManagementService = {
         hoursStudied: 0,
         topicsCompleted: 0,
         totalTopics: 0,
-        lastStudied: new Date()
+        lastStudied: new Date(),
       };
     }
   },
@@ -320,48 +341,30 @@ export const courseManagementService = {
   /**
    * Generate quests for course topics
    */
-  async generateCourseQuests(courseId: string, syllabusItems: SyllabusItem[]): Promise<void> {
+  async generateCourseQuests(
+    courseId: string,
+    syllabusItems: SyllabusItem[]
+  ): Promise<void> {
     try {
       // Generate milestone quests for high-priority topics
-      const highPriorityItems = syllabusItems.filter(item => item.priority === 'high');
-      
-      for (const item of highPriorityItems) {
-        await questService.create({
-          title: `Master ${item.title}`,
-          description: `Complete the topic: ${item.title}`,
-          type: 'milestone',
-          xp_reward: item.estimatedHours * 10, // 10 XP per estimated hour
-          difficulty: 'medium',
-          requirements: [{
-            type: 'complete_topic',
-            target: 1,
-            current: 0,
-            description: `Complete ${item.title}`
-          }],
-          status: 'available',
-          course_id: courseId,
-          expires_at: item.deadline
-        });
-      }
+      const highPriorityItems = syllabusItems.filter(
+        item => item.priority === 'high'
+      );
+
+      // Use the questService to generate quests from syllabus
+      await questService.generateQuestsFromSyllabus(
+        courseId,
+        highPriorityItems
+      );
 
       // Generate a completion quest for the entire course
-      const totalHours = syllabusItems.reduce((sum, item) => sum + item.estimatedHours, 0);
-      
-      await questService.create({
-        title: `Course Completion Master`,
-        description: `Complete all topics in this course`,
-        type: 'milestone',
-        xp_reward: totalHours * 20, // Bonus XP for course completion
-        difficulty: 'hard',
-        requirements: [{
-          type: 'complete_topic',
-          target: syllabusItems.length,
-          current: 0,
-          description: `Complete all ${syllabusItems.length} topics`
-        }],
-        status: 'available',
-        course_id: courseId
-      });
+      const totalHours = syllabusItems.reduce(
+        (sum, item) => sum + item.estimatedHours,
+        0
+      );
+
+      // Generate milestone quests for the entire course
+      await questService.generateMilestoneQuests(courseId, syllabusItems);
     } catch (error) {
       console.error('Error generating course quests:', error);
       // Don't throw error as quest generation is optional
@@ -371,12 +374,17 @@ export const courseManagementService = {
   /**
    * Award XP for completing a syllabus item
    */
-  async awardCompletionXP(courseId: string, syllabusItemId: string): Promise<void> {
+  async awardCompletionXP(
+    courseId: string,
+    syllabusItemId: string
+  ): Promise<void> {
     try {
       // This would integrate with the gamification service
       // For now, we'll just log the completion
-      console.log(`Awarding XP for completing syllabus item ${syllabusItemId} in course ${courseId}`);
-      
+      console.log(
+        `Awarding XP for completing syllabus item ${syllabusItemId} in course ${courseId}`
+      );
+
       // TODO: Integrate with gamification service to award actual XP
       // await gamificationService.awardXP(userId, xpAmount, 'topic_completion');
     } catch (error) {
@@ -394,9 +402,10 @@ export const courseManagementService = {
     // Search filter
     if (filters.search) {
       const searchTerm = filters.search.toLowerCase();
-      filteredCourses = filteredCourses.filter(course =>
-        course.name.toLowerCase().includes(searchTerm) ||
-        course.description.toLowerCase().includes(searchTerm)
+      filteredCourses = filteredCourses.filter(
+        course =>
+          course.name.toLowerCase().includes(searchTerm) ||
+          course.description.toLowerCase().includes(searchTerm)
       );
     }
 
@@ -407,7 +416,10 @@ export const courseManagementService = {
           case 'completed':
             return course.progress.completionPercentage === 100;
           case 'in_progress':
-            return course.progress.completionPercentage > 0 && course.progress.completionPercentage < 100;
+            return (
+              course.progress.completionPercentage > 0 &&
+              course.progress.completionPercentage < 100
+            );
           case 'not_started':
             return course.progress.completionPercentage === 0;
           default:
@@ -418,23 +430,33 @@ export const courseManagementService = {
 
     // Color filter
     if (filters.color) {
-      filteredCourses = filteredCourses.filter(course => course.color === filters.color);
+      filteredCourses = filteredCourses.filter(
+        course => course.color === filters.color
+      );
     }
 
     // Sorting
     if (filters.sortBy) {
       filteredCourses.sort((a, b) => {
         const sortOrder = filters.sortOrder === 'desc' ? -1 : 1;
-        
+
         switch (filters.sortBy) {
           case 'name':
             return sortOrder * a.name.localeCompare(b.name);
           case 'created_at':
             return sortOrder * (a.createdAt.getTime() - b.createdAt.getTime());
           case 'progress':
-            return sortOrder * (a.progress.completionPercentage - b.progress.completionPercentage);
+            return (
+              sortOrder *
+              (a.progress.completionPercentage -
+                b.progress.completionPercentage)
+            );
           case 'last_studied':
-            return sortOrder * (a.progress.lastStudied.getTime() - b.progress.lastStudied.getTime());
+            return (
+              sortOrder *
+              (a.progress.lastStudied.getTime() -
+                b.progress.lastStudied.getTime())
+            );
           default:
             return 0;
         }
@@ -450,16 +472,10 @@ export const courseManagementService = {
   async deleteCourse(courseId: string): Promise<void> {
     try {
       // Delete course progress
-      await supabase
-        .from('course_progress')
-        .delete()
-        .eq('course_id', courseId);
+      await supabase.from('course_progress').delete().eq('course_id', courseId);
 
       // Delete associated quests
-      await supabase
-        .from('quests')
-        .delete()
-        .eq('course_id', courseId);
+      await supabase.from('quests').delete().eq('course_id', courseId);
 
       // Delete the course
       await courseService.delete(courseId);
@@ -482,14 +498,28 @@ export const courseManagementService = {
   }> {
     try {
       const course = await this.getCourseWithProgress(courseId);
-      
+
       const completedTopics = course.syllabus.filter(item => item.completed);
-      const totalEstimatedHours = course.syllabus.reduce((sum, item) => sum + item.estimatedHours, 0);
-      const completedHours = completedTopics.reduce((sum, item) => sum + item.estimatedHours, 0);
-      
+      const totalEstimatedHours = course.syllabus.reduce(
+        (sum, item) => sum + item.estimatedHours,
+        0
+      );
+      const completedHours = completedTopics.reduce(
+        (sum, item) => sum + item.estimatedHours,
+        0
+      );
+
       const upcomingDeadlines = course.syllabus
-        .filter(item => item.deadline && !item.completed && new Date(item.deadline) >= new Date())
-        .sort((a, b) => new Date(a.deadline!).getTime() - new Date(b.deadline!).getTime())
+        .filter(
+          item =>
+            item.deadline &&
+            !item.completed &&
+            new Date(item.deadline) >= new Date()
+        )
+        .sort(
+          (a, b) =>
+            new Date(a.deadline!).getTime() - new Date(b.deadline!).getTime()
+        )
         .slice(0, 5);
 
       return {
@@ -498,11 +528,11 @@ export const courseManagementService = {
         totalEstimatedHours,
         completedHours,
         averageTopicCompletion: course.progress.completionPercentage,
-        upcomingDeadlines
+        upcomingDeadlines,
       };
     } catch (error) {
       console.error('Error getting course statistics:', error);
       throw error;
     }
-  }
+  },
 };

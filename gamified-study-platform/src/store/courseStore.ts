@@ -376,10 +376,10 @@ export const useCourseStore = create<CourseState>((set, get) => ({
 
       if (xpAmount > 0) {
         const gamificationStore = useGamificationStore.getState();
-        await gamificationStore.awardXP(userId, xpAmount, progressType, {
-          courseId,
-          ...metadata,
-        });
+        await gamificationStore.awardXP(
+          xpAmount,
+          `Course Progress: ${progressType}`
+        );
       }
     } catch (error) {
       console.error('Error awarding course progress XP:', error);

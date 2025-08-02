@@ -483,6 +483,7 @@ export const useEnvironmentStore = create<
             const mockTrack: MusicTrack = {
               id: trackId,
               title: 'Lo-fi Study Track',
+              artist: 'Study Music Artist',
               duration: 180,
               url: `/music/${trackId}.mp3`,
               genre: 'lofi',

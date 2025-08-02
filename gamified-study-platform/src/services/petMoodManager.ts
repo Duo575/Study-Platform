@@ -124,6 +124,7 @@ export class PetMoodManager {
         type: 'attention',
         impact: 15,
         description: 'Completed a full study session together',
+        timestamp: new Date(),
       });
       message = 'Great job on completing your study session!';
     } else if (sessionDuration >= 15) {
@@ -132,6 +133,7 @@ export class PetMoodManager {
         type: 'attention',
         impact: 10,
         description: 'Completed a study session',
+        timestamp: new Date(),
       });
       message = 'Nice work studying together!';
     }
@@ -145,6 +147,7 @@ export class PetMoodManager {
           type: 'happiness',
           impact: 10,
           description: 'Excellent study quality made me so happy!',
+          timestamp: new Date(),
         });
         message += ' Your focus was amazing!';
         celebrationLevel = 'large';
@@ -156,6 +159,7 @@ export class PetMoodManager {
           type: 'happiness',
           impact: 5,
           description: 'Good study quality',
+          timestamp: new Date(),
         });
         message += ' You did really well!';
         celebrationLevel = 'medium';
@@ -172,6 +176,7 @@ export class PetMoodManager {
           type: 'happiness',
           impact: -5,
           description: 'Study session could have gone better',
+          timestamp: new Date(),
         });
         message = "Don't worry, we'll do better next time!";
         break;
@@ -190,6 +195,7 @@ export class PetMoodManager {
         type: 'happiness',
         impact: 5,
         description: 'Study streak continued!',
+        timestamp: new Date(),
       });
       message += ' Our study streak continues!';
     }
@@ -225,6 +231,7 @@ export class PetMoodManager {
         type: 'happiness',
         impact: -Math.min(20, previousStreak * 2),
         description: `Study streak of ${previousStreak} days was broken`,
+        timestamp: new Date(),
       },
     ];
 
@@ -294,6 +301,7 @@ export class PetMoodManager {
           type: 'happiness',
           impact: happinessChange,
           description: `Celebrated ${milestoneValue}-day study streak`,
+          timestamp: new Date(),
         });
         break;
 
@@ -315,6 +323,7 @@ export class PetMoodManager {
           type: 'happiness',
           impact: happinessChange,
           description: `Celebrated ${milestoneValue} total study hours`,
+          timestamp: new Date(),
         });
         break;
 
@@ -326,6 +335,7 @@ export class PetMoodManager {
           type: 'happiness',
           impact: happinessChange,
           description: `Celebrated reaching level ${milestoneValue}`,
+          timestamp: new Date(),
         });
         break;
 
@@ -347,6 +357,7 @@ export class PetMoodManager {
           type: 'happiness',
           impact: happinessChange,
           description: `Celebrated ${milestoneValue} completed study sessions`,
+          timestamp: new Date(),
         });
         break;
     }
@@ -422,6 +433,7 @@ export class PetMoodManager {
           type: 'attention',
           impact: -15,
           description: 'Missing study time together',
+          timestamp: new Date(),
         });
       } else if (hoursSinceLastStudy > 24) {
         happinessChange -= 5;
@@ -436,6 +448,7 @@ export class PetMoodManager {
           type: 'attention',
           impact: -5,
           description: 'Would like to study together',
+          timestamp: new Date(),
         });
       }
     }
@@ -449,6 +462,7 @@ export class PetMoodManager {
         type: 'happiness',
         impact: -10,
         description: 'No active study streak',
+        timestamp: new Date(),
       });
     }
 
@@ -461,6 +475,7 @@ export class PetMoodManager {
         type: 'happiness',
         impact: 10,
         description: 'Multiple study sessions today',
+        timestamp: new Date(),
       });
     } else if (performance.sessionsToday >= 1) {
       happinessChange += 5;
@@ -470,6 +485,7 @@ export class PetMoodManager {
         type: 'happiness',
         impact: 5,
         description: 'Studied today',
+        timestamp: new Date(),
       });
     }
 
@@ -502,7 +518,8 @@ export class PetMoodManager {
     const newMood: PetMood = {
       current: moodChange.newMood,
       factors: moodChange.moodFactors,
-      lastChanged: new Date(),
+      lastUpdated: new Date(),
+      trend: 'stable', // Will be calculated based on mood history
     };
 
     // Update happiness

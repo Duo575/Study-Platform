@@ -64,8 +64,11 @@ export class PetEvolutionSystemService {
 
     if (!nextStage) {
       return {
+        isEligible: false,
         canEvolve: false,
-        nextStage: null,
+        nextStage: undefined,
+        requirements: [],
+        completedRequirements: [],
         missingRequirements: [],
         progress: 100, // Already at max evolution
       };
@@ -86,32 +89,32 @@ export class PetEvolutionSystemService {
       switch (requirement.type) {
         case 'study_hours':
           currentValue = studyStats.totalStudyHours;
-          isCompleted = currentValue >= requirement.target;
+          isCompleted = currentValue >= Number(requirement.target);
           break;
         case 'streak_days':
           currentValue = studyStats.streakDays;
-          isCompleted = currentValue >= requirement.target;
+          isCompleted = currentValue >= Number(requirement.target);
           break;
         case 'quests_completed':
           currentValue = studyStats.questsCompleted;
-          isCompleted = currentValue >= requirement.target;
+          isCompleted = currentValue >= Number(requirement.target);
           break;
         case 'level_reached':
           currentValue = pet.level;
-          isCompleted = currentValue >= requirement.target;
+          isCompleted = currentValue >= Number(requirement.target);
           break;
         case 'happiness_maintained':
           currentValue = pet.happiness;
-          isCompleted = currentValue >= requirement.target;
+          isCompleted = currentValue >= Number(requirement.target);
           break;
         case 'health_maintained':
           currentValue = pet.health;
-          isCompleted = currentValue >= requirement.target;
+          isCompleted = currentValue >= Number(requirement.target);
           break;
         case 'care_consistency':
           // Calculate care consistency based on feeding/playing frequency
           currentValue = this.calculateCareConsistency(pet);
-          isCompleted = currentValue >= requirement.target;
+          isCompleted = currentValue >= Number(requirement.target);
           break;
       }
 
@@ -127,7 +130,7 @@ export class PetEvolutionSystemService {
         missingRequirements.push(updatedRequirement);
         const progress = Math.min(
           100,
-          (currentValue / requirement.target) * 100
+          (currentValue / Number(requirement.target)) * 100
         );
         totalProgress += progress;
       }
@@ -138,8 +141,13 @@ export class PetEvolutionSystemService {
     const canEvolve = missingRequirements.length === 0;
 
     return {
+      isEligible: canEvolve,
       canEvolve,
-      nextStage: canEvolve ? nextStage : null,
+      nextStage: canEvolve ? nextStage : undefined,
+      requirements,
+      completedRequirements: requirements
+        .filter(r => r.completed)
+        .map(r => r.id),
       missingRequirements,
       progress: Math.round(overallProgress),
     };
@@ -226,105 +234,137 @@ export class PetEvolutionSystemService {
     const baseRequirements: Record<string, EvolutionRequirement[]> = {
       baby_to_child: [
         {
+          id: 'study_hours_10',
           type: 'study_hours',
           target: 10,
           current: 0,
+          completed: false,
           description: 'Study for 10 hours total',
         },
         {
+          id: 'level_5',
           type: 'level_reached',
           target: 5,
           current: 0,
+          completed: false,
           description: 'Reach level 5',
         },
         {
+          id: 'happiness_70',
           type: 'happiness_maintained',
           target: 70,
           current: 0,
+          completed: false,
           description: 'Maintain happiness above 70',
         },
       ],
       child_to_teen: [
         {
+          id: 'study_hours_25',
           type: 'study_hours',
           target: 25,
           current: 0,
+          completed: false,
           description: 'Study for 25 hours total',
         },
         {
+          id: 'streak_7',
           type: 'streak_days',
           target: 7,
           current: 0,
+          completed: false,
           description: 'Maintain a 7-day study streak',
         },
         {
+          id: 'level_10',
           type: 'level_reached',
           target: 10,
           current: 0,
+          completed: false,
           description: 'Reach level 10',
         },
         {
+          id: 'quests_5',
           type: 'quests_completed',
           target: 5,
           current: 0,
+          completed: false,
           description: 'Complete 5 quests',
         },
       ],
       teen_to_adult: [
         {
+          id: 'study_hours_50',
           type: 'study_hours',
           target: 50,
           current: 0,
+          completed: false,
           description: 'Study for 50 hours total',
         },
         {
+          id: 'streak_14',
           type: 'streak_days',
           target: 14,
           current: 0,
+          completed: false,
           description: 'Maintain a 14-day study streak',
         },
         {
+          id: 'level_20',
           type: 'level_reached',
           target: 20,
           current: 0,
+          completed: false,
           description: 'Reach level 20',
         },
         {
+          id: 'care_80',
           type: 'care_consistency',
           target: 80,
           current: 0,
+          completed: false,
           description: 'Maintain 80% care consistency',
         },
         {
+          id: 'health_80',
           type: 'health_maintained',
           target: 80,
           current: 0,
+          completed: false,
           description: 'Maintain health above 80',
         },
       ],
       adult_to_elder: [
         {
+          id: 'study_hours_100',
           type: 'study_hours',
           target: 100,
           current: 0,
+          completed: false,
           description: 'Study for 100 hours total',
         },
         {
+          id: 'streak_30',
           type: 'streak_days',
           target: 30,
           current: 0,
+          completed: false,
           description: 'Maintain a 30-day study streak',
         },
         {
+          id: 'level_35',
           type: 'level_reached',
           target: 35,
           current: 0,
+          completed: false,
           description: 'Reach level 35',
         },
         {
+          id: 'quests_25',
           type: 'quests_completed',
           target: 25,
           current: 0,
+          completed: false,
           description: 'Complete 25 quests',
         },
       ],
@@ -425,14 +465,19 @@ export class PetEvolutionSystemService {
     fromStage: string,
     toStage: string
   ): EvolutionCelebration {
-    const rewards = [
-      { type: 'coins' as const, amount: 100 },
-      { type: 'xp' as const, amount: 50 },
+    const rewards: Array<{
+      type: 'coins' | 'xp' | 'item' | 'ability';
+      amount?: number;
+      itemId?: string;
+      abilityId?: string;
+    }> = [
+      { type: 'coins', amount: 100 },
+      { type: 'xp', amount: 50 },
     ];
 
     // Add stage-specific rewards
     if (toStage === 'Adult') {
-      rewards.push({ type: 'item' as const, itemId: 'evolution_trophy' });
+      rewards.push({ type: 'item', itemId: 'evolution_trophy' });
     }
 
     return {
@@ -551,7 +596,8 @@ export class PetEvolutionSystemService {
     }
 
     for (const requirement of eligibility.missingRequirements) {
-      const remaining = requirement.target - requirement.current;
+      const remaining =
+        Number(requirement.target) - Number(requirement.current);
 
       switch (requirement.type) {
         case 'study_hours':

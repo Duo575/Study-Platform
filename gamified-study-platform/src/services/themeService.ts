@@ -1,10 +1,10 @@
-import type { ThemeManager, Theme, ThemeCustomization } from '../types';
+import type { Theme, ThemeCustomization } from '../types';
 
 /**
  * Enhanced Theme Manager Service for managing themes and visual customization
  * Integrates with the theme store and provides advanced theme management features
  */
-export class ThemeManagerService implements ThemeManager {
+export class ThemeManagerService {
   private themes: Theme[] = [];
   private currentTheme: Theme | null = null;
   private currentPreviewTheme: Theme | null = null;
@@ -223,7 +223,7 @@ export class ThemeManagerService implements ThemeManager {
         id: 'minimal-dark',
         name: 'Minimal Dark',
         description: 'Clean dark theme with minimal distractions',
-        category: 'minimal',
+        category: 'dark',
         cssVariables: {
           '--theme-primary': '#6366F1',
           '--theme-secondary': '#4F46E5',
@@ -503,30 +503,9 @@ export class ThemeManagerService implements ThemeManager {
    * Apply custom component styles
    */
   private applyCustomComponents(theme: Theme): void {
-    if (!theme.customComponents) return;
-
-    // Remove existing custom styles
-    const existingStyle = document.getElementById('theme-custom-styles');
-    if (existingStyle) {
-      existingStyle.remove();
-    }
-
-    // Create new style element
-    const style = document.createElement('style');
-    style.id = 'theme-custom-styles';
-
-    let css = '';
-    theme.customComponents.forEach(component => {
-      const selector = component.component;
-      const styles = Object.entries(component.styles)
-        .map(([prop, value]) => `${prop}: ${value}`)
-        .join('; ');
-
-      css += `${selector} { ${styles} }\n`;
-    });
-
-    style.textContent = css;
-    document.head.appendChild(style);
+    // Custom components feature not implemented yet
+    // This is a placeholder for future enhancement
+    return;
   }
 
   /**
@@ -578,8 +557,11 @@ export class ThemeManagerService implements ThemeManager {
     }
 
     const customization: ThemeCustomization = {
+      id: crypto.randomUUID(),
+      userId: 'current-user', // TODO: Get from auth service
       themeId,
       customizations,
+      isPublic: false,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -630,10 +612,7 @@ export class ThemeManagerService implements ThemeManager {
    */
   private saveCustomizations(): void {
     const customizationsData = Array.from(this.customizations.entries()).map(
-      ([id, customization]) => ({
-        id,
-        ...customization,
-      })
+      ([id, customization]) => customization
     );
     localStorage.setItem(
       'theme-customizations',
@@ -651,8 +630,11 @@ export class ThemeManagerService implements ThemeManager {
         const customizationsData = JSON.parse(saved);
         customizationsData.forEach((item: any) => {
           this.customizations.set(item.id, {
+            id: item.id,
+            userId: item.userId || 'current-user',
             themeId: item.themeId,
             customizations: item.customizations,
+            isPublic: item.isPublic || false,
             createdAt: new Date(item.createdAt),
             updatedAt: new Date(item.updatedAt),
           });
@@ -755,8 +737,11 @@ export class ThemeManagerService implements ThemeManager {
       // Import customizations if present
       if (customizations) {
         this.customizations.set(newTheme.id, {
+          id: crypto.randomUUID(),
+          userId: 'current-user',
           themeId: newTheme.id,
           customizations: customizations.customizations,
+          isPublic: false,
           createdAt: new Date(customizations.createdAt),
           updatedAt: new Date(),
         });

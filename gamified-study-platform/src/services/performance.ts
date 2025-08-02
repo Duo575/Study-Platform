@@ -11,7 +11,7 @@ interface PerformanceMetric {
 }
 
 interface WebVitalsMetric {
-  name: 'CLS' | 'FID' | 'FCP' | 'LCP' | 'TTFB';
+  name: 'CLS' | 'INP' | 'FCP' | 'LCP' | 'TTFB';
   value: number;
   rating: 'good' | 'needs-improvement' | 'poor';
   delta: number;
@@ -48,12 +48,12 @@ class PerformanceMonitor {
   private initWebVitals() {
     // Dynamically import web-vitals to avoid bundle bloat
     import('web-vitals')
-      .then(({ getCLS, getFID, getFCP, getLCP, getTTFB }) => {
-        getCLS(this.onWebVital.bind(this));
-        getFID(this.onWebVital.bind(this));
-        getFCP(this.onWebVital.bind(this));
-        getLCP(this.onWebVital.bind(this));
-        getTTFB(this.onWebVital.bind(this));
+      .then(({ onCLS, onINP, onFCP, onLCP, onTTFB }) => {
+        onCLS(this.onWebVital.bind(this));
+        onINP(this.onWebVital.bind(this));
+        onFCP(this.onWebVital.bind(this));
+        onLCP(this.onWebVital.bind(this));
+        onTTFB(this.onWebVital.bind(this));
       })
       .catch(() => {
         console.warn('Web Vitals library not available');
@@ -204,8 +204,8 @@ class PerformanceMonitor {
 
   private sendToAnalytics(eventName: string, parameters: Record<string, any>) {
     // Send to Google Analytics if available
-    if (typeof gtag !== 'undefined') {
-      gtag('event', eventName, parameters);
+    if (typeof window !== 'undefined' && 'gtag' in window) {
+      (window as any).gtag('event', eventName, parameters);
     }
 
     // Send to other analytics services

@@ -3,7 +3,7 @@ import { questService as dbQuestService } from '../services/database';
 import questService from '../services/questService';
 import { getCurrentUser } from '../lib/supabase';
 import { MOCK_MODE } from '../services/mockDatabase';
-import type { Quest, QuestFilters, Course } from '../types';
+import type { Quest, QuestFilters, QuestStatus, Course } from '../types';
 
 interface QuestState {
   quests: Quest[];

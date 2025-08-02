@@ -371,8 +371,7 @@ describe('EnvironmentManagerService', () => {
         updatedAt: new Date(),
       };
 
-      const result =
-        environmentService.validateEnvironmentConfig(validEnvironment);
+      const result = environmentService.validateEnvironment(validEnvironment);
       expect(result.isValid).toBe(true);
       expect(result.errors).toHaveLength(0);
     });
@@ -384,8 +383,7 @@ describe('EnvironmentManagerService', () => {
         // Missing required fields
       };
 
-      const result =
-        environmentService.validateEnvironmentConfig(invalidEnvironment);
+      const result = environmentService.validateEnvironment(invalidEnvironment);
       expect(result.isValid).toBe(false);
       expect(result.errors.length).toBeGreaterThan(0);
     });

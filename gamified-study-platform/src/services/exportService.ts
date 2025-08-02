@@ -4,12 +4,12 @@ import Papa from 'papaparse';
 import { saveAs } from 'file-saver';
 import { format } from 'date-fns';
 import { supabase } from '../lib/supabase';
-import { 
-  sanitizeExportData, 
-  validateExportData, 
+import {
+  sanitizeExportData,
+  validateExportData,
   generateExportFilename,
   flattenForCSV,
-  compressExportData
+  compressExportData,
 } from '../utils/exportUtils';
 import type {
   User,
@@ -20,7 +20,7 @@ import type {
   Achievement,
   StudyPet,
   PomodoroSession,
-  Routine
+  Routine,
 } from '../types';
 
 export interface ExportOptions {
@@ -60,18 +60,18 @@ class ExportService {
   async exportUserData(userId: string, options: ExportOptions): Promise<void> {
     try {
       let userData = await this.gatherUserData(userId, options);
-      
+
       // Sanitize and validate data
       userData = sanitizeExportData(userData, options);
       const validation = validateExportData(userData);
-      
+
       if (!validation.isValid) {
         console.warn('Export data validation warnings:', validation.errors);
       }
-      
+
       // Compress data for efficiency
       userData = compressExportData(userData);
-      
+
       switch (options.format) {
         case 'json':
           await this.exportAsJSON(userData, options, userId);
@@ -91,7 +91,10 @@ class ExportService {
     }
   }
 
-  private async gatherUserData(userId: string, options: ExportOptions): Promise<UserDataExport> {
+  private async gatherUserData(
+    userId: string,
+    options: ExportOptions
+  ): Promise<UserDataExport> {
     const userData: UserDataExport = {
       exportDate: new Date().toISOString(),
       user: {},
@@ -109,8 +112,8 @@ class ExportService {
         averageSessionLength: 0,
         streakDays: 0,
         level: 0,
-        totalXP: 0
-      }
+        totalXP: 0,
+      },
     };
 
     // Get user profile data
@@ -120,7 +123,7 @@ class ExportService {
         .select('*')
         .eq('id', userId)
         .single();
-      
+
       if (profile) {
         userData.user = {
           id: profile.id,
@@ -130,10 +133,10 @@ class ExportService {
             firstName: profile.first_name,
             lastName: profile.last_name,
             timezone: profile.timezone,
-            bio: profile.bio
+            bio: profile.bio,
           },
           createdAt: new Date(profile.created_at),
-          updatedAt: new Date(profile.updated_at)
+          updatedAt: new Date(profile.updated_at),
         };
       }
     }
@@ -145,7 +148,7 @@ class ExportService {
         .select('*')
         .eq('user_id', userId)
         .single();
-      
+
       if (gameStats) {
         userData.analytics.level = gameStats.level;
         userData.analytics.totalXP = gameStats.total_xp;
@@ -155,16 +158,19 @@ class ExportService {
       // Get pet data
       const { data: pet } = await supabase
         .from('study_pets')
-        .select(`
+        .select(
+          `
           *,
           pet_species:species_id (*)
-        `)
+        `
+        )
         .eq('user_id', userId)
         .single();
-      
+
       if (pet) {
         userData.pet = {
           id: pet.id,
+          userId: pet.user_id,
           name: pet.name,
           species: pet.pet_species,
           level: pet.level,
@@ -174,19 +180,21 @@ class ExportService {
           accessories: pet.accessories || [],
           lastFed: new Date(pet.last_fed),
           lastPlayed: new Date(pet.last_played),
-          createdAt: new Date(pet.created_at)
+          createdAt: new Date(pet.created_at),
         };
       }
 
       // Get achievements
       const { data: achievements } = await supabase
         .from('user_achievements')
-        .select(`
+        .select(
+          `
           *,
           achievement_definitions (*)
-        `)
+        `
+        )
         .eq('user_id', userId);
-      
+
       if (achievements) {
         userData.achievements = achievements.map(ach => ({
           id: ach.achievement_definitions.id,
@@ -196,7 +204,7 @@ class ExportService {
           rarity: ach.achievement_definitions.rarity,
           xpReward: ach.achievement_definitions.xp_reward,
           iconUrl: ach.achievement_definitions.icon_url,
-          unlockedAt: new Date(ach.unlocked_at)
+          unlockedAt: new Date(ach.unlocked_at),
         }));
       }
     }
@@ -205,10 +213,12 @@ class ExportService {
     if (options.includeStudyData) {
       let courseQuery = supabase
         .from('courses')
-        .select(`
+        .select(
+          `
           *,
           course_progress (*)
-        `)
+        `
+        )
         .eq('user_id', userId);
 
       const { data: courses } = await courseQuery;
@@ -224,10 +234,10 @@ class ExportService {
             hoursStudied: 0,
             topicsCompleted: 0,
             totalTopics: 0,
-            lastStudied: new Date()
+            lastStudied: new Date(),
           },
           createdAt: new Date(course.created_at),
-          updatedAt: new Date(course.updated_at)
+          updatedAt: new Date(course.updated_at),
         }));
       }
 
@@ -257,18 +267,22 @@ class ExportService {
           courseId: quest.course_id,
           createdAt: new Date(quest.created_at),
           expiresAt: quest.expires_at ? new Date(quest.expires_at) : undefined,
-          completedAt: quest.completed_at ? new Date(quest.completed_at) : undefined
+          completedAt: quest.completed_at
+            ? new Date(quest.completed_at)
+            : undefined,
         }));
       }
 
       // Get study sessions
       let sessionQuery = supabase
         .from('study_sessions')
-        .select(`
+        .select(
+          `
           *,
           courses (name),
           todo_items (title)
-        `)
+        `
+        )
         .eq('user_id', userId);
 
       if (options.dateRange) {
@@ -289,31 +303,47 @@ class ExportService {
           duration: session.duration,
           type: session.type,
           xpEarned: session.xp_earned,
-          notes: session.notes
+          notes: session.notes,
         }));
 
         // Calculate analytics
         userData.analytics.totalSessions = sessions.length;
-        userData.analytics.totalStudyTime = sessions.reduce((total, s) => total + s.duration, 0);
-        userData.analytics.averageSessionLength = userData.analytics.totalSessions > 0 
-          ? userData.analytics.totalStudyTime / userData.analytics.totalSessions 
-          : 0;
+        userData.analytics.totalStudyTime = sessions.reduce(
+          (total, s) => total + s.duration,
+          0
+        );
+        userData.analytics.averageSessionLength =
+          userData.analytics.totalSessions > 0
+            ? userData.analytics.totalStudyTime /
+              userData.analytics.totalSessions
+            : 0;
       }
     }
 
     return userData;
   }
 
-  private async exportAsJSON(userData: UserDataExport, options: ExportOptions, userId: string): Promise<void> {
+  private async exportAsJSON(
+    userData: UserDataExport,
+    options: ExportOptions,
+    userId: string
+  ): Promise<void> {
     const jsonString = JSON.stringify(userData, null, 2);
     const blob = new Blob([jsonString], { type: 'application/json' });
     const filename = generateExportFilename(options, userId);
     saveAs(blob, filename);
   }
 
-  private async exportAsCSV(userData: UserDataExport, options: ExportOptions, userId: string): Promise<void> {
-    const baseFilename = generateExportFilename(options, userId).replace('.csv', '');
-    
+  private async exportAsCSV(
+    userData: UserDataExport,
+    options: ExportOptions,
+    userId: string
+  ): Promise<void> {
+    const baseFilename = generateExportFilename(options, userId).replace(
+      '.csv',
+      ''
+    );
+
     // Export courses
     if (userData.courses && userData.courses.length > 0) {
       const flattenedCourses = flattenForCSV(userData.courses);
@@ -342,7 +372,9 @@ class ExportService {
     if (userData.achievements && userData.achievements.length > 0) {
       const flattenedAchievements = flattenForCSV(userData.achievements);
       const achievementsCSV = Papa.unparse(flattenedAchievements);
-      const achievementsBlob = new Blob([achievementsCSV], { type: 'text/csv' });
+      const achievementsBlob = new Blob([achievementsCSV], {
+        type: 'text/csv',
+      });
       saveAs(achievementsBlob, `${baseFilename}-achievements.csv`);
     }
 
@@ -363,7 +395,11 @@ class ExportService {
     }
   }
 
-  private async exportAsPDF(userData: UserDataExport, options: ExportOptions, userId: string): Promise<void> {
+  private async exportAsPDF(
+    userData: UserDataExport,
+    options: ExportOptions,
+    userId: string
+  ): Promise<void> {
     const pdf = new jsPDF();
     const pageWidth = pdf.internal.pageSize.getWidth();
     const pageHeight = pdf.internal.pageSize.getHeight();
@@ -371,12 +407,18 @@ class ExportService {
 
     // Title
     pdf.setFontSize(20);
-    pdf.text('Study Platform Data Export', pageWidth / 2, yPosition, { align: 'center' });
+    pdf.text('Study Platform Data Export', pageWidth / 2, yPosition, {
+      align: 'center',
+    });
     yPosition += 20;
 
     // Export date
     pdf.setFontSize(12);
-    pdf.text(`Export Date: ${format(new Date(userData.exportDate), 'PPP')}`, 20, yPosition);
+    pdf.text(
+      `Export Date: ${format(new Date(userData.exportDate), 'PPP')}`,
+      20,
+      yPosition
+    );
     yPosition += 15;
 
     // User info
@@ -384,17 +426,18 @@ class ExportService {
       pdf.setFontSize(16);
       pdf.text('User Information', 20, yPosition);
       yPosition += 10;
-      
+
       pdf.setFontSize(12);
       pdf.text(`Username: ${userData.user.username}`, 20, yPosition);
       yPosition += 8;
-      
+
       if (userData.user.profile?.firstName || userData.user.profile?.lastName) {
-        const fullName = `${userData.user.profile?.firstName || ''} ${userData.user.profile?.lastName || ''}`.trim();
+        const fullName =
+          `${userData.user.profile?.firstName || ''} ${userData.user.profile?.lastName || ''}`.trim();
         pdf.text(`Name: ${fullName}`, 20, yPosition);
         yPosition += 8;
       }
-      
+
       yPosition += 10;
     }
 
@@ -402,17 +445,29 @@ class ExportService {
     pdf.setFontSize(16);
     pdf.text('Study Analytics', 20, yPosition);
     yPosition += 10;
-    
+
     pdf.setFontSize(12);
     pdf.text(`Level: ${userData.analytics.level}`, 20, yPosition);
     yPosition += 8;
     pdf.text(`Total XP: ${userData.analytics.totalXP}`, 20, yPosition);
     yPosition += 8;
-    pdf.text(`Study Streak: ${userData.analytics.streakDays} days`, 20, yPosition);
+    pdf.text(
+      `Study Streak: ${userData.analytics.streakDays} days`,
+      20,
+      yPosition
+    );
     yPosition += 8;
-    pdf.text(`Total Study Time: ${Math.round(userData.analytics.totalStudyTime / 60)} hours`, 20, yPosition);
+    pdf.text(
+      `Total Study Time: ${Math.round(userData.analytics.totalStudyTime / 60)} hours`,
+      20,
+      yPosition
+    );
     yPosition += 8;
-    pdf.text(`Total Sessions: ${userData.analytics.totalSessions}`, 20, yPosition);
+    pdf.text(
+      `Total Sessions: ${userData.analytics.totalSessions}`,
+      20,
+      yPosition
+    );
     yPosition += 15;
 
     // Courses summary
@@ -420,23 +475,31 @@ class ExportService {
       pdf.setFontSize(16);
       pdf.text('Courses', 20, yPosition);
       yPosition += 10;
-      
+
       pdf.setFontSize(12);
       userData.courses.slice(0, 10).forEach(course => {
         if (yPosition > pageHeight - 30) {
           pdf.addPage();
           yPosition = 20;
         }
-        
-        pdf.text(`• ${course.name} (${course.progress.completionPercentage}% complete)`, 20, yPosition);
+
+        pdf.text(
+          `• ${course.name} (${course.progress.completionPercentage}% complete)`,
+          20,
+          yPosition
+        );
         yPosition += 8;
       });
-      
+
       if (userData.courses.length > 10) {
-        pdf.text(`... and ${userData.courses.length - 10} more courses`, 20, yPosition);
+        pdf.text(
+          `... and ${userData.courses.length - 10} more courses`,
+          20,
+          yPosition
+        );
         yPosition += 8;
       }
-      
+
       yPosition += 10;
     }
 
@@ -445,18 +508,22 @@ class ExportService {
       pdf.setFontSize(16);
       pdf.text('Recent Achievements', 20, yPosition);
       yPosition += 10;
-      
+
       pdf.setFontSize(12);
       userData.achievements.slice(0, 5).forEach(achievement => {
         if (yPosition > pageHeight - 30) {
           pdf.addPage();
           yPosition = 20;
         }
-        
-        pdf.text(`• ${achievement.title} (${achievement.rarity})`, 20, yPosition);
+
+        pdf.text(
+          `• ${achievement.title} (${achievement.rarity})`,
+          20,
+          yPosition
+        );
         yPosition += 8;
       });
-      
+
       yPosition += 10;
     }
 
@@ -465,7 +532,7 @@ class ExportService {
       pdf.setFontSize(16);
       pdf.text('Study Pet', 20, yPosition);
       yPosition += 10;
-      
+
       pdf.setFontSize(12);
       pdf.text(`Name: ${userData.pet.name}`, 20, yPosition);
       yPosition += 8;
@@ -489,33 +556,31 @@ class ExportService {
         includePersonalData: true,
         includeProgressData: true,
         includeGameData: true,
-        includeStudyData: true
+        includeStudyData: true,
       };
 
       const userData = await this.gatherUserData(userId, fullExportOptions);
-      
+
       // Store backup in Supabase storage
       const backupData = JSON.stringify(userData, null, 2);
       const filename = `backup-${userId}-${format(new Date(), 'yyyy-MM-dd-HHmm')}.json`;
-      
+
       const { data, error } = await supabase.storage
         .from('user-backups')
         .upload(filename, backupData, {
-          contentType: 'application/json'
+          contentType: 'application/json',
         });
 
       if (error) throw error;
 
       // Record backup in database
-      const { error: dbError } = await supabase
-        .from('user_backups')
-        .insert({
-          user_id: userId,
-          filename: filename,
-          file_path: data.path,
-          backup_type: 'full',
-          created_at: new Date().toISOString()
-        });
+      const { error: dbError } = await supabase.from('user_backups').insert({
+        user_id: userId,
+        filename: filename,
+        file_path: data.path,
+        backup_type: 'full',
+        created_at: new Date().toISOString(),
+      });
 
       if (dbError) throw dbError;
 
@@ -526,7 +591,10 @@ class ExportService {
     }
   }
 
-  async restoreFromBackup(userId: string, backupFilename: string): Promise<void> {
+  async restoreFromBackup(
+    userId: string,
+    backupFilename: string
+  ): Promise<void> {
     try {
       // Download backup file
       const { data, error } = await supabase.storage
@@ -540,11 +608,12 @@ class ExportService {
 
       // This is a simplified restore - in production, you'd want more sophisticated logic
       console.log('Backup data ready for restore:', backupData);
-      
+
       // Note: Actual restoration would require careful handling of foreign keys,
       // conflict resolution, and user confirmation
-      throw new Error('Restore functionality requires additional implementation for safety');
-      
+      throw new Error(
+        'Restore functionality requires additional implementation for safety'
+      );
     } catch (error) {
       console.error('Backup restoration failed:', error);
       throw new Error('Failed to restore from backup');

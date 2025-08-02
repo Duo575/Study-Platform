@@ -16,6 +16,7 @@ vi.mock('../store/petStore', () => ({
     getState: () => ({
       pet: {
         id: 'test-pet',
+        userId: 'test-user',
         name: 'Test Pet',
         species: {
           id: 'test-species',

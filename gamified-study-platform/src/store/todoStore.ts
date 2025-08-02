@@ -46,6 +46,7 @@ const calculateTodoXP = (todo: TodoItem): number => {
 interface TodoFilters {
   search?: string;
   priority?: 'low' | 'medium' | 'high' | 'all';
+  status?: 'pending' | 'completed' | 'overdue' | 'all';
   completed?: boolean;
   courseId?: string;
   dueDate?: 'today' | 'week' | 'overdue' | 'all';

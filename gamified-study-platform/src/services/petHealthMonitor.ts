@@ -430,23 +430,38 @@ export class PetHealthMonitorService {
     // Food needs
     if (petStatus.hunger >= 80) {
       needs.push({
+        id: `food_critical_${Date.now()}`,
         type: 'food',
+        name: 'Critical Hunger',
         urgency: 'critical',
         description: 'Your pet is starving and needs food immediately!',
+        value: petStatus.hunger,
+        lastSatisfied: new Date(Date.now() - 4 * 60 * 60 * 1000), // 4 hours ago
+        icon: '🍖',
         timeRemaining: 0,
       });
     } else if (petStatus.hunger >= 60) {
       needs.push({
+        id: `food_high_${Date.now()}`,
         type: 'food',
+        name: 'High Hunger',
         urgency: 'high',
         description: 'Your pet is very hungry',
+        value: petStatus.hunger,
+        lastSatisfied: new Date(Date.now() - 3 * 60 * 60 * 1000), // 3 hours ago
+        icon: '🍖',
         timeRemaining: 60,
       });
     } else if (petStatus.hunger >= 40) {
       needs.push({
+        id: `food_medium_${Date.now()}`,
         type: 'food',
+        name: 'Moderate Hunger',
         urgency: 'medium',
         description: 'Your pet is getting hungry',
+        value: petStatus.hunger,
+        lastSatisfied: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
+        icon: '🍖',
         timeRemaining: 120,
       });
     }
@@ -454,23 +469,38 @@ export class PetHealthMonitorService {
     // Play needs
     if (petStatus.happiness <= 20) {
       needs.push({
+        id: `play_critical_${Date.now()}`,
         type: 'play',
+        name: 'Critical Sadness',
         urgency: 'critical',
         description: 'Your pet is very sad and needs attention!',
+        value: 100 - petStatus.happiness,
+        lastSatisfied: new Date(Date.now() - 6 * 60 * 60 * 1000), // 6 hours ago
+        icon: '🎾',
         timeRemaining: 0,
       });
     } else if (petStatus.happiness <= 40) {
       needs.push({
+        id: `play_high_${Date.now()}`,
         type: 'play',
+        name: 'Wants to Play',
         urgency: 'high',
         description: 'Your pet wants to play',
+        value: 100 - petStatus.happiness,
+        lastSatisfied: new Date(Date.now() - 4 * 60 * 60 * 1000), // 4 hours ago
+        icon: '🎾',
         timeRemaining: 90,
       });
     } else if (petStatus.happiness <= 60) {
       needs.push({
+        id: `play_medium_${Date.now()}`,
         type: 'play',
+        name: 'Playtime',
         urgency: 'medium',
         description: 'Your pet could use some playtime',
+        value: 100 - petStatus.happiness,
+        lastSatisfied: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
+        icon: '🎾',
         timeRemaining: 180,
       });
     }
@@ -478,16 +508,26 @@ export class PetHealthMonitorService {
     // Health needs
     if (petStatus.health <= 30) {
       needs.push({
+        id: `care_critical_${Date.now()}`,
         type: 'care',
+        name: 'Medical Attention',
         urgency: 'critical',
         description: 'Your pet needs medical attention!',
+        value: 100 - petStatus.health,
+        lastSatisfied: new Date(Date.now() - 8 * 60 * 60 * 1000), // 8 hours ago
+        icon: '🏥',
         timeRemaining: 0,
       });
     } else if (petStatus.health <= 50) {
       needs.push({
+        id: `care_high_${Date.now()}`,
         type: 'care',
+        name: 'Health Care',
         urgency: 'high',
         description: 'Your pet needs some care',
+        value: 100 - petStatus.health,
+        lastSatisfied: new Date(Date.now() - 4 * 60 * 60 * 1000), // 4 hours ago
+        icon: '🏥',
         timeRemaining: 120,
       });
     }

@@ -158,7 +158,10 @@ export class SyncService {
    */
   async syncFeedingRecord(record: PetFeedingRecord): Promise<boolean> {
     // Always store locally first
-    await indexedDBService.storeFeedingRecord(record);
+    await indexedDBService.storeFeedingRecord({
+      ...record,
+      happinessChange: record.happinessGain || 0,
+    });
 
     if (!this.isOnline) {
       return true; // Will sync when online
